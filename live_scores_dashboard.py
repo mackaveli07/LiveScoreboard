@@ -59,38 +59,48 @@ def display_scores(sport_name, logo_size):
     if not scores:
         return
 
-    st.subheader(f"🏆 {sport_name}")
+    st.markdown(f"## 🏆 {sport_name}")
 
     for game in scores:
         team1, team2 = game["teams"]
         status = game["status"]
         period = f"Period: {game['period']}" if game['period'] else ""
 
-        with st.expander(f"{team1['name']} vs {team2['name']} - {status}"):
+        with st.container():
+            st.markdown("---")
             col1, col2, col3 = st.columns([4, 2, 4])
 
             with col1:
                 st.image(team1["logo"], width=logo_size)
-                st.markdown(f"**{team1['name']}**")
-                st.markdown(f"Score: {team1['score']}")
+                st.markdown(f"### {team1['name']}")
+                st.markdown(f"**Score:** {team1['score']}")
                 if team1["possession"]:
                     st.markdown("🏈 Possession")
 
             with col2:
-                st.markdown("VS", help="Matchup")
-                st.markdown(f"Status: {status}")
-                st.markdown(period)
+                st.markdown("### VS")
+                st.markdown(f"**Status:** {status}")
+                st.markdown(f"{period}")
 
             with col3:
                 st.image(team2["logo"], width=logo_size)
-                st.markdown(f"**{team2['name']}**")
-                st.markdown(f"Score: {team2['score']}")
+                st.markdown(f"### {team2['name']}")
+                st.markdown(f"**Score:** {team2['score']}")
                 if team2["possession"]:
                     st.markdown("🏈 Possession")
 
 # UI
+st.markdown("""
+    <style>
+        .stApp {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', sans-serif;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("📺 Live Sports Scores Dashboard")
-st.markdown("Real-time updates with team logos.")
+st.markdown("Real-time updates with team logos. Sleek modern UI.")
 
 selected_sports = st.sidebar.multiselect(
     "Select sports to display:",
