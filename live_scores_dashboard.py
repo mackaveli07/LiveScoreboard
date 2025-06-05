@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-from streamlit_extras.st_autorefresh import st_autorefresh  # ✅ Updated import
+from streamlit_extras import st_autorefresh  # ✅ Updated import
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
