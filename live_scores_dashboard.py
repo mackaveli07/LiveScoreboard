@@ -103,7 +103,7 @@ for seconds_left in range(refresh_interval, 0, -1):
     countdown.markdown(f"🔄 Refreshing in **{seconds_left}** seconds...")
     time.sleep(1)
 
-st.experimental_rerun()
+
 
 for sport in selected_sports:
     display_scores(sport, logo_size)
