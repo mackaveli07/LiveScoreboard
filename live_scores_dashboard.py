@@ -44,11 +44,14 @@ def get_scores(sport_path):
                 "possession": team_info.get("id") == possession
             })
 
+        stats = competition.get("statistics", [])
+
         results.append({
             "id": game["id"],
             "status": status,
             "teams": team_data,
-            "period": period
+            "period": period,
+            "stats": stats
         })
 
     return results
@@ -65,6 +68,7 @@ def display_scores(sport_name, logo_size):
         team1, team2 = game["teams"]
         status = game["status"]
         period = f"Period: {game['period']}" if game['period'] else ""
+        stats = game.get("stats", [])
 
         with st.container():
             st.markdown("---")
@@ -89,16 +93,14 @@ def display_scores(sport_name, logo_size):
                 if team2["possession"]:
                     st.markdown("🏈 Possession")
 
-# UI
-st.markdown("""
-    <style>
-        .stApp {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', sans-serif;
-        }
-    </style>
-""", unsafe_allow_html=True)
+            with st.expander("Show Game Stats"):
+                if stats:
+                    for stat in stats:
+                        st.markdown(f"- {stat.get('name', '')}: {stat.get('displayValue', '')}")
+                else:
+                    st.markdown("No stats available.")
 
+# UI
 st.title("📺 Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos. Sleek modern UI.")
 
@@ -111,3 +113,4 @@ logo_size = st.sidebar.slider("Team Logo Size", 40, 100, 60)
 
 for sport in selected_sports:
     display_scores(sport, logo_size)
+
