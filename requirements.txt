@@ -1,4 +1,5 @@
 streamlit
-streamlit_autorefresh
 requests
-
+Pillow
+colorthief
+streamlit-extras
