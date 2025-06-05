@@ -1,19 +1,20 @@
 import streamlit as st
 import requests
 
-# League-specific themes
-league_themes = {
-    "NFL (Football)": {"bg": "#013369", "text": "#ffffff"},
-    "NBA (Basketball)": {"bg": "#1D428A", "text": "#ffffff"},
-    "MLB (Baseball)": {"bg": "#002D72", "text": "#ffffff"},
-    "NHL (Hockey)": {"bg": "#111111", "text": "#ffffff"},
-}
+st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
 SPORTS = {
     "NFL (Football)": "football/nfl",
     "NBA (Basketball)": "basketball/nba",
     "MLB (Baseball)": "baseball/mlb",
     "NHL (Hockey)": "hockey/nhl"
+}
+
+LEAGUE_THEMES = {
+    "NFL (Football)": "#013369",
+    "NBA (Basketball)": "#1D428A",
+    "MLB (Baseball)": "#002D72",
+    "NHL (Hockey)": "#111111",
 }
 
 def sanitize_hex(color):
@@ -35,14 +36,13 @@ def get_scores_with_colors(sport_path):
     for game in games:
         competition = game['competitions'][0]
         status = competition['status']['type']['shortDetail']
+        possession = competition.get("situation", {}).get("possession", "")
+        period = competition.get("status", {}).get("period", "")
+        clock = competition.get("status", {}).get("displayClock", "")
         teams = competition['competitors']
 
         if len(teams) != 2:
-            continue
-
-        possession = next((t["team"]["abbreviation"] for t in teams if t.get("possession")), "")
-        period = competition.get("status", {}).get("period", "")
-        clock = competition.get("status", {}).get("displayClock", "")
+            continue  # Skip malformed games
 
         game_data = {
             "status": status,
@@ -60,11 +60,12 @@ def get_scores_with_colors(sport_path):
             game_data["teams"].append({
                 "name": team_info['displayName'],
                 "score": team.get('score', '0'),
-                "logo": team_info['logo'],
+                "logo": team_info.get('logo', ''),
                 "color": colors,
                 "alt_color": alt_color,
-                "abbreviation": team_info['abbreviation'],
-                "has_possession": team.get("possession", False)
+                "abbreviation": team_info.get('abbreviation', ''),
+                "id": team_info.get("id", ""),
+                "has_possession": team_info.get("id") == possession
             })
 
         results.append(game_data)
@@ -89,66 +90,87 @@ def get_game_stats(game_id, sport_path):
             stat = cat.get("stats", ["-"])[0]
             lines.append(f"**{label}**: {stat}")
         stats.append((team_name, lines))
+
     return stats
 
-def apply_league_theme(sport_name):
-    theme = league_themes.get(sport_name, {"bg": "#ffffff", "text": "#000000"})
-    st.markdown(f"""
-        <style>
-        .stApp {{
-            background-color: {theme['bg']};
-            color: {theme['text']};
-        }}
-        </style>
-    """, unsafe_allow_html=True)
-
-def show_top_ticker(selected_sports):
-    ticker_html = '<div style="display: flex; overflow-x: auto; padding: 10px; background: #333;">'
-    for sport in selected_sports:
-        games = get_scores_with_colors(SPORTS[sport])
-        for game in games:
-            t1, t2 = game["teams"]
-            ticker_html += f"""
-                <div style="display: flex; align-items: center; margin-right: 20px; color: white;">
-                    <img src="{t1['logo']}" height="24" style="margin-right: 4px;" />
-                    <strong>{t1['abbreviation']}</strong> {t1['score']} - {t2['score']} <strong>{t2['abbreviation']}</strong>
-                    <img src="{t2['logo']}" height="24" style="margin-left: 4px;" />
-                </div>
-            """
-    ticker_html += '</div>'
-    st.markdown(ticker_html, unsafe_allow_html=True)
-
-def display_scores(sport_name):
-    apply_league_theme(sport_name)
-    st.subheader(f"🏆 {sport_name}")
+def display_scores(sport_name, logo_size):
+    theme_color = LEAGUE_THEMES.get(sport_name, "#444")
     scores = get_scores_with_colors(SPORTS[sport_name])
     if not scores:
         st.info("No live or recent games currently.")
         return
 
+    # 🔵 Ticker Bar
+    st.markdown(f"<div style='background-color:{theme_color}; padding: 10px;'>", unsafe_allow_html=True)
+    ticker_text = ""
     for game in scores:
+        if len(game.get("teams", [])) != 2:
+            continue
+
         team1, team2 = game["teams"]
+        required_fields = ["name", "score", "logo", "color", "alt_color", "abbreviation"]
+        if not all(field in team1 for field in required_fields) or not all(field in team2 for field in required_fields):
+            continue
+
+        ticker_text += f"""
+            <span style='color:white; margin-right:30px;'>
+                <img src="{team1['logo']}" height="20" style="vertical-align:middle;">
+                {team1['abbreviation']} <strong>{team1['score']}</strong>
+                -
+                <strong>{team2['score']}</strong> {team2['abbreviation']}
+                <img src="{team2['logo']}" height="20" style="vertical-align:middle;">
+                ({game['status']})
+            </span>
+        """
+    st.markdown(f"<marquee scrollamount='5'>{ticker_text}</marquee></div>", unsafe_allow_html=True)
+
+    # 🔵 Game Cards
+    for game in scores:
+        if len(game.get("teams", [])) != 2:
+            continue
+        team1, team2 = game["teams"]
+        required_fields = ["name", "score", "logo", "color", "alt_color", "abbreviation"]
+        if not all(field in team1 for field in required_fields) or not all(field in team2 for field in required_fields):
+            st.warning(f"⚠️ Skipping game due to missing data: {team1.get('name', 'Unknown')} vs {team2.get('name', 'Unknown')}")
+            continue
+
         with st.expander(f"{team1['name']} vs {team2['name']} - {game['status']}"):
             col1, col2, col3 = st.columns([4, 2, 4])
 
             with col1:
-                st.image(team1["logo"], width=60)
-                st.markdown(f"<div style='font-size: 20px; color:{team1['color']}'>{team1['name']}</div>", unsafe_allow_html=True)
-                style = "border: 3px solid yellow;" if team1["has_possession"] else ""
-                st.markdown(f"<div style='{style} background-color:{team1['color']}; color:{team1['alt_color']}; padding:6px 12px; font-size:24px; border-radius:8px;'>{team1['score']}</div>", unsafe_allow_html=True)
+                st.image(team1["logo"], width=logo_size)
+                st.markdown(
+                    f"<div style='font-size: 20px; font-weight: bold; color:{team1['color']}'>{team1['name']}</div>",
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    f"<div style='background-color:{team1['color']}; color:{team1['alt_color']}; padding: 6px 12px; display:inline-block; font-size: 24px; border-radius: 8px; font-weight: bold;'>{team1['score']}</div>",
+                    unsafe_allow_html=True,
+                )
+                if team1["has_possession"]:
+                    st.markdown("🏈 Possession", unsafe_allow_html=True)
 
             with col2:
-                st.markdown("<div style='text-align:center; font-size: 16px;'>VS</div>", unsafe_allow_html=True)
-                st.markdown(f"<div style='text-align:center; font-size: 14px;'>Status:<br><strong>{game['status']}</strong></div>", unsafe_allow_html=True)
-                st.markdown(f"<div style='text-align:center; font-size: 13px;'>Q/P: {game['period']}<br>Clock: {game['clock']}</div>", unsafe_allow_html=True)
+                st.markdown("<div style='text-align:center; font-size: 16px; color: gray;'>VS</div>", unsafe_allow_html=True)
+                st.markdown(
+                    f"<div style='text-align:center; font-size: 14px; color: #666;'>Status:<br><strong>{game['status']}</strong><br>Period: {game['period']}<br>Clock: {game['clock']}</div>",
+                    unsafe_allow_html=True,
+                )
                 toggle_key = f"show_stats_{game['id']}"
                 show = st.toggle("📊 View Stats", key=toggle_key)
 
             with col3:
-                st.image(team2["logo"], width=60)
-                st.markdown(f"<div style='font-size: 20px; color:{team2['color']}'>{team2['name']}</div>", unsafe_allow_html=True)
-                style = "border: 3px solid yellow;" if team2["has_possession"] else ""
-                st.markdown(f"<div style='{style} background-color:{team2['color']}; color:{team2['alt_color']}; padding:6px 12px; font-size:24px; border-radius:8px;'>{team2['score']}</div>", unsafe_allow_html=True)
+                st.image(team2["logo"], width=logo_size)
+                st.markdown(
+                    f"<div style='font-size: 20px; font-weight: bold; color:{team2['color']}'>{team2['name']}</div>",
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    f"<div style='background-color:{team2['color']}; color:{team2['alt_color']}; padding: 6px 12px; display:inline-block; font-size: 24px; border-radius: 8px; font-weight: bold;'>{team2['score']}</div>",
+                    unsafe_allow_html=True,
+                )
+                if team2["has_possession"]:
+                    st.markdown("🏈 Possession", unsafe_allow_html=True)
 
             if show:
                 stats = get_game_stats(game["id"], SPORTS[sport_name])
@@ -162,19 +184,16 @@ def display_scores(sport_name):
                                 st.markdown(line)
 
 # UI
-st.set_page_config(page_title="Live Sports Scores", layout="wide")
 st.title("📺 Live Sports Scores Dashboard")
-st.markdown("Real-time scores with team logos, ticker bar, and stats on click.")
+st.markdown("Real-time scores with logos, possession, and stats for NFL, NBA, MLB, NHL games.")
 
 selected_sports = st.sidebar.multiselect(
     "Select sports to display:",
     list(SPORTS.keys()),
     default=list(SPORTS.keys())
 )
+logo_size = st.sidebar.slider("Team Logo Size", min_value=40, max_value=100, value=60)
 
-# Top ticker bar
-show_top_ticker(selected_sports)
-
-# Show each sport section
+# Render sports
 for sport in selected_sports:
-    display_scores(sport)
+    display_scores(sport, logo_size)
