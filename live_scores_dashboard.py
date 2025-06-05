@@ -10,6 +10,9 @@ SPORTS = {
     "NHL (Hockey)": {"path": "hockey/nhl"}
 }
 
+# Cache to detect score changes
+game_score_cache = {}
+
 def get_scores(sport_path):
     url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard"
     try:
@@ -47,6 +50,7 @@ def get_scores(sport_path):
                 "score": team.get("score", "0"),
                 "logo": team_info.get("logo", ""),
                 "abbreviation": team_info.get("abbreviation", ""),
+                "id": team_info.get("id", ""),
                 "possession": team_info.get("id") == possession
             })
 
@@ -78,6 +82,13 @@ def display_scores(sport_name, logo_size):
         clock = f"<span style='font-weight:bold;color:#d62728;'>Time:</span> {game['clock']}" if game['clock'] else ""
         stats = game.get("stats", [])
 
+        # Determine if score has changed
+        game_id = game['id']
+        previous_scores = game_score_cache.get(game_id, (None, None))
+        team1_changed = previous_scores[0] != team1["score"]
+        team2_changed = previous_scores[1] != team2["score"]
+        game_score_cache[game_id] = (team1["score"], team2["score"])
+
         with st.container():
             st.markdown("---")
             col1, col2, col3 = st.columns([4, 2, 4])
@@ -85,7 +96,10 @@ def display_scores(sport_name, logo_size):
             with col1:
                 st.image(team1["logo"], width=logo_size)
                 st.markdown(f"### {team1['name']}")
-                st.markdown(f"**Score:** {team1['score']}")
+                if team1_changed:
+                    st.markdown(f"<span style='color:green; font-weight:bold;'>Score: {team1['score']} ⬆</span>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"**Score:** {team1['score']}")
                 if team1["possession"]:
                     st.markdown("🏈 Possession")
 
@@ -100,7 +114,10 @@ def display_scores(sport_name, logo_size):
             with col3:
                 st.image(team2["logo"], width=logo_size)
                 st.markdown(f"### {team2['name']}")
-                st.markdown(f"**Score:** {team2['score']}")
+                if team2_changed:
+                    st.markdown(f"<span style='color:green; font-weight:bold;'>Score: {team2['score']} ⬆</span>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"**Score:** {team2['score']}")
                 if team2["possession"]:
                     st.markdown("🏈 Possession")
 
