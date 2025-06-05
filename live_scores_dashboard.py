@@ -51,6 +51,21 @@ def get_scores_with_colors(sport_path):
         results.append(game_data)
     return results
 
+
+def set_background_color():
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background-color: #f0f2f6;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+set_background_color()
+
 def get_game_stats(game_id):
     url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={game_id}"
     try:
@@ -154,3 +169,4 @@ if "show_stats" not in st.session_state:
 # Show scores
 for sport in selected_sports:
     display_scores(sport, logo_size)
+
