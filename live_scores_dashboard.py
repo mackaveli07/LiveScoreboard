@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-import st_autorefresh  # ✅ Updated import
+from streamlit_autorefresh import st_autorefresh  # ✅ Built-in-safe refresh
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
@@ -33,7 +33,7 @@ def get_scores_with_colors(sport_path):
         teams = competition['competitors']
 
         if len(teams) != 2:
-            continue  # Skip malformed games
+            continue
 
         game_data = {
             "status": status,
@@ -144,6 +144,10 @@ def display_scores(sport_name, logo_size):
                             for line in lines:
                                 st.markdown(line)
 
+# ⏱️ Auto-refresh setup (every 30s default)
+refresh_interval = st.sidebar.slider("Auto-refresh every (seconds):", 10, 60, 30)
+st_autorefresh(interval=refresh_interval * 1000, key="refresh_scores")
+
 # UI
 st.title("📺 Live Sports Scores Dashboard")
 st.markdown("Get real-time scores with team logos and click into matchups for full team stats.")
@@ -154,11 +158,6 @@ selected_sports = st.sidebar.multiselect(
     default=list(SPORTS.keys())
 )
 logo_size = st.sidebar.slider("Team Logo Size", min_value=40, max_value=100, value=60)
-refresh_interval = st.sidebar.slider("Auto-refresh every (seconds):", 10, 60, 30)
 
-# ✅ Auto-refresh logic using streamlit-extras
-st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
-
-# Display selected sports
 for sport in selected_sports:
     display_scores(sport, logo_size)
