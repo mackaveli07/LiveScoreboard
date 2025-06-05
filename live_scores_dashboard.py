@@ -139,5 +139,8 @@ selected_sports = st.sidebar.multiselect(
 )
 logo_size = st.sidebar.slider("Team Logo Size", 40, 100, 60)
 
+if st.sidebar.button("Refresh Scores"):
+    st.experimental_rerun()
+
 for sport in selected_sports:
     display_scores(sport, logo_size)
