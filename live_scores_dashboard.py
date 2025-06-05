@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-import time
+from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
@@ -51,23 +51,8 @@ def get_scores_with_colors(sport_path):
         results.append(game_data)
     return results
 
-
-def set_background_color():
-    st.markdown(
-        """
-        <style>
-        .stApp {
-            background-color: #e28743;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-set_background_color()
-
-def get_game_stats(game_id):
-    url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={game_id}"
+def get_game_stats(game_id, sport_path):
+    url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/summary?event={game_id}"
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -78,11 +63,22 @@ def get_game_stats(game_id):
 
     stats = []
     for team in data.get("boxscore", {}).get("teams", []):
-        team_name = team["team"]["displayName"]
-        lines = [f"**{category['label']}**: {category['stats'][0]}" for category in team["statistics"]]
+        team_name = team.get("team", {}).get("displayName", "Unknown Team")
+        lines = [f"**{cat.get('label', 'Stat')}**: {cat.get('stats', ['-'])[0]}" for cat in team.get("statistics", [])]
         stats.append((team_name, lines))
 
     return stats
+
+def set_background_color():
+    st.markdown("""
+        <style>
+        .stApp {
+            background-color: #e28743;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+set_background_color()
 
 def display_scores(sport_name, logo_size):
     st.subheader(f"🏆 {sport_name}")
@@ -92,9 +88,9 @@ def display_scores(sport_name, logo_size):
         return
 
     for game in scores:
-        with st.container():
+        team1, team2 = game["teams"]
+        with st.expander(f"{team1['name']} vs {team2['name']} - {game['status']}"):
             col1, col2, col3 = st.columns([4, 2, 4])
-            team1, team2 = game["teams"]
 
             with col1:
                 st.image(team1["logo"], width=logo_size)
@@ -113,12 +109,8 @@ def display_scores(sport_name, logo_size):
                     f"<div style='text-align:center; font-size: 14px; color: #666;'>Status:<br><strong>{game['status']}</strong></div>",
                     unsafe_allow_html=True,
                 )
-
-                if st.button(f"📊 View Stats", key=f"stats_btn_{game['id']}"):
-                    if st.session_state.get("show_stats") == game["id"]:
-                        st.session_state["show_stats"] = None  # Collapse
-                    else:
-                        st.session_state["show_stats"] = game["id"]  # Expand
+                toggle_key = f"show_stats_{game['id']}"
+                show = st.toggle("📊 View Stats", key=toggle_key)
 
             with col3:
                 st.image(team2["logo"], width=logo_size)
@@ -131,11 +123,8 @@ def display_scores(sport_name, logo_size):
                     unsafe_allow_html=True,
                 )
 
-            st.markdown("<hr>", unsafe_allow_html=True)
-
-            # Show/hide game stats based on session state
-            if st.session_state.get("show_stats") == game["id"]:
-                stats = get_game_stats(game["id"])
+            if show:
+                stats = get_game_stats(game["id"], SPORTS[sport_name])
                 if stats:
                     st.markdown(f"### 📈 Game Stats: {team1['name']} vs {team2['name']}")
                     stat_cols = st.columns(2)
@@ -157,16 +146,9 @@ selected_sports = st.sidebar.multiselect(
 logo_size = st.sidebar.slider("Team Logo Size", min_value=40, max_value=100, value=60)
 refresh_interval = st.sidebar.slider("Auto-refresh every (seconds):", 10, 60, 30)
 
-countdown = st.empty()
-for seconds_left in range(refresh_interval, 0, -1):
-    countdown.markdown(f"🔄 Refreshing in **{seconds_left}** seconds...")
-    time.sleep(1)
+# Auto-refresh logic
+st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
 
-# Initialize toggle state
-if "show_stats" not in st.session_state:
-    st.session_state["show_stats"] = None
-
-# Show scores
+# Display selected sports
 for sport in selected_sports:
     display_scores(sport, logo_size)
-
