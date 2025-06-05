@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-from streamlit_autorefresh import st_autorefresh
+import time
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
@@ -142,8 +142,10 @@ selected_sports = st.sidebar.multiselect(
 logo_size = st.sidebar.slider("Team Logo Size", min_value=40, max_value=100, value=60)
 refresh_interval = st.sidebar.slider("Auto-refresh every (seconds):", 10, 60, 30)
 
-# Refresh every N seconds
-st_autorefresh(interval=refresh_interval * 1000, key="refresh")
+countdown = st.empty()
+for seconds_left in range(refresh_interval, 0, -1):
+    countdown.markdown(f"🔄 Refreshing in **{seconds_left}** seconds...")
+    time.sleep(1)
 
 # Initialize toggle state
 if "show_stats" not in st.session_state:
