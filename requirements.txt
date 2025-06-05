@@ -1,3 +1,4 @@
 streamlit
 requests
 streamlit-extras
+streamlit_extras.st_autorefresh
