@@ -80,11 +80,16 @@ def get_game_stats(game_id, sport_path):
     return stats
 
 def render_ticker(games, league_color):
-    ticker_html = f"<div style='background-color:{league_color}; padding:10px; overflow:hidden; white-space:nowrap;'>"
+    if not games:
+        return
+
+    ticker_html = f"""
+    <div style='background-color:{league_color}; padding:10px; overflow:hidden; white-space:nowrap;'>
+    """
     for game in games:
         team1, team2 = game['teams']
         ticker_html += f"""
-        <span style='margin-right:30px; color:white; font-weight:bold;'>
+        <span style='margin-right:30px; color:white; font-weight:bold; display:inline-block;'>
             <img src="{team1['logo']}" width="20" style="vertical-align:middle;"> {team1['abbreviation']} {team1['score']} 
             vs 
             {team2['abbreviation']} {team2['score']} <img src="{team2['logo']}" width="20" style="vertical-align:middle;">
@@ -92,6 +97,7 @@ def render_ticker(games, league_color):
         </span>
         """
     ticker_html += "</div>"
+
     st.markdown(ticker_html, unsafe_allow_html=True)
 
 def display_scores(sport_name, logo_size):
@@ -119,7 +125,7 @@ def display_scores(sport_name, logo_size):
                     unsafe_allow_html=True
                 )
                 if team1["possession"]:
-                    st.markdown("🏈 Possession", unsafe_allow_html=True)
+                    st.markdown("🏈 Possession")
 
             with col2:
                 st.markdown(f"<div style='text-align:center; color:gray;'>VS</div>", unsafe_allow_html=True)
@@ -143,7 +149,7 @@ def display_scores(sport_name, logo_size):
                     unsafe_allow_html=True
                 )
                 if team2["possession"]:
-                    st.markdown("🏈 Possession", unsafe_allow_html=True)
+                    st.markdown("🏈 Possession")
 
 # UI
 st.title("📺 Live Sports Scores Dashboard")
