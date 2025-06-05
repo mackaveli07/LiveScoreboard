@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-import time
+from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
@@ -13,11 +13,17 @@ SPORTS = {
 
 def get_scores_with_colors(sport_path):
     url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard"
-    response = requests.get(url)
-    data = response.json()
-    games = data.get("events", [])
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        st.error(f"Failed to fetch data: {e}")
+        return []
 
+    games = data.get("events", [])
     results = []
+
     for game in games:
         competition = game['competitions'][0]
         status = competition['status']['type']['shortDetail']
@@ -25,23 +31,43 @@ def get_scores_with_colors(sport_path):
 
         game_data = {
             "status": status,
-            "teams": []
+            "teams": [],
+            "id": game["id"]
         }
 
         for team in teams:
             team_info = team['team']
-            colors = team_info.get("color", "000000")
-            alt_color = team_info.get("alternateColor", "FFFFFF")
+            colors = team_info.get("color") or "000000"
+            alt_color = team_info.get("alternateColor") or "FFFFFF"
             game_data["teams"].append({
                 "name": team_info['displayName'],
                 "score": team.get('score', '0'),
                 "logo": team_info['logo'],
                 "color": f"#{colors}",
-                "alt_color": f"#{alt_color}"
+                "alt_color": f"#{alt_color}",
+                "abbreviation": team_info['abbreviation']
             })
 
         results.append(game_data)
     return results
+
+def get_game_stats(game_id):
+    url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={game_id}"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        st.error(f"Failed to fetch game stats: {e}")
+        return None
+
+    stats = []
+    for team in data.get("boxscore", {}).get("teams", []):
+        team_name = team["team"]["displayName"]
+        lines = [f"**{category['label']}**: {category['stats'][0]}" for category in team["statistics"]]
+        stats.append((team_name, lines))
+
+    return stats
 
 def display_scores(sport_name, logo_size):
     st.subheader(f"🏆 {sport_name}")
@@ -73,6 +99,12 @@ def display_scores(sport_name, logo_size):
                     unsafe_allow_html=True,
                 )
 
+                if st.button(f"📊 View Stats", key=f"stats_btn_{game['id']}"):
+                    if st.session_state.get("show_stats") == game["id"]:
+                        st.session_state["show_stats"] = None  # Collapse
+                    else:
+                        st.session_state["show_stats"] = game["id"]  # Expand
+
             with col3:
                 st.image(team2["logo"], width=logo_size)
                 st.markdown(
@@ -86,24 +118,37 @@ def display_scores(sport_name, logo_size):
 
             st.markdown("<hr>", unsafe_allow_html=True)
 
+            # Show/hide game stats based on session state
+            if st.session_state.get("show_stats") == game["id"]:
+                stats = get_game_stats(game["id"])
+                if stats:
+                    st.markdown(f"### 📈 Game Stats: {team1['name']} vs {team2['name']}")
+                    stat_cols = st.columns(2)
+                    for i, (team_name, lines) in enumerate(stats):
+                        with stat_cols[i]:
+                            st.markdown(f"#### {team_name}")
+                            for line in lines:
+                                st.markdown(line)
+
+# UI
 st.title("📺 Live Sports Scores Dashboard")
-st.markdown("Get real-time scores with team logos and colors for major leagues.")
+st.markdown("Get real-time scores with team logos and click into matchups for full team stats.")
 
 selected_sports = st.sidebar.multiselect(
     "Select sports to display:",
     list(SPORTS.keys()),
     default=list(SPORTS.keys())
 )
-
 logo_size = st.sidebar.slider("Team Logo Size", min_value=40, max_value=100, value=60)
 refresh_interval = st.sidebar.slider("Auto-refresh every (seconds):", 10, 60, 30)
-countdown = st.empty()
 
-for seconds_left in range(refresh_interval, 0, -1):
-    countdown.markdown(f"🔄 Refreshing in **{seconds_left}** seconds...")
-    time.sleep(1)
+# Refresh every N seconds
+st_autorefresh(interval=refresh_interval * 1000, key="refresh")
 
+# Initialize toggle state
+if "show_stats" not in st.session_state:
+    st.session_state["show_stats"] = None
 
-
+# Show scores
 for sport in selected_sports:
     display_scores(sport, logo_size)
