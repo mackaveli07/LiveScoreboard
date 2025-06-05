@@ -30,6 +30,11 @@ def get_scores(sport_path):
         clock = competition['status'].get('displayClock', "")
         possession = competition.get("situation", {}).get("possession")
 
+        # MLB specific: inning and top/bottom
+        inning = competition['status'].get('period', "")
+        inning_half = competition['status'].get('half', "") if 'half' in competition['status'] else ""
+        inning_display = f"Inning: {inning} ({inning_half.title()})" if inning and inning_half else ""
+
         teams = competition['competitors']
         if len(teams) != 2:
             continue
@@ -51,7 +56,7 @@ def get_scores(sport_path):
             "id": game["id"],
             "status": status,
             "teams": team_data,
-            "period": period,
+            "period": inning_display if "mlb" in sport_path else period,
             "clock": clock,
             "stats": stats
         })
