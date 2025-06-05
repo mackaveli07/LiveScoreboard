@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-from streamlit_autorefresh import st_autorefresh
+from streamlit_extras.st_autorefresh import st_autorefresh  # ✅ Updated import
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
@@ -10,6 +10,9 @@ SPORTS = {
     "MLB (Baseball)": "baseball/mlb",
     "NHL (Hockey)": "hockey/nhl"
 }
+
+def sanitize_hex(color):
+    return f"#{color}" if color and len(color) == 6 else "#000000"
 
 def get_scores_with_colors(sport_path):
     url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard"
@@ -29,6 +32,9 @@ def get_scores_with_colors(sport_path):
         status = competition['status']['type']['shortDetail']
         teams = competition['competitors']
 
+        if len(teams) != 2:
+            continue  # Skip malformed games
+
         game_data = {
             "status": status,
             "teams": [],
@@ -37,14 +43,14 @@ def get_scores_with_colors(sport_path):
 
         for team in teams:
             team_info = team['team']
-            colors = team_info.get("color") or "000000"
-            alt_color = team_info.get("alternateColor") or "FFFFFF"
+            colors = sanitize_hex(team_info.get("color"))
+            alt_color = sanitize_hex(team_info.get("alternateColor"))
             game_data["teams"].append({
                 "name": team_info['displayName'],
                 "score": team.get('score', '0'),
                 "logo": team_info['logo'],
-                "color": f"#{colors}",
-                "alt_color": f"#{alt_color}",
+                "color": colors,
+                "alt_color": alt_color,
                 "abbreviation": team_info['abbreviation']
             })
 
@@ -64,7 +70,11 @@ def get_game_stats(game_id, sport_path):
     stats = []
     for team in data.get("boxscore", {}).get("teams", []):
         team_name = team.get("team", {}).get("displayName", "Unknown Team")
-        lines = [f"**{cat.get('label', 'Stat')}**: {cat.get('stats', ['-'])[0]}" for cat in team.get("statistics", [])]
+        lines = []
+        for cat in team.get("statistics", []):
+            label = cat.get("label", "Stat")
+            stat = cat.get("stats", ["-"])[0]
+            lines.append(f"**{label}**: {stat}")
         stats.append((team_name, lines))
 
     return stats
@@ -146,7 +156,7 @@ selected_sports = st.sidebar.multiselect(
 logo_size = st.sidebar.slider("Team Logo Size", min_value=40, max_value=100, value=60)
 refresh_interval = st.sidebar.slider("Auto-refresh every (seconds):", 10, 60, 30)
 
-# Auto-refresh logic
+# ✅ Auto-refresh logic using streamlit-extras
 st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
 
 # Display selected sports
