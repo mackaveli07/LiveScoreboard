@@ -4,16 +4,13 @@ import requests
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
 SPORTS = {
-    "NFL (Football)": {"path": "football/nfl", "theme_color": "#013369"},
-    "NBA (Basketball)": {"path": "basketball/nba", "theme_color": "#C9082A"},
-    "MLB (Baseball)": {"path": "baseball/mlb", "theme_color": "#0C2340"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "theme_color": "#111111"}
+    "NFL (Football)": {"path": "football/nfl"},
+    "NBA (Basketball)": {"path": "basketball/nba"},
+    "MLB (Baseball)": {"path": "baseball/mlb"},
+    "NHL (Hockey)": {"path": "hockey/nhl"}
 }
 
-def sanitize_hex(color):
-    return f"#{color}" if color and len(color) == 6 else "#000000"
-
-def get_scores_with_colors(sport_path):
+def get_scores(sport_path):
     url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard"
     try:
         response = requests.get(url)
@@ -43,8 +40,6 @@ def get_scores_with_colors(sport_path):
                 "name": team_info.get("displayName", ""),
                 "score": team.get("score", "0"),
                 "logo": team_info.get("logo", ""),
-                "color": sanitize_hex(team_info.get("color")),
-                "alt_color": sanitize_hex(team_info.get("alternateColor")),
                 "abbreviation": team_info.get("abbreviation", ""),
                 "possession": team_info.get("id") == possession
             })
@@ -58,28 +53,12 @@ def get_scores_with_colors(sport_path):
 
     return results
 
-def render_ticker(games, league_color):
-    ticker_html = f"<div style='background-color:{league_color}; padding:10px; overflow:hidden; white-space:nowrap;'>"
-    for game in games:
-        team1, team2 = game['teams']
-        ticker_html += f"""
-        <span style='margin-right:30px; color:white; font-weight:bold;'>
-            <img src="{team1['logo']}" width="20" style="vertical-align:middle;'> {team1['abbreviation']} {team1['score']} 
-            vs 
-            {team2['abbreviation']} {team2['score']} <img src="{team2['logo']}" width="20" style="vertical-align:middle;'>
-            ({game['status']})
-        </span>
-        """
-    ticker_html += "</div>"
-    st.markdown(ticker_html, unsafe_allow_html=True)
-
 def display_scores(sport_name, logo_size):
     sport_config = SPORTS[sport_name]
-    scores = get_scores_with_colors(sport_config["path"])
+    scores = get_scores(sport_config["path"])
     if not scores:
         return
 
-    render_ticker(scores, sport_config["theme_color"])
     st.subheader(f"🏆 {sport_name}")
 
     for game in scores:
@@ -92,26 +71,26 @@ def display_scores(sport_name, logo_size):
 
             with col1:
                 st.image(team1["logo"], width=logo_size)
-                st.markdown(f"<div style='color:{team1['color']}; font-weight:bold;'>{team1['name']}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div style='font-size:24px;'>{team1['score']}</div>", unsafe_allow_html=True)
+                st.markdown(f"**{team1['name']}**")
+                st.markdown(f"Score: {team1['score']}")
                 if team1["possession"]:
-                    st.markdown("🏈 Possession", unsafe_allow_html=True)
+                    st.markdown("🏈 Possession")
 
             with col2:
-                st.markdown(f"<div style='text-align:center; color:gray;'>VS</div>", unsafe_allow_html=True)
-                st.markdown(f"<div style='text-align:center; font-size:14px;'>Status:<br><strong>{status}</strong></div>", unsafe_allow_html=True)
-                st.markdown(f"<div style='text-align:center;'>{period}</div>", unsafe_allow_html=True)
+                st.markdown("VS", help="Matchup")
+                st.markdown(f"Status: {status}")
+                st.markdown(period)
 
             with col3:
                 st.image(team2["logo"], width=logo_size)
-                st.markdown(f"<div style='color:{team2['color']}; font-weight:bold;'>{team2['name']}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div style='font-size:24px;'>{team2['score']}</div>", unsafe_allow_html=True)
+                st.markdown(f"**{team2['name']}**")
+                st.markdown(f"Score: {team2['score']}")
                 if team2["possession"]:
-                    st.markdown("🏈 Possession", unsafe_allow_html=True)
+                    st.markdown("🏈 Possession")
 
 # UI
 st.title("📺 Live Sports Scores Dashboard")
-st.markdown("Real-time updates with team logos, colors, and league themes.")
+st.markdown("Real-time updates with team logos.")
 
 selected_sports = st.sidebar.multiselect(
     "Select sports to display:",
