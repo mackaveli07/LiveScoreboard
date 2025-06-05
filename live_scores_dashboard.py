@@ -27,6 +27,7 @@ def get_scores(sport_path):
         competition = game['competitions'][0]
         status = competition['status']['type']['shortDetail']
         period = competition['status'].get('period', "")
+        clock = competition['status'].get('displayClock', "")
         possession = competition.get("situation", {}).get("possession")
 
         teams = competition['competitors']
@@ -51,6 +52,7 @@ def get_scores(sport_path):
             "status": status,
             "teams": team_data,
             "period": period,
+            "clock": clock,
             "stats": stats
         })
 
@@ -67,7 +69,8 @@ def display_scores(sport_name, logo_size):
     for game in scores:
         team1, team2 = game["teams"]
         status = game["status"]
-        period = f"Period: {game['period']}" if game['period'] else ""
+        period = f"<span style='font-weight:bold;color:#1f77b4;'>Period:</span> {game['period']}" if game['period'] else ""
+        clock = f"<span style='font-weight:bold;color:#d62728;'>Time:</span> {game['clock']}" if game['clock'] else ""
         stats = game.get("stats", [])
 
         with st.container():
@@ -84,7 +87,10 @@ def display_scores(sport_name, logo_size):
             with col2:
                 st.markdown("### VS")
                 st.markdown(f"**Status:** {status}")
-                st.markdown(f"{period}")
+                if period:
+                    st.markdown(period, unsafe_allow_html=True)
+                if clock:
+                    st.markdown(clock, unsafe_allow_html=True)
 
             with col3:
                 st.image(team2["logo"], width=logo_size)
@@ -101,7 +107,7 @@ def display_scores(sport_name, logo_size):
                     st.markdown("No stats available.")
 
 # UI
-st.title("📺 Live Sports Scores Dashboard")
+st.title("📻 Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos. Sleek modern UI.")
 
 selected_sports = st.sidebar.multiselect(
@@ -113,4 +119,3 @@ logo_size = st.sidebar.slider("Team Logo Size", 40, 100, 60)
 
 for sport in selected_sports:
     display_scores(sport, logo_size)
-
