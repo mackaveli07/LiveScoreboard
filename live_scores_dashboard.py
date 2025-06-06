@@ -31,6 +31,19 @@ SPORTS = {
     "NHL (Hockey)": {"path": "hockey/nhl"}
 }
 
+# Expanded team color mapping
+TEAM_COLORS = {
+    # NFL
+    "NE": "#002244", "DAL": "#003594", "GB": "#203731", "KC": "#E31837", "PHI": "#004C54",
+    "SF": "#AA0000", "CHI": "#0B162A", "PIT": "#FFB612",
+    # NBA
+    "LAL": "#552583", "BOS": "#007A33", "GSW": "#1D428A", "MIA": "#98002E", "NYK": "#F58426",
+    # MLB
+    "NYY": "#003087", "BOS": "#BD3039", "LAD": "#005A9C", "CHC": "#0E3386", "HOU": "#EB6E1F",
+    # NHL
+    "NYR": "#0038A8", "CHI": "#CC0000", "BOS": "#FFB81C", "TOR": "#00205B", "VGK": "#B4975A"
+}
+
 # Cache for scores
 game_score_cache = {}
 
@@ -74,7 +87,12 @@ def get_scores(sport_path):
                 "possession": team_info.get("id") == possession
             })
 
-        stats = competition.get("statistics", [])
+        stats = []
+        for stat_group in competition.get("competitor", []):
+            if "statistics" in stat_group:
+                for stat in stat_group["statistics"]:
+                    if "avg" not in stat.get("name", "").lower():
+                        stats.append(stat)
 
         results.append({
             "id": game["id"],
@@ -106,13 +124,16 @@ def display_scores(sport_name):
         previous_scores = game_score_cache.get(game_id, (None, None))
         game_score_cache[game_id] = (team1["score"], team2["score"])
 
+        color1 = TEAM_COLORS.get(team1["abbreviation"], "#f0f0f0")
+        color2 = TEAM_COLORS.get(team2["abbreviation"], "#f0f0f0")
+
         with st.container():
             st.markdown("---")
             col1, col2, col3 = st.columns([4, 2, 4])
 
             with col1:
                 st.image(team1["logo"], width=60)
-                st.markdown(f"### {team1['name']}")
+                st.markdown(f"### <span style='color:{color1};'>{team1['name']}</span>", unsafe_allow_html=True)
                 st.markdown(f"**Score:** {team1['score']}")
                 if team1["possession"]:
                     st.markdown("🏈 Possession")
@@ -127,7 +148,7 @@ def display_scores(sport_name):
 
             with col3:
                 st.image(team2["logo"], width=60)
-                st.markdown(f"### {team2['name']}")
+                st.markdown(f"### <span style='color:{color2};'>{team2['name']}</span>", unsafe_allow_html=True)
                 st.markdown(f"**Score:** {team2['score']}")
                 if team2["possession"]:
                     st.markdown("🏈 Possession")
