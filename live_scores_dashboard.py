@@ -164,11 +164,11 @@ def display_scores(sport_name):
                         team = stat["team"]
                         if team not in grouped_stats:
                             grouped_stats[team] = []
-                        grouped_stats[team].append(f"**{stat['name']}**: {stat['value']}")
+                        grouped_stats[team].append(f"✅ **{stat['name']}**: {stat['value']}")
 
                     for team, team_stats in grouped_stats.items():
                         with st.container():
-                            st.markdown(f"#### {team}")
+                            st.markdown(f"#### 🧢 {team}")
                             for stat_line in team_stats:
                                 st.markdown(f"- {stat_line}")
                 else:
