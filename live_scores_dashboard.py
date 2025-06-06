@@ -39,8 +39,8 @@ TEAM_COLORS = {
     "NE": "#002244", "DAL": "#003594", "GB": "#203731", "KC": "#E31837", "PHI": "#004C54",
     "SF": "#AA0000", "CHI": "#0B162A", "PIT": "#FFB612",
     "LAL": "#552583", "BOS": "#007A33", "GSW": "#1D428A", "MIA": "#98002E", "NYK": "#F58426",
-    "NYY": "#003087", "BOS": "#BD3039", "LAD": "#005A9C", "CHC": "#0E3386", "HOU": "#EB6E1F",
-    "NYR": "#0038A8", "CHI": "#CC0000", "BOS": "#FFB81C", "TOR": "#00205B", "VGK": "#B4975A"
+    "NYY": "#003087", "LAD": "#005A9C", "CHC": "#0E3386", "HOU": "#EB6E1F",
+    "NYR": "#0038A8", "TOR": "#00205B", "VGK": "#B4975A"
 }
 
 game_score_cache = {}
@@ -118,6 +118,40 @@ def get_scores(sport_path, date=None):
     st.session_state.schedule_cache[cache_key] = results
     return results
 
+def get_team_schedule(sport_path):
+    cache_key = f"{sport_path}-schedule"
+    if cache_key in st.session_state.schedule_cache:
+        return st.session_state.schedule_cache[cache_key]
+
+    try:
+        schedule_url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/teams"
+        teams_data = requests.get(schedule_url).json().get("sports", [])[0].get("leagues", [])[0].get("teams", [])
+        all_schedules = {}
+        for team in teams_data:
+            team_info = team.get("team", {})
+            team_abbr = team_info.get("abbreviation", "")
+            team_name = team_info.get("displayName", "")
+            team_id = team_info.get("id", "")
+            logo = team_info.get("logo", "")
+
+            if not team_id:
+                continue
+
+            schedule_api = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/teams/{team_id}/schedule"
+            games = requests.get(schedule_api).json().get("events", [])
+            all_schedules[team_name] = {
+                "id": team_id,
+                "abbreviation": team_abbr,
+                "logo": logo,
+                "games": games
+            }
+
+        st.session_state.schedule_cache[cache_key] = all_schedules
+        return all_schedules
+    except Exception as e:
+        st.error(f"Failed to fetch team schedules: {e}")
+        return {}
+
 def display_scores(sport_name, date):
     sport_config = SPORTS[sport_name]
     scores = get_scores(sport_config["path"], date)
@@ -192,6 +226,25 @@ st.markdown("Real-time updates with team logos and stats.")
 
 date_selection = st.sidebar.date_input("Select date (for past games):", datetime.today())
 selected_sport = st.sidebar.selectbox("Select a sport:", list(SPORTS.keys()))
-
 formatted_date = date_selection.strftime("%Y%m%d")
 display_scores(selected_sport, formatted_date)
+
+# Team Schedule Viewer
+team_schedules = get_team_schedule(SPORTS[selected_sport]["path"])
+all_teams = list(team_schedules.keys())
+selected_team = st.sidebar.selectbox("Select a team to view season games:", all_teams)
+
+def display_team_schedule(team_data):
+    st.markdown(f"### 📅 Schedule for {selected_team}")
+    for event in team_data["games"]:
+        game = event.get("name", "Unknown Matchup")
+        date = event.get("date", "")
+        try:
+            game_time = datetime.strptime(date, "%Y-%m-%dT%H:%MZ")
+            local_time = game_time.strftime("%b %d, %Y %I:%M %p")
+        except:
+            local_time = date
+        st.markdown(f"- 🗓 **{local_time}** — {game}")
+
+if selected_team in team_schedules:
+    display_team_schedule(team_schedules[selected_team])
