@@ -1,11 +1,17 @@
 import streamlit as st
 import requests
-from streamlit_extras.st_autorefresh import st_autorefresh
+import time
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
-# Auto-refresh every 5 seconds
-st_autorefresh(interval=5000, limit=None, key="auto-refresh")
+# Timer-based manual refresh every 5 seconds
+if "last_refresh" not in st.session_state:
+    st.session_state.last_refresh = time.time()
+
+# Add refresh button
+if st.sidebar.button("🔁 Refresh Scores") or time.time() - st.session_state.last_refresh > 5:
+    st.session_state.last_refresh = time.time()
+    st.experimental_rerun()
 
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl"},
@@ -131,9 +137,6 @@ selected_sports = st.sidebar.multiselect(
     list(SPORTS.keys()),
     default=list(SPORTS.keys())
 )
-
-if st.sidebar.button("🔁 Refresh Scores"):
-    st.experimental_rerun()
 
 for sport in selected_sports:
     display_scores(sport)
