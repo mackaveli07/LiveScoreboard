@@ -94,6 +94,7 @@ def get_scores(sport_path):
                 if "avg" not in stat.get("name", "").lower():
                     stats.append({
                         "team": comp.get("team", {}).get("displayName", ""),
+                        "team_logo": comp.get("team", {}).get("logo", ""),
                         "name": stat.get("name", ""),
                         "value": stat.get("displayValue", "")
                     })
@@ -160,14 +161,17 @@ def display_scores(sport_name):
             with st.expander("📊 Show Game Stats"):
                 if stats:
                     grouped_stats = {}
+                    team_logos = {}
                     for stat in stats:
                         team = stat["team"]
                         if team not in grouped_stats:
                             grouped_stats[team] = []
+                            team_logos[team] = stat.get("team_logo", "")
                         grouped_stats[team].append(f"✅ **{stat['name']}**: {stat['value']}")
 
                     for team, team_stats in grouped_stats.items():
                         with st.container():
+                            st.image(team_logos[team], width=40)
                             st.markdown(f"#### 🧢 {team}")
                             for stat_line in team_stats:
                                 st.markdown(f"- {stat_line}")
