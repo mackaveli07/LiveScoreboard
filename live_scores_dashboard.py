@@ -4,21 +4,21 @@ import time
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
-# ⏯️ Initialize auto-refresh toggle
+# Initialize session state
 if "auto_refresh_enabled" not in st.session_state:
     st.session_state.auto_refresh_enabled = True
+if "last_refresh" not in st.session_state:
+    st.session_state.last_refresh = time.time()
+if "run_pending_rerun" not in st.session_state:
+    st.session_state.run_pending_rerun = False
 
-# 🔁 Auto refresh every 5 seconds if enabled
-if st.session_state.auto_refresh_enabled:
-    if "last_refresh" not in st.session_state:
-        st.session_state.last_refresh = time.time()
-    else:
-        now = time.time()
-        if now - st.session_state.last_refresh > 5:
-            st.session_state.last_refresh = now
-            st.experimental_rerun()
+# Auto-refresh logic (safely triggers rerun)
+now = time.time()
+if st.session_state.auto_refresh_enabled and now - st.session_state.last_refresh > 5:
+    st.session_state.last_refresh = now
+    st.session_state.run_pending_rerun = True
 
-# 🎯 Supported Sports
+# Sports config
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl"},
     "NBA (Basketball)": {"path": "basketball/nba"},
@@ -26,10 +26,10 @@ SPORTS = {
     "NHL (Hockey)": {"path": "hockey/nhl"}
 }
 
-# 🧠 Score cache for change detection
+# Cache for score change detection
 game_score_cache = {}
 
-# 💅 CSS for score animation
+# Custom CSS for smooth animations
 st.markdown("""
     <style>
     .score {
@@ -38,12 +38,10 @@ st.markdown("""
         color: #1f77b4;
         transition: all 0.4s ease-in-out;
     }
-
     .score-change {
         animation: pop 0.5s ease;
         color: #28a745;
     }
-
     @keyframes pop {
         0% { transform: scale(1); opacity: 0.6; }
         50% { transform: scale(1.2); opacity: 1; }
@@ -161,9 +159,9 @@ def display_scores(sport_name, logo_size):
                 else:
                     st.markdown("No stats available.")
 
-# 🎨 UI Layout
+# Main title
 st.title("📻 Live Sports Scores Dashboard")
-st.markdown("Real-time updates with team logos, clean animations, and sleek UI.")
+st.markdown("Real-time scoreboard with clean design and subtle animations.")
 
 # Sidebar controls
 selected_sports = st.sidebar.multiselect(
@@ -173,14 +171,19 @@ selected_sports = st.sidebar.multiselect(
 )
 logo_size = st.sidebar.slider("Team Logo Size", 40, 100, 60)
 
-# ⏯️ Auto-refresh toggle
+# Auto-refresh toggle
 if st.sidebar.button("⏸️ Pause Auto-Refresh" if st.session_state.auto_refresh_enabled else "▶️ Resume Auto-Refresh"):
     st.session_state.auto_refresh_enabled = not st.session_state.auto_refresh_enabled
 
-# 🔄 Manual refresh
-if st.sidebar.button("🔄 Refresh Scores"):
+# Manual refresh button
+if st.sidebar.button("🔄 Manual Refresh"):
     st.experimental_rerun()
 
 # Display scores
 for sport in selected_sports:
     display_scores(sport, logo_size)
+
+# Safe rerun trigger after rendering is complete
+if st.session_state.run_pending_rerun:
+    st.session_state.run_pending_rerun = False
+    st.experimental_rerun()
