@@ -15,21 +15,26 @@ st.markdown("""
     @keyframes blinker {
         50% { opacity: 0.5; }
     }
-    .base-graphic {
-        display: flex;
-        justify-content: center;
-        gap: 5px;
-        margin-top: 5px;
+    .diamond {
+        width: 50px;
+        height: 50px;
+        position: relative;
+        margin: 10px auto;
     }
     .base {
-        width: 15px;
-        height: 15px;
+        width: 12px;
+        height: 12px;
         background-color: lightgray;
         border-radius: 50%;
+        position: absolute;
     }
-    .occupied {
+    .base.occupied {
         background-color: green;
     }
+    .first { top: 0; left: 50%; transform: translate(-50%, -50%); }
+    .second { top: 50%; left: 100%; transform: translate(-50%, -50%); }
+    .third { top: 100%; left: 50%; transform: translate(-50%, -50%); }
+    .home { top: 50%; left: 0; transform: translate(-50%, -50%); }
     </style>
 """, unsafe_allow_html=True)
 
@@ -135,12 +140,19 @@ def display_scores(sport_name, date):
                 st.markdown(f"Clock: {game['clock']}")
             else:
                 st.markdown(f"Inning: {game['period']}")
-                base_html = "<div class='base-graphic'>"
-                base_html += f"<div class='base{' occupied' if game['on_first'] else ''}'></div>"
-                base_html += f"<div class='base{' occupied' if game['on_second'] else ''}'></div>"
-                base_html += f"<div class='base{' occupied' if game['on_third'] else ''}'></div>"
-                base_html += "</div>"
-                st.markdown(base_html, unsafe_allow_html=True)
+                diamond_html = """
+                <div class='diamond'>
+                    <div class='base first {f}'></div>
+                    <div class='base second {s}'></div>
+                    <div class='base third {t}'></div>
+                    <div class='base home'></div>
+                </div>
+                """.format(
+                    f="occupied" if game['on_first'] else "",
+                    s="occupied" if game['on_second'] else "",
+                    t="occupied" if game['on_third'] else ""
+                )
+                st.markdown(diamond_html, unsafe_allow_html=True)
 
         with col3:
             st.image(t2['logo'], width=60)
