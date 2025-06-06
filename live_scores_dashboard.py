@@ -40,55 +40,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Session state init
-if "last_refresh" not in st.session_state:
-    st.session_state.last_refresh = time.time()
-if "auto_refresh" not in st.session_state:
-    st.session_state.auto_refresh = False
-if "schedule_cache" not in st.session_state:
-    st.session_state.schedule_cache = {}
-if "cache_timestamps" not in st.session_state:
-    st.session_state.cache_timestamps = {}
-if "show_refresh_overlay" not in st.session_state:
-    st.session_state.show_refresh_overlay = False
-
-# Sidebar controls
-col1, col2 = st.sidebar.columns(2)
-if col1.button("🔁 Refresh Now"):
-    st.session_state.last_refresh = time.time()
-    st.session_state.show_refresh_overlay = True
-    for league_cfg in [v for v in SPORTS.values()]:
-        _ = get_scores(league_cfg["path"])
-    st.rerun()
-
-if col2.button("⏯ Toggle Auto-Refresh"):
-    st.session_state.auto_refresh = not st.session_state.auto_refresh
-
-# Refresh logic
-now = time.time()
-auto_refresh_interval = 5
-should_refresh = st.session_state.auto_refresh and (now - st.session_state.last_refresh > auto_refresh_interval)
-
-if should_refresh:
-    st.session_state.last_refresh = now
-    st.session_state.show_refresh_overlay = True
-    for league_cfg in [v for v in SPORTS.values()]:
-        _ = get_scores(league_cfg["path"])
-    st.rerun()
-
-# Invalidate expired cache keys
-expired_keys = [
-    k for k, ts in st.session_state.cache_timestamps.items()
-    if now - ts > 5
-]
-for k in expired_keys:
-    st.session_state.schedule_cache.pop(k, None)
-    st.session_state.cache_timestamps.pop(k, None)
-
-if st.session_state.get("show_refresh_overlay"):
-    st.markdown("<div class='refresh-overlay'>Refreshing...</div>", unsafe_allow_html=True)
-    st.session_state.show_refresh_overlay = False
-
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
     "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
@@ -104,8 +55,145 @@ TEAM_COLORS = {
     "NYR": "#0038A8", "TOR": "#00205B", "VGK": "#B4975A"
 }
 
-# The rest of the code remains unchanged, including get_scores and display_scores definitions.
-# UI rendering:
+# Session state init
+if "last_refresh" not in st.session_state:
+    st.session_state.last_refresh = time.time()
+if "auto_refresh" not in st.session_state:
+    st.session_state.auto_refresh = False
+if "schedule_cache" not in st.session_state:
+    st.session_state.schedule_cache = {}
+if "cache_timestamps" not in st.session_state:
+    st.session_state.cache_timestamps = {}
+if "show_refresh_overlay" not in st.session_state:
+    st.session_state.show_refresh_overlay = False
+
+# Helper function
+score_cache = {}
+
+def get_scores(sport_path, date=None):
+    cache_key = f"{sport_path}-{date or 'live'}"
+    now = time.time()
+    if cache_key in st.session_state.schedule_cache:
+        return st.session_state.schedule_cache[cache_key]
+
+    url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard"
+    if date:
+        url += f"?dates={date}"
+    try:
+        response = requests.get(url)
+        data = response.json()
+    except Exception as e:
+        st.error(f"Error fetching scores: {e}")
+        return []
+
+    results = []
+    for event in data.get("events", []):
+        comp = event['competitions'][0]
+        teams = comp['competitors']
+        if len(teams) != 2:
+            continue
+        t1, t2 = teams
+
+        possession = comp.get("situation", {}).get("possession")
+        results.append({
+            "id": event['id'],
+            "status": comp['status']['type']['shortDetail'],
+            "teams": [
+                {
+                    "name": t1['team']['displayName'],
+                    "score": t1['score'],
+                    "logo": t1['team']['logo'],
+                    "abbreviation": t1['team']['abbreviation'],
+                    "possession": t1['team']['id'] == possession
+                },
+                {
+                    "name": t2['team']['displayName'],
+                    "score": t2['score'],
+                    "logo": t2['team']['logo'],
+                    "abbreviation": t2['team']['abbreviation'],
+                    "possession": t2['team']['id'] == possession
+                }
+            ],
+            "period": comp['status'].get("period", ""),
+            "clock": comp['status'].get("displayClock", "")
+        })
+
+    st.session_state.schedule_cache[cache_key] = results
+    st.session_state.cache_timestamps[cache_key] = now
+    return results
+
+def display_scores(sport_name, date):
+    sport_cfg = SPORTS[sport_name]
+    scores = get_scores(sport_cfg['path'], date)
+    if not scores:
+        st.info("No games available.")
+        return
+
+    for game in scores:
+        t1, t2 = game['teams']
+        game_id = game['id']
+        prev = score_cache.get(game_id, (None, None))
+        score_cache[game_id] = (t1['score'], t2['score'])
+        b1 = " blinking" if prev[0] != t1['score'] and prev[0] is not None else ""
+        b2 = " blinking" if prev[1] != t2['score'] and prev[1] is not None else ""
+
+        col1, col2, col3 = st.columns([4, 2, 4])
+        with col1:
+            st.image(t1['logo'], width=60)
+            st.markdown(f"### {t1['name']}")
+            st.markdown(f"<div class='fade-in{b1}'><strong>{t1['score']}</strong></div>", unsafe_allow_html=True)
+            if t1['possession']:
+                st.markdown("🏈 Possession")
+
+        with col2:
+            st.markdown(f"### VS")
+            st.markdown(f"**{game['status']}**")
+            st.markdown(f"Period: {game['period']}")
+            st.markdown(f"Clock: {game['clock']}")
+
+        with col3:
+            st.image(t2['logo'], width=60)
+            st.markdown(f"### {t2['name']}")
+            st.markdown(f"<div class='fade-in{b2}'><strong>{t2['score']}</strong></div>", unsafe_allow_html=True)
+            if t2['possession']:
+                st.markdown("🏈 Possession")
+
+        st.markdown("---")
+
+# Sidebar controls
+col1, col2 = st.sidebar.columns(2)
+if col1.button("🔁 Refresh Now"):
+    st.session_state.last_refresh = time.time()
+    st.session_state.show_refresh_overlay = True
+    for cfg in SPORTS.values():
+        _ = get_scores(cfg["path"])
+    st.rerun()
+
+if col2.button("⏯ Toggle Auto-Refresh"):
+    st.session_state.auto_refresh = not st.session_state.auto_refresh
+
+# Refresh logic
+now = time.time()
+auto_refresh_interval = 5
+should_refresh = st.session_state.auto_refresh and (now - st.session_state.last_refresh > auto_refresh_interval)
+if should_refresh:
+    st.session_state.last_refresh = now
+    st.session_state.show_refresh_overlay = True
+    for cfg in SPORTS.values():
+        _ = get_scores(cfg["path"])
+    st.rerun()
+
+# Invalidate expired cache
+expired = [k for k, ts in st.session_state.cache_timestamps.items() if now - ts > 5]
+for k in expired:
+    st.session_state.schedule_cache.pop(k, None)
+    st.session_state.cache_timestamps.pop(k, None)
+
+if st.session_state.get("show_refresh_overlay"):
+    st.markdown("<div class='refresh-overlay'>Refreshing...</div>", unsafe_allow_html=True)
+    st.session_state.show_refresh_overlay = False
+
+# Main content
 st.title("📻 Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos and stats.")
 
