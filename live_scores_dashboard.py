@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import time
+from datetime import datetime
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
@@ -47,10 +48,12 @@ TEAM_COLORS = {
 # Cache for scores
 game_score_cache = {}
 
-def get_scores(sport_path):
-    url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard"
+def get_scores(sport_path, date=None):
+    base_url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard"
+    if date:
+        base_url += f"?dates={date}"
     try:
-        response = requests.get(url)
+        response = requests.get(base_url)
         response.raise_for_status()
         data = response.json()
     except Exception as e:
@@ -113,9 +116,9 @@ def get_scores(sport_path):
 
     return results
 
-def display_scores(sport_name):
+def display_scores(sport_name, date):
     sport_config = SPORTS[sport_name]
-    scores = get_scores(sport_config["path"])
+    scores = get_scores(sport_config["path"], date)
     if not scores:
         return
 
@@ -185,11 +188,14 @@ def display_scores(sport_name):
 st.title("📻 Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos and stats.")
 
+date_selection = st.sidebar.date_input("Select date (for past games):", datetime.today())
 selected_sports = st.sidebar.multiselect(
     "Select sports to display:",
     list(SPORTS.keys()),
     default=list(SPORTS.keys())
 )
 
+formatted_date = date_selection.strftime("%Y%m%d")
+
 for sport in selected_sports:
-    display_scores(sport)
+    display_scores(sport, formatted_date)
