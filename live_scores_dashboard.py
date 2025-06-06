@@ -25,7 +25,6 @@ st.markdown("""
         width: 12px;
         height: 12px;
         background-color: lightgray;
-        border-radius: 50%;
         position: absolute;
     }
     .base.occupied {
@@ -41,7 +40,7 @@ SPORTS = {
     "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
     "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
     "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🂂"}
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "💂"}
 }
 
 TEAM_COLORS = {
@@ -141,9 +140,9 @@ def display_scores(sport_name, date):
                 st.markdown(f"Inning: {game['period']}")
                 diamond_html = f"""
                 <div class='diamond'>
-                    <div class='base second {'occupied' if game['on_second'] else ''}'></div>
-                    <div class='base first {'occupied' if game['on_first'] else ''}'></div>
-                    <div class='base third {'occupied' if game['on_third'] else ''}'></div>
+                    <div class='base second {'occupied' if game['on_second'] else ''}' style='top: 0; left: 50%;'></div>
+                    <div class='base third {'occupied' if game['on_third'] else ''}' style='bottom: 0; right: 0;'></div>
+                    <div class='base first {'occupied' if game['on_first'] else ''}' style='bottom: 0; left: 0;'></div>
                 </div>
                 """
                 st.markdown(diamond_html, unsafe_allow_html=True)
