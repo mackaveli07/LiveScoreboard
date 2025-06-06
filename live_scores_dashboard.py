@@ -88,11 +88,15 @@ def get_scores(sport_path):
             })
 
         stats = []
-        for stat_group in competition.get("competitor", []):
-            if "statistics" in stat_group:
-                for stat in stat_group["statistics"]:
-                    if "avg" not in stat.get("name", "").lower():
-                        stats.append(stat)
+        competitors = competition.get("competitors", [])
+        for comp in competitors:
+            for stat in comp.get("statistics", []):
+                if "avg" not in stat.get("name", "").lower():
+                    stats.append({
+                        "team": comp.get("team", {}).get("displayName", ""),
+                        "name": stat.get("name", ""),
+                        "value": stat.get("displayValue", "")
+                    })
 
         results.append({
             "id": game["id"],
@@ -116,8 +120,8 @@ def display_scores(sport_name):
     for game in scores:
         team1, team2 = game["teams"]
         status = game["status"]
-        period = f"<span style='font-weight:bold;color:#1f77b4;'>Period:</span> {game['period']}" if game['period'] else ""
-        clock = f"<span style='font-weight:bold;color:#d62728;'>Time:</span> {game['clock']}" if game['clock'] else ""
+        period = f"Period: {game['period']}" if game['period'] else ""
+        clock = f"Time: {game['clock']}" if game['clock'] else ""
         stats = game.get("stats", [])
 
         game_id = game['id']
@@ -133,7 +137,7 @@ def display_scores(sport_name):
 
             with col1:
                 st.image(team1["logo"], width=60)
-                st.markdown(f"### <span style='color:{color1};'>{team1['name']}</span>", unsafe_allow_html=True)
+                st.markdown(f"### {team1['name']}")
                 st.markdown(f"**Score:** {team1['score']}")
                 if team1["possession"]:
                     st.markdown("🏈 Possession")
@@ -142,25 +146,31 @@ def display_scores(sport_name):
                 st.markdown("### VS")
                 st.markdown(f"**Status:** {status}")
                 if period:
-                    st.markdown(period, unsafe_allow_html=True)
+                    st.markdown(period)
                 if clock:
-                    st.markdown(clock, unsafe_allow_html=True)
+                    st.markdown(clock)
 
             with col3:
                 st.image(team2["logo"], width=60)
-                st.markdown(f"### <span style='color:{color2};'>{team2['name']}</span>", unsafe_allow_html=True)
+                st.markdown(f"### {team2['name']}")
                 st.markdown(f"**Score:** {team2['score']}")
                 if team2["possession"]:
                     st.markdown("🏈 Possession")
 
             with st.expander("📊 Show Game Stats"):
                 if stats:
+                    grouped_stats = {}
                     for stat in stats:
-                        col_stat1, col_stat2 = st.columns([2, 3])
-                        with col_stat1:
-                            st.markdown(f"**{stat.get('name', '')}**")
-                        with col_stat2:
-                            st.markdown(f"{stat.get('displayValue', '')}")
+                        team = stat["team"]
+                        if team not in grouped_stats:
+                            grouped_stats[team] = []
+                        grouped_stats[team].append(f"**{stat['name']}**: {stat['value']}")
+
+                    for team, team_stats in grouped_stats.items():
+                        with st.container():
+                            st.markdown(f"#### {team}")
+                            for stat_line in team_stats:
+                                st.markdown(f"- {stat_line}")
                 else:
                     st.markdown("No stats available.")
 
