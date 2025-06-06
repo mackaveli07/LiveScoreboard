@@ -4,7 +4,7 @@ import time
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
-# Initialize session state
+# Session state setup
 if "auto_refresh_enabled" not in st.session_state:
     st.session_state.auto_refresh_enabled = True
 if "last_refresh" not in st.session_state:
@@ -12,13 +12,13 @@ if "last_refresh" not in st.session_state:
 if "run_pending_rerun" not in st.session_state:
     st.session_state.run_pending_rerun = False
 
-# Auto-refresh logic (safely triggers rerun)
+# Handle auto-refresh
 now = time.time()
 if st.session_state.auto_refresh_enabled and now - st.session_state.last_refresh > 5:
     st.session_state.last_refresh = now
     st.session_state.run_pending_rerun = True
 
-# Sports config
+# Supported sports
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl"},
     "NBA (Basketball)": {"path": "basketball/nba"},
@@ -26,10 +26,9 @@ SPORTS = {
     "NHL (Hockey)": {"path": "hockey/nhl"}
 }
 
-# Cache for score change detection
 game_score_cache = {}
 
-# Custom CSS for smooth animations
+# Custom CSS
 st.markdown("""
     <style>
     .score {
@@ -70,8 +69,9 @@ def get_scores(sport_path):
         clock = competition['status'].get('displayClock', "")
         possession = competition.get("situation", {}).get("possession")
 
+        # Inning display for MLB
         inning = competition['status'].get('period', "")
-        inning_half = competition['status'].get('half', "") if 'half' in competition['status'] else ""
+        inning_half = competition['status'].get('half', "")
         inning_display = f"Inning: {inning} ({inning_half.title()})" if inning and inning_half else ""
 
         teams = competition['competitors']
@@ -90,7 +90,16 @@ def get_scores(sport_path):
                 "possession": team_info.get("id") == possession
             })
 
-        stats = competition.get("statistics", [])
+        # Collect team stats (available for all sports if present)
+        stats = []
+        for team in competition.get("competitors", []):
+            team_stats = team.get("statistics", [])
+            for stat in team_stats:
+                stats.append({
+                    "team": team["team"]["displayName"],
+                    "name": stat.get("name", ""),
+                    "value": stat.get("displayValue", "")
+                })
 
         results.append({
             "id": game["id"],
@@ -155,15 +164,15 @@ def display_scores(sport_name, logo_size):
             with st.expander("Show Game Stats"):
                 if stats:
                     for stat in stats:
-                        st.markdown(f"- {stat.get('name', '')}: {stat.get('displayValue', '')}")
+                        st.markdown(f"- **{stat['team']}**: {stat['name']} – {stat['value']}")
                 else:
                     st.markdown("No stats available.")
 
-# Main title
+# UI
 st.title("📻 Live Sports Scores Dashboard")
 st.markdown("Real-time scoreboard with clean design and subtle animations.")
 
-# Sidebar controls
+# Sidebar Controls
 selected_sports = st.sidebar.multiselect(
     "Select sports to display:",
     list(SPORTS.keys()),
@@ -171,19 +180,19 @@ selected_sports = st.sidebar.multiselect(
 )
 logo_size = st.sidebar.slider("Team Logo Size", 40, 100, 60)
 
-# Auto-refresh toggle
+# Toggle auto-refresh
 if st.sidebar.button("⏸️ Pause Auto-Refresh" if st.session_state.auto_refresh_enabled else "▶️ Resume Auto-Refresh"):
     st.session_state.auto_refresh_enabled = not st.session_state.auto_refresh_enabled
 
-# Manual refresh button
+# Manual refresh
 if st.sidebar.button("🔄 Manual Refresh"):
     st.experimental_rerun()
 
-# Display scores
+# Main content
 for sport in selected_sports:
     display_scores(sport, logo_size)
 
-# Safe rerun trigger after rendering is complete
+# Delayed rerun if triggered
 if st.session_state.run_pending_rerun:
     st.session_state.run_pending_rerun = False
     st.experimental_rerun()
