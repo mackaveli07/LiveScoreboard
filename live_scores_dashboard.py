@@ -1,18 +1,21 @@
 import streamlit as st
 import requests
-from streamlit_extras.st_autorefresh import st_autorefresh
+import time
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
-# ⏱️ Optional Auto-Refresh Toggle
-auto_refresh = st.sidebar.checkbox("Auto-Refresh Every 5s", value=True)
-if auto_refresh:
-    st_autorefresh(interval=5000, limit=None, key="auto_refresh_toggle")
-else:
-    if st.sidebar.button("🔄 Manual Refresh"):
-        st.experimental_rerun()
+# 🎯 Supported Sports
+SPORTS = {
+    "NFL (Football)": {"path": "football/nfl"},
+    "NBA (Basketball)": {"path": "basketball/nba"},
+    "MLB (Baseball)": {"path": "baseball/mlb"},
+    "NHL (Hockey)": {"path": "hockey/nhl"}
+}
 
-# 💅 Custom CSS for subtle animation
+# 🧠 Score cache for change detection
+game_score_cache = {}
+
+# 💅 CSS for animations
 st.markdown("""
     <style>
     .score {
@@ -35,17 +38,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🎯 Supported Sports
-SPORTS = {
-    "NFL (Football)": {"path": "football/nfl"},
-    "NBA (Basketball)": {"path": "basketball/nba"},
-    "MLB (Baseball)": {"path": "baseball/mlb"},
-    "NHL (Hockey)": {"path": "hockey/nhl"}
-}
-
-# 🧠 Score cache for change detection
-game_score_cache = {}
-
 def get_scores(sport_path):
     url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard"
     try:
@@ -66,7 +58,6 @@ def get_scores(sport_path):
         clock = competition['status'].get('displayClock', "")
         possession = competition.get("situation", {}).get("possession")
 
-        # MLB: inning and half
         inning = competition['status'].get('period', "")
         inning_half = competition['status'].get('half', "") if 'half' in competition['status'] else ""
         inning_display = f"Inning: {inning} ({inning_half.title()})" if inning and inning_half else ""
@@ -167,5 +158,19 @@ selected_sports = st.sidebar.multiselect(
 )
 logo_size = st.sidebar.slider("Team Logo Size", 40, 100, 60)
 
+# 🔄 Manual refresh
+if st.sidebar.button("🔄 Refresh Scores"):
+    st.experimental_rerun()
+
+# 🔁 Auto refresh every 5 seconds using session state
+if "last_refresh" not in st.session_state:
+    st.session_state.last_refresh = time.time()
+else:
+    now = time.time()
+    if now - st.session_state.last_refresh > 5:
+        st.session_state.last_refresh = now
+        st.experimental_rerun()
+
+# 🧾 Display scores
 for sport in selected_sports:
     display_scores(sport, logo_size)
