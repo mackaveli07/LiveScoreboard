@@ -1,8 +1,41 @@
 import streamlit as st
 import requests
+from streamlit_extras.st_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
+# ⏱️ Optional Auto-Refresh Toggle
+auto_refresh = st.sidebar.checkbox("Auto-Refresh Every 5s", value=True)
+if auto_refresh:
+    st_autorefresh(interval=5000, limit=None, key="auto_refresh_toggle")
+else:
+    if st.sidebar.button("🔄 Manual Refresh"):
+        st.experimental_rerun()
+
+# 💅 Custom CSS for subtle animation
+st.markdown("""
+    <style>
+    .score {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1f77b4;
+        transition: all 0.4s ease-in-out;
+    }
+
+    .score-change {
+        animation: pop 0.5s ease;
+        color: #28a745;
+    }
+
+    @keyframes pop {
+        0% { transform: scale(1); opacity: 0.6; }
+        50% { transform: scale(1.3); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# 🎯 Supported Sports
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl"},
     "NBA (Basketball)": {"path": "basketball/nba"},
@@ -10,7 +43,7 @@ SPORTS = {
     "NHL (Hockey)": {"path": "hockey/nhl"}
 }
 
-# Cache to detect score changes
+# 🧠 Score cache for change detection
 game_score_cache = {}
 
 def get_scores(sport_path):
@@ -33,7 +66,7 @@ def get_scores(sport_path):
         clock = competition['status'].get('displayClock', "")
         possession = competition.get("situation", {}).get("possession")
 
-        # MLB specific: inning and top/bottom
+        # MLB: inning and half
         inning = competition['status'].get('period', "")
         inning_half = competition['status'].get('half', "") if 'half' in competition['status'] else ""
         inning_display = f"Inning: {inning} ({inning_half.title()})" if inning and inning_half else ""
@@ -82,7 +115,6 @@ def display_scores(sport_name, logo_size):
         clock = f"<span style='font-weight:bold;color:#d62728;'>Time:</span> {game['clock']}" if game['clock'] else ""
         stats = game.get("stats", [])
 
-        # Determine if score has changed
         game_id = game['id']
         previous_scores = game_score_cache.get(game_id, (None, None))
         team1_changed = previous_scores[0] != team1["score"]
@@ -96,10 +128,8 @@ def display_scores(sport_name, logo_size):
             with col1:
                 st.image(team1["logo"], width=logo_size)
                 st.markdown(f"### {team1['name']}")
-                if team1_changed:
-                    st.markdown(f"<span style='color:green; font-weight:bold;'>Score: {team1['score']} ⬆</span>", unsafe_allow_html=True)
-                else:
-                    st.markdown(f"**Score:** {team1['score']}")
+                score_class_1 = "score score-change" if team1_changed else "score"
+                st.markdown(f"<div class='{score_class_1}'>{team1['score']}</div>", unsafe_allow_html=True)
                 if team1["possession"]:
                     st.markdown("🏈 Possession")
 
@@ -114,10 +144,8 @@ def display_scores(sport_name, logo_size):
             with col3:
                 st.image(team2["logo"], width=logo_size)
                 st.markdown(f"### {team2['name']}")
-                if team2_changed:
-                    st.markdown(f"<span style='color:green; font-weight:bold;'>Score: {team2['score']} ⬆</span>", unsafe_allow_html=True)
-                else:
-                    st.markdown(f"**Score:** {team2['score']}")
+                score_class_2 = "score score-change" if team2_changed else "score"
+                st.markdown(f"<div class='{score_class_2}'>{team2['score']}</div>", unsafe_allow_html=True)
                 if team2["possession"]:
                     st.markdown("🏈 Possession")
 
@@ -128,9 +156,9 @@ def display_scores(sport_name, logo_size):
                 else:
                     st.markdown("No stats available.")
 
-# UI
+# 🎨 UI Layout
 st.title("📻 Live Sports Scores Dashboard")
-st.markdown("Real-time updates with team logos. Sleek modern UI.")
+st.markdown("Real-time updates with team logos, clean animations, and sleek UI.")
 
 selected_sports = st.sidebar.multiselect(
     "Select sports to display:",
@@ -138,9 +166,6 @@ selected_sports = st.sidebar.multiselect(
     default=list(SPORTS.keys())
 )
 logo_size = st.sidebar.slider("Team Logo Size", 40, 100, 60)
-
-if st.sidebar.button("Refresh Scores"):
-    st.experimental_rerun()
 
 for sport in selected_sports:
     display_scores(sport, logo_size)
