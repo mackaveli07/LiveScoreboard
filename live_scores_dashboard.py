@@ -156,7 +156,11 @@ def display_scores(sport_name):
             with st.expander("📊 Show Game Stats"):
                 if stats:
                     for stat in stats:
-                        st.markdown(f"**{stat.get('name', '')}**: {stat.get('displayValue', '')}")
+                        col_stat1, col_stat2 = st.columns([2, 3])
+                        with col_stat1:
+                            st.markdown(f"**{stat.get('name', '')}**")
+                        with col_stat2:
+                            st.markdown(f"{stat.get('displayValue', '')}")
                 else:
                     st.markdown("No stats available.")
 
