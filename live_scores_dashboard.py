@@ -26,10 +26,10 @@ if st.session_state.auto_refresh and time.time() - st.session_state.last_refresh
     st.rerun()
 
 SPORTS = {
-    "NFL (Football)": {"path": "football/nfl"},
-    "NBA (Basketball)": {"path": "basketball/nba"},
-    "MLB (Baseball)": {"path": "baseball/mlb"},
-    "NHL (Hockey)": {"path": "hockey/nhl"}
+    "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
+    "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
+    "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏒"}
 }
 
 # Expanded team color mapping
@@ -122,7 +122,7 @@ def display_scores(sport_name, date):
     if not scores:
         return
 
-    st.markdown(f"## 🏆 {sport_name}")
+    st.markdown(f"## {sport_config['icon']} {sport_name}")
 
     for game in scores:
         team1, team2 = game["teams"]
