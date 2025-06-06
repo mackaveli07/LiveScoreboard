@@ -84,7 +84,9 @@ def get_scores(sport_path, date=None):
         teams = comp['competitors']
         if len(teams) != 2:
             continue
-        t1, t2 = teams
+
+        home = [t for t in teams if t['homeAway'] == 'home'][0]
+        away = [t for t in teams if t['homeAway'] == 'away'][0]
 
         possession = comp.get("situation", {}).get("possession")
         on_first = comp.get("situation", {}).get("onFirst")
@@ -96,18 +98,18 @@ def get_scores(sport_path, date=None):
             "status": comp['status']['type']['shortDetail'],
             "teams": [
                 {
-                    "name": t1['team']['displayName'],
-                    "score": t1['score'],
-                    "logo": t1['team']['logo'],
-                    "abbreviation": t1['team']['abbreviation'],
-                    "possession": t1['team']['id'] == possession
+                    "name": away['team']['displayName'],
+                    "score": away['score'],
+                    "logo": away['team']['logo'],
+                    "abbreviation": away['team']['abbreviation'],
+                    "possession": away['team']['id'] == possession
                 },
                 {
-                    "name": t2['team']['displayName'],
-                    "score": t2['score'],
-                    "logo": t2['team']['logo'],
-                    "abbreviation": t2['team']['abbreviation'],
-                    "possession": t2['team']['id'] == possession
+                    "name": home['team']['displayName'],
+                    "score": home['score'],
+                    "logo": home['team']['logo'],
+                    "abbreviation": home['team']['abbreviation'],
+                    "possession": home['team']['id'] == possession
                 }
             ],
             "period": comp['status'].get("period", ""),
@@ -159,42 +161,3 @@ def display_scores(sport_name, date):
                     <div class='base second {'occupied' if game['on_second'] else ''}'></div>
                     <div class='base third {'occupied' if game['on_third'] else ''}'></div>
                     <div class='base first {'occupied' if game['on_first'] else ''}'></div>
-                </div>
-                """
-                st.markdown(diamond_html, unsafe_allow_html=True)
-
-        with col3:
-            st.image(t2['logo'], width=60)
-            st.markdown(f"### {t2['name']}")
-            st.markdown(flash2, unsafe_allow_html=True)
-            if t2['possession']:
-                st.markdown("🏈 Possession")
-
-        st.markdown("---")
-
-# Sidebar controls
-st.sidebar.title("Controls")
-if "auto_refresh" not in st.session_state:
-    st.session_state.auto_refresh = False
-
-if st.sidebar.button(":arrows_counterclockwise: Refresh Now"):
-    st.cache_data.clear()
-    st.rerun()
-
-if st.sidebar.button(":pause_button: Toggle Auto-Refresh"):
-    st.session_state.auto_refresh = not st.session_state.auto_refresh
-
-# Main content
-st.title(":classical_building: Live Sports Scores Dashboard")
-st.markdown("Real-time updates with team logos and stats.")
-
-selected_date = st.sidebar.date_input("Select date:", datetime.today())
-selected_sport = st.sidebar.selectbox("Choose a sport:", list(SPORTS.keys()))
-formatted_date = selected_date.strftime("%Y%m%d")
-
-display_scores(selected_sport, formatted_date)
-
-if st.session_state.auto_refresh:
-    time.sleep(2)
-    st.cache_data.clear()
-    st.rerun()
