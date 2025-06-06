@@ -32,6 +32,8 @@ if "auto_refresh" not in st.session_state:
     st.session_state.auto_refresh = False
 if "schedule_cache" not in st.session_state:
     st.session_state.schedule_cache = {}
+if "cache_timestamps" not in st.session_state:
+    st.session_state.cache_timestamps = {}
 
 # Sidebar controls
 col1, col2 = st.sidebar.columns(2)
@@ -46,10 +48,14 @@ if st.session_state.auto_refresh and now - st.session_state.last_refresh > 5:
     st.session_state.last_refresh = now
     st.rerun()
 
-# Invalidate cache after 5s
-expired_keys = [k for k, v in st.session_state.schedule_cache.items() if now - st.session_state.last_refresh > 5]
+# Invalidate expired cache keys
+expired_keys = [
+    k for k, ts in st.session_state.cache_timestamps.items()
+    if now - ts > 5
+]
 for k in expired_keys:
-    del st.session_state.schedule_cache[k]
+    st.session_state.schedule_cache.pop(k, None)
+    st.session_state.cache_timestamps.pop(k, None)
 
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
@@ -109,7 +115,7 @@ def get_scores(sport_path, date=None):
                 "name": team_info.get("displayName", ""),
                 "score": team.get("score", "0"),
                 "logo": team_info.get("logo", ""),
-                "abbreviation": team_info.get("abbreviation", ""),
+                "abbreviation": team_info.get("abbreviation", team_info.get("displayName", "")),
                 "id": team_info.get("id", ""),
                 "possession": team_info.get("id") == possession
             })
@@ -139,6 +145,7 @@ def get_scores(sport_path, date=None):
         })
 
     st.session_state.schedule_cache[cache_key] = results
+    st.session_state.cache_timestamps[cache_key] = time.time()
     return results
 
 def display_scores(sport_name, date):
