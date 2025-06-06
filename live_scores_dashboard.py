@@ -31,9 +31,9 @@ st.markdown("""
     .base.occupied {
         background-color: green;
     }
-    .first { top: 0; left: 50%; transform: translate(-50%, -50%); }
-    .second { top: 50%; left: 100%; transform: translate(-50%, -50%); }
-    .third { top: 100%; left: 50%; transform: translate(-50%, -50%); }
+    .first { bottom: 0; left: 0; transform: translate(-50%, 50%); }
+    .second { top: 0; left: 50%; transform: translate(-50%, -50%); }
+    .third { bottom: 0; right: 0; transform: translate(50%, 50%); }
     </style>
 """, unsafe_allow_html=True)
 
@@ -41,7 +41,7 @@ SPORTS = {
     "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
     "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
     "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏂"}
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🂂"}
 }
 
 TEAM_COLORS = {
@@ -141,8 +141,8 @@ def display_scores(sport_name, date):
                 st.markdown(f"Inning: {game['period']}")
                 diamond_html = f"""
                 <div class='diamond'>
-                    <div class='base first {'occupied' if game['on_first'] else ''}'></div>
                     <div class='base second {'occupied' if game['on_second'] else ''}'></div>
+                    <div class='base first {'occupied' if game['on_first'] else ''}'></div>
                     <div class='base third {'occupied' if game['on_third'] else ''}'></div>
                 </div>
                 """
