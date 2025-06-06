@@ -9,33 +9,11 @@ st.set_page_config(page_title="Live Sports Scores", layout="wide")
 # Animation CSS
 st.markdown("""
     <style>
-    @keyframes fadeIn {
-        0% {opacity: 0;}
-        100% {opacity: 1;}
-    }
-    .fade-in {
-        animation: fadeIn 0.8s ease-in;
-    }
     .blinking {
         animation: blinker 1s linear infinite;
     }
     @keyframes blinker {
         50% { opacity: 0.5; }
-    }
-    .refresh-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(255, 255, 255, 0.8);
-        z-index: 9999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 2em;
-        font-weight: bold;
-        animation: fadeIn 0.5s ease-in;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -123,7 +101,7 @@ def display_scores(sport_name, date):
         with col1:
             st.image(t1['logo'], width=60)
             st.markdown(f"### {t1['name']}")
-            st.markdown(f"<div class='fade-in{b1}'><strong>{t1['score']}</strong></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='{b1}'><strong>{t1['score']}</strong></div>", unsafe_allow_html=True)
             if t1['possession']:
                 st.markdown("🏈 Possession")
 
@@ -136,7 +114,7 @@ def display_scores(sport_name, date):
         with col3:
             st.image(t2['logo'], width=60)
             st.markdown(f"### {t2['name']}")
-            st.markdown(f"<div class='fade-in{b2}'><strong>{t2['score']}</strong></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='{b2}'><strong>{t2['score']}</strong></div>", unsafe_allow_html=True)
             if t2['possession']:
                 st.markdown("🏈 Possession")
 
@@ -149,14 +127,10 @@ if "auto_refresh" not in st.session_state:
 
 if st.sidebar.button("🔁 Refresh Now"):
     st.cache_data.clear()
+    st.rerun()
 
 if st.sidebar.button("⏸ Toggle Auto-Refresh"):
     st.session_state.auto_refresh = not st.session_state.auto_refresh
-
-if st.session_state.auto_refresh:
-    time.sleep(2)
-    st.cache_data.clear()
-    st.rerun()
 
 # Main content
 st.title("🏛 Live Sports Scores Dashboard")
@@ -167,3 +141,8 @@ selected_sport = st.sidebar.selectbox("Choose a sport:", list(SPORTS.keys()))
 formatted_date = selected_date.strftime("%Y%m%d")
 
 display_scores(selected_sport, formatted_date)
+
+if st.session_state.auto_refresh:
+    time.sleep(2)
+    st.cache_data.clear()
+    st.rerun()
