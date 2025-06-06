@@ -4,7 +4,6 @@ import time
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
-# Session state setup
 if "auto_refresh_enabled" not in st.session_state:
     st.session_state.auto_refresh_enabled = True
 if "last_refresh" not in st.session_state:
@@ -12,13 +11,11 @@ if "last_refresh" not in st.session_state:
 if "run_pending_rerun" not in st.session_state:
     st.session_state.run_pending_rerun = False
 
-# Handle auto-refresh
 now = time.time()
 if st.session_state.auto_refresh_enabled and now - st.session_state.last_refresh > 5:
     st.session_state.last_refresh = now
     st.session_state.run_pending_rerun = True
 
-# Supported sports
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl"},
     "NBA (Basketball)": {"path": "basketball/nba"},
@@ -46,6 +43,13 @@ st.markdown("""
         50% { transform: scale(1.2); opacity: 1; }
         100% { transform: scale(1); opacity: 1; }
     }
+    .stat-card {
+        background-color: #f5f7fa;
+        padding: 10px 15px;
+        margin: 5px 0;
+        border-left: 5px solid #1f77b4;
+        border-radius: 6px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -69,7 +73,7 @@ def get_scores(sport_path):
         clock = competition['status'].get('displayClock', "")
         possession = competition.get("situation", {}).get("possession")
 
-        # Inning display for MLB
+        # MLB-specific
         inning = competition['status'].get('period', "")
         inning_half = competition['status'].get('half', "")
         inning_display = f"Inning: {inning} ({inning_half.title()})" if inning and inning_half else ""
@@ -90,16 +94,18 @@ def get_scores(sport_path):
                 "possession": team_info.get("id") == possession
             })
 
-        # Collect team stats (available for all sports if present)
+        # Gather stats and filter out averages
         stats = []
         for team in competition.get("competitors", []):
             team_stats = team.get("statistics", [])
             for stat in team_stats:
-                stats.append({
-                    "team": team["team"]["displayName"],
-                    "name": stat.get("name", ""),
-                    "value": stat.get("displayValue", "")
-                })
+                stat_name = stat.get("name", "").lower()
+                if "avg" not in stat_name and "average" not in stat_name:
+                    stats.append({
+                        "team": team["team"]["displayName"],
+                        "name": stat.get("name", ""),
+                        "value": stat.get("displayValue", "")
+                    })
 
         results.append({
             "id": game["id"],
@@ -161,18 +167,24 @@ def display_scores(sport_name, logo_size):
                 if team2["possession"]:
                     st.markdown("🏈 Possession")
 
-            with st.expander("Show Game Stats"):
+            with st.expander("📊 Show Game Stats"):
                 if stats:
                     for stat in stats:
-                        st.markdown(f"- **{stat['team']}**: {stat['name']} – {stat['value']}")
+                        st.markdown(
+                            f"""
+                            <div class="stat-card">
+                                <strong>{stat['team']}</strong>: {stat['name']} – {stat['value']}
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
                 else:
                     st.markdown("No stats available.")
 
 # UI
 st.title("📻 Live Sports Scores Dashboard")
-st.markdown("Real-time scoreboard with clean design and subtle animations.")
+st.markdown("Real-time scoreboard with live logos, clean visuals, and in-depth game data.")
 
-# Sidebar Controls
 selected_sports = st.sidebar.multiselect(
     "Select sports to display:",
     list(SPORTS.keys()),
@@ -188,11 +200,11 @@ if st.sidebar.button("⏸️ Pause Auto-Refresh" if st.session_state.auto_refres
 if st.sidebar.button("🔄 Manual Refresh"):
     st.experimental_rerun()
 
-# Main content
+# Render selected sports
 for sport in selected_sports:
     display_scores(sport, logo_size)
 
-# Delayed rerun if triggered
+# Trigger rerun if auto-refresh is active
 if st.session_state.run_pending_rerun:
     st.session_state.run_pending_rerun = False
     st.experimental_rerun()
