@@ -34,10 +34,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 SPORTS = {
-    "NFL (Football)": {"path": "football/nfl", "icon": "\ud83c\udfc8"},
-    "NBA (Basketball)": {"path": "basketball/nba", "icon": "\ud83c\udfc0"},
-    "MLB (Baseball)": {"path": "baseball/mlb", "icon": "\u26be"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "\ud83c\udfc2"}
+    "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
+    "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
+    "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏂"}
 }
 
 TEAM_COLORS = {
@@ -125,7 +125,7 @@ def display_scores(sport_name, date):
             st.markdown(f"### {t1['name']}")
             st.markdown(f"<div class='{b1}'><strong>{t1['score']}</strong></div>", unsafe_allow_html=True)
             if t1['possession']:
-                st.markdown("\ud83c\udfc8 Possession")
+                st.markdown("🏈 Possession")
 
         with col2:
             st.markdown(f"### VS")
@@ -147,7 +147,7 @@ def display_scores(sport_name, date):
             st.markdown(f"### {t2['name']}")
             st.markdown(f"<div class='{b2}'><strong>{t2['score']}</strong></div>", unsafe_allow_html=True)
             if t2['possession']:
-                st.markdown("\ud83c\udfc8 Possession")
+                st.markdown("🏈 Possession")
 
         st.markdown("---")
 
@@ -156,15 +156,15 @@ st.sidebar.title("Controls")
 if "auto_refresh" not in st.session_state:
     st.session_state.auto_refresh = False
 
-if st.sidebar.button("\ud83d\udd01 Refresh Now"):
+if st.sidebar.button(":arrows_counterclockwise: Refresh Now"):
     st.cache_data.clear()
     st.rerun()
 
-if st.sidebar.button("\u23f8 Toggle Auto-Refresh"):
+if st.sidebar.button(":pause_button: Toggle Auto-Refresh"):
     st.session_state.auto_refresh = not st.session_state.auto_refresh
 
 # Main content
-st.title("\ud83c\udfdb Live Sports Scores Dashboard")
+st.title(":classical_building: Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos and stats.")
 
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
