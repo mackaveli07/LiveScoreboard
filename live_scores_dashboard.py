@@ -4,6 +4,20 @@ import time
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
+# ⏯️ Initialize auto-refresh toggle
+if "auto_refresh_enabled" not in st.session_state:
+    st.session_state.auto_refresh_enabled = True
+
+# 🔁 Auto refresh every 5 seconds if enabled
+if st.session_state.auto_refresh_enabled:
+    if "last_refresh" not in st.session_state:
+        st.session_state.last_refresh = time.time()
+    else:
+        now = time.time()
+        if now - st.session_state.last_refresh > 5:
+            st.session_state.last_refresh = now
+            st.experimental_rerun()
+
 # 🎯 Supported Sports
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl"},
@@ -15,7 +29,7 @@ SPORTS = {
 # 🧠 Score cache for change detection
 game_score_cache = {}
 
-# 💅 CSS for animations
+# 💅 CSS for score animation
 st.markdown("""
     <style>
     .score {
@@ -32,7 +46,7 @@ st.markdown("""
 
     @keyframes pop {
         0% { transform: scale(1); opacity: 0.6; }
-        50% { transform: scale(1.3); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 1; }
         100% { transform: scale(1); opacity: 1; }
     }
     </style>
@@ -151,6 +165,7 @@ def display_scores(sport_name, logo_size):
 st.title("📻 Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos, clean animations, and sleek UI.")
 
+# Sidebar controls
 selected_sports = st.sidebar.multiselect(
     "Select sports to display:",
     list(SPORTS.keys()),
@@ -158,19 +173,14 @@ selected_sports = st.sidebar.multiselect(
 )
 logo_size = st.sidebar.slider("Team Logo Size", 40, 100, 60)
 
+# ⏯️ Auto-refresh toggle
+if st.sidebar.button("⏸️ Pause Auto-Refresh" if st.session_state.auto_refresh_enabled else "▶️ Resume Auto-Refresh"):
+    st.session_state.auto_refresh_enabled = not st.session_state.auto_refresh_enabled
+
 # 🔄 Manual refresh
 if st.sidebar.button("🔄 Refresh Scores"):
     st.experimental_rerun()
 
-# 🔁 Auto refresh every 5 seconds using session state
-if "last_refresh" not in st.session_state:
-    st.session_state.last_refresh = time.time()
-else:
-    now = time.time()
-    if now - st.session_state.last_refresh > 5:
-        st.session_state.last_refresh = now
-        st.experimental_rerun()
-
-# 🧾 Display scores
+# Display scores
 for sport in selected_sports:
     display_scores(sport, logo_size)
