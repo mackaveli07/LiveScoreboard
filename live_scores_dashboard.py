@@ -1,7 +1,11 @@
 import streamlit as st
 import requests
+from streamlit_extras.st_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
+
+# Auto-refresh every 5 seconds
+st_autorefresh(interval=5000, limit=None, key="auto-refresh")
 
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl"},
@@ -114,7 +118,7 @@ def display_scores(sport_name):
             with st.expander("📊 Show Game Stats"):
                 if stats:
                     for stat in stats:
-                        st.markdown(f"- {stat.get('name', '')}: {stat.get('displayValue', '')}")
+                        st.markdown(f"**{stat.get('name', '')}**: {stat.get('displayValue', '')}")
                 else:
                     st.markdown("No stats available.")
 
