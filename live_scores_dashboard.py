@@ -34,6 +34,18 @@ st.markdown("""
     .first { bottom: 0; right: 0; transform: translate(50%, 50%) rotate(45deg); }
     .second { top: 0; left: 50%; transform: translate(-50%, -50%) rotate(45deg); }
     .third { bottom: 0; left: 0; transform: translate(-50%, 50%) rotate(45deg); }
+    .scoring-indicator {
+        animation: flash 1s infinite;
+        font-weight: bold;
+        padding: 0.25em 0.5em;
+        border-radius: 5px;
+        display: inline-block;
+    }
+    @keyframes flash {
+        0% { opacity: 1; }
+        50% { opacity: 0.2; }
+        100% { opacity: 1; }
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -41,7 +53,7 @@ SPORTS = {
     "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
     "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
     "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "💂"}
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🛂"}
 }
 
 TEAM_COLORS = {
@@ -123,11 +135,14 @@ def display_scores(sport_name, date):
         b1 = " blinking" if prev[0] != t1['score'] and prev[0] is not None else ""
         b2 = " blinking" if prev[1] != t2['score'] and prev[1] is not None else ""
 
+        flash1 = f"<div class='scoring-indicator' style='background:{TEAM_COLORS.get(t1['abbreviation'], '#ccc')}'>{t1['score']}</div>" if b1 else f"<strong>{t1['score']}</strong>"
+        flash2 = f"<div class='scoring-indicator' style='background:{TEAM_COLORS.get(t2['abbreviation'], '#ccc')}'>{t2['score']}</div>" if b2 else f"<strong>{t2['score']}</strong>"
+
         col1, col2, col3 = st.columns([4, 2, 4])
         with col1:
             st.image(t1['logo'], width=60)
             st.markdown(f"### {t1['name']}")
-            st.markdown(f"<div class='{b1}'><strong>{t1['score']}</strong></div>", unsafe_allow_html=True)
+            st.markdown(flash1, unsafe_allow_html=True)
             if t1['possession']:
                 st.markdown("🏈 Possession")
 
@@ -151,7 +166,7 @@ def display_scores(sport_name, date):
         with col3:
             st.image(t2['logo'], width=60)
             st.markdown(f"### {t2['name']}")
-            st.markdown(f"<div class='{b2}'><strong>{t2['score']}</strong></div>", unsafe_allow_html=True)
+            st.markdown(flash2, unsafe_allow_html=True)
             if t2['possession']:
                 st.markdown("🏈 Possession")
 
