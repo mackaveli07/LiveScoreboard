@@ -12,6 +12,9 @@ if "last_refresh" not in st.session_state:
 if "auto_refresh" not in st.session_state:
     st.session_state.auto_refresh = False
 
+if "schedule_cache" not in st.session_state:
+    st.session_state.schedule_cache = {}
+
 # Sidebar controls
 col1, col2 = st.sidebar.columns(2)
 if col1.button("🔁 Refresh Now"):
@@ -32,23 +35,21 @@ SPORTS = {
     "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏒"}
 }
 
-# Expanded team color mapping
 TEAM_COLORS = {
-    # NFL
     "NE": "#002244", "DAL": "#003594", "GB": "#203731", "KC": "#E31837", "PHI": "#004C54",
     "SF": "#AA0000", "CHI": "#0B162A", "PIT": "#FFB612",
-    # NBA
     "LAL": "#552583", "BOS": "#007A33", "GSW": "#1D428A", "MIA": "#98002E", "NYK": "#F58426",
-    # MLB
     "NYY": "#003087", "BOS": "#BD3039", "LAD": "#005A9C", "CHC": "#0E3386", "HOU": "#EB6E1F",
-    # NHL
     "NYR": "#0038A8", "CHI": "#CC0000", "BOS": "#FFB81C", "TOR": "#00205B", "VGK": "#B4975A"
 }
 
-# Cache for scores
 game_score_cache = {}
 
 def get_scores(sport_path, date=None):
+    cache_key = f"{sport_path}-{date}"
+    if cache_key in st.session_state.schedule_cache:
+        return st.session_state.schedule_cache[cache_key]
+
     base_url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard"
     if date:
         base_url += f"?dates={date}"
@@ -114,6 +115,7 @@ def get_scores(sport_path, date=None):
             "stats": stats
         })
 
+    st.session_state.schedule_cache[cache_key] = results
     return results
 
 def display_scores(sport_name, date):
@@ -189,13 +191,7 @@ st.title("📻 Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos and stats.")
 
 date_selection = st.sidebar.date_input("Select date (for past games):", datetime.today())
-selected_sports = st.sidebar.multiselect(
-    "Select sports to display:",
-    list(SPORTS.keys()),
-    default=list(SPORTS.keys())
-)
+selected_sport = st.sidebar.selectbox("Select a sport:", list(SPORTS.keys()))
 
 formatted_date = date_selection.strftime("%Y%m%d")
-
-for sport in selected_sports:
-    display_scores(sport, formatted_date)
+display_scores(selected_sport, formatted_date)
