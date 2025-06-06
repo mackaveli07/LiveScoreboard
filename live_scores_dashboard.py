@@ -15,14 +15,29 @@ st.markdown("""
     @keyframes blinker {
         50% { opacity: 0.5; }
     }
+    .base-graphic {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        margin-top: 5px;
+    }
+    .base {
+        width: 15px;
+        height: 15px;
+        background-color: lightgray;
+        border-radius: 50%;
+    }
+    .occupied {
+        background-color: green;
+    }
     </style>
 """, unsafe_allow_html=True)
 
 SPORTS = {
-    "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
-    "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
-    "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏂"}
+    "NFL (Football)": {"path": "football/nfl", "icon": "\ud83c\udfc8"},
+    "NBA (Basketball)": {"path": "basketball/nba", "icon": "\ud83c\udfc0"},
+    "MLB (Baseball)": {"path": "baseball/mlb", "icon": "\u26be"},
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "\ud83c\udfc2"}
 }
 
 TEAM_COLORS = {
@@ -56,6 +71,10 @@ def get_scores(sport_path, date=None):
         t1, t2 = teams
 
         possession = comp.get("situation", {}).get("possession")
+        on_first = comp.get("situation", {}).get("onFirst")
+        on_second = comp.get("situation", {}).get("onSecond")
+        on_third = comp.get("situation", {}).get("onThird")
+
         results.append({
             "id": event['id'],
             "status": comp['status']['type']['shortDetail'],
@@ -76,7 +95,10 @@ def get_scores(sport_path, date=None):
                 }
             ],
             "period": comp['status'].get("period", ""),
-            "clock": comp['status'].get("displayClock", "")
+            "clock": comp['status'].get("displayClock", ""),
+            "on_first": on_first,
+            "on_second": on_second,
+            "on_third": on_third
         })
 
     return results
@@ -103,20 +125,29 @@ def display_scores(sport_name, date):
             st.markdown(f"### {t1['name']}")
             st.markdown(f"<div class='{b1}'><strong>{t1['score']}</strong></div>", unsafe_allow_html=True)
             if t1['possession']:
-                st.markdown("🏈 Possession")
+                st.markdown("\ud83c\udfc8 Possession")
 
         with col2:
             st.markdown(f"### VS")
             st.markdown(f"**{game['status']}**")
-            st.markdown(f"Period: {game['period']}")
-            st.markdown(f"Clock: {game['clock']}")
+            if sport_name != "MLB (Baseball)":
+                st.markdown(f"Period: {game['period']}")
+                st.markdown(f"Clock: {game['clock']}")
+            else:
+                st.markdown(f"Inning: {game['period']}")
+                base_html = "<div class='base-graphic'>"
+                base_html += f"<div class='base{' occupied' if game['on_first'] else ''}'></div>"
+                base_html += f"<div class='base{' occupied' if game['on_second'] else ''}'></div>"
+                base_html += f"<div class='base{' occupied' if game['on_third'] else ''}'></div>"
+                base_html += "</div>"
+                st.markdown(base_html, unsafe_allow_html=True)
 
         with col3:
             st.image(t2['logo'], width=60)
             st.markdown(f"### {t2['name']}")
             st.markdown(f"<div class='{b2}'><strong>{t2['score']}</strong></div>", unsafe_allow_html=True)
             if t2['possession']:
-                st.markdown("🏈 Possession")
+                st.markdown("\ud83c\udfc8 Possession")
 
         st.markdown("---")
 
@@ -125,15 +156,15 @@ st.sidebar.title("Controls")
 if "auto_refresh" not in st.session_state:
     st.session_state.auto_refresh = False
 
-if st.sidebar.button("🔁 Refresh Now"):
+if st.sidebar.button("\ud83d\udd01 Refresh Now"):
     st.cache_data.clear()
     st.rerun()
 
-if st.sidebar.button("⏸ Toggle Auto-Refresh"):
+if st.sidebar.button("\u23f8 Toggle Auto-Refresh"):
     st.session_state.auto_refresh = not st.session_state.auto_refresh
 
 # Main content
-st.title("🏛 Live Sports Scores Dashboard")
+st.title("\ud83c\udfdb Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos and stats.")
 
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
