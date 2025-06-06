@@ -10,8 +10,9 @@ SPORTS = {
     "NHL (Hockey)": {"path": "hockey/nhl"}
 }
 
-# Cache to detect score changes
-game_score_cache = {}
+# Cache using session_state
+if "game_score_cache" not in st.session_state:
+    st.session_state.game_score_cache = {}
 
 def get_scores(sport_path):
     url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard"
@@ -27,24 +28,29 @@ def get_scores(sport_path):
     results = []
 
     for game in games:
-        competition = game['competitions'][0]
-        status = competition['status']['type']['shortDetail']
-        period = competition['status'].get('period', "")
-        clock = competition['status'].get('displayClock', "")
+        competition = game.get('competitions', [{}])[0]
+        status = competition.get('status', {}).get('type', {}).get('shortDetail', "")
+        period = competition.get('status', {}).get('period', "")
+        clock = competition.get('status', {}).get('displayClock', "")
         possession = competition.get("situation", {}).get("possession")
 
         # MLB specific: inning and top/bottom
-        inning = competition['status'].get('period', "")
-        inning_half = competition['status'].get('half', "") if 'half' in competition['status'] else ""
-        inning_display = f"Inning: {inning} ({inning_half.title()})" if inning and inning_half else ""
+        inning = competition.get('status', {}).get('period', "")
+        inning_half = competition.get('status', {}).get('half', "")
+        inning_display = ""
+        if inning:
+            if isinstance(inning_half, str) and inning_half:
+                inning_display = f"Inning: {inning} ({inning_half.title()})"
+            else:
+                inning_display = f"Inning: {inning}"
 
-        teams = competition['competitors']
+        teams = competition.get('competitors', [])
         if len(teams) != 2:
             continue
 
         team_data = []
         for team in teams:
-            team_info = team['team']
+            team_info = team.get('team', {})
             team_data.append({
                 "name": team_info.get("displayName", ""),
                 "score": team.get("score", "0"),
@@ -57,10 +63,10 @@ def get_scores(sport_path):
         stats = competition.get("statistics", [])
 
         results.append({
-            "id": game["id"],
+            "id": game.get("id", ""),
             "status": status,
             "teams": team_data,
-            "period": inning_display if "mlb" in sport_path else period,
+            "period": inning_display if "mlb" in sport_path else str(period),
             "clock": clock,
             "stats": stats
         })
@@ -74,51 +80,64 @@ def display_scores(sport_name, logo_size):
         return
 
     st.markdown(f"## 🏆 {sport_name}")
+    game_score_cache = st.session_state.game_score_cache
 
     for game in scores:
         team1, team2 = game["teams"]
         status = game["status"]
-        period = f"<span style='font-weight:bold;color:#1f77b4;'>Period:</span> {game['period']}" if game['period'] else ""
-        clock = f"<span style='font-weight:bold;color:#d62728;'>Time:</span> {game['clock']}" if game['clock'] else ""
+        period = game.get("period", "")
+        clock = game.get("clock", "")
         stats = game.get("stats", [])
 
-        # Determine if score has changed
-        game_id = game['id']
+        # Format HTML safely
+        period_display = f"<span style='font-weight:bold;color:#1f77b4;'>Period:</span> {period}" if period else ""
+        clock_display = f"<span style='font-weight:bold;color:#d62728;'>Time:</span> {clock}" if clock else ""
+
+        # Detect score changes
+        game_id = game.get("id", "")
         previous_scores = game_score_cache.get(game_id, (None, None))
-        team1_changed = previous_scores[0] != team1["score"]
-        team2_changed = previous_scores[1] != team2["score"]
-        game_score_cache[game_id] = (team1["score"], team2["score"])
+        team1_changed = previous_scores[0] != team1.get("score", "0")
+        team2_changed = previous_scores[1] != team2.get("score", "0")
+        game_score_cache[game_id] = (team1.get("score", "0"), team2.get("score", "0"))
 
         with st.container():
             st.markdown("---")
             col1, col2, col3 = st.columns([4, 2, 4])
 
             with col1:
-                st.image(team1["logo"], width=logo_size)
+                if team1["logo"]:
+                    st.image(team1["logo"], width=logo_size)
                 st.markdown(f"### {team1['name']}")
                 if team1_changed:
-                    st.markdown(f"<span style='color:green; font-weight:bold;'>Score: {team1['score']} ⬆</span>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<span style='color:green; font-weight:bold;'>Score: {team1.get('score', '0')} ⬆</span>",
+                        unsafe_allow_html=True
+                    )
                 else:
-                    st.markdown(f"**Score:** {team1['score']}")
-                if team1["possession"]:
+                    st.markdown(f"**Score:** {team1.get('score', '0')}")
+                if team1.get("possession"):
                     st.markdown("🏈 Possession")
 
             with col2:
                 st.markdown("### VS")
                 st.markdown(f"**Status:** {status}")
-                if period:
-                    st.markdown(period, unsafe_allow_html=True)
-                if clock:
-                    st.markdown(clock, unsafe_allow_html=True)
+                if period_display:
+                    st.markdown(period_display, unsafe_allow_html=True)
+                if clock_display:
+                    st.markdown(clock_display, unsafe_allow_html=True)
 
             with col3:
-                st.image(team2["logo"], width=logo_size)
+                if team2["logo"]:
+                    st.image(team2["logo"], width=logo_size)
                 st.markdown(f"### {team2['name']}")
                 if team2_changed:
-                    st.markdown(f"<span style='color:green; font-weight:bold;'>Score: {team2['score']} ⬆</span>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<span style='color:green; font-weight:bold;'>Score: {team2.get('score', '0')} ⬆</span>",
+                        unsafe_allow_html=True
+                    )
                 else:
-                    st.markdown(f"**Score:** {team2['score']}")
-                if team2["possession"]:
+                    st.markdown(f"**Score:** {team2.get('score', '0')}")
+                if team2.get("possession"):
                     st.markdown("🏈 Possession")
 
             with st.expander("Show Game Stats"):
