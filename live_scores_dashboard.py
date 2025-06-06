@@ -88,16 +88,19 @@ def get_scores(sport_path):
             })
 
         stats = []
-        competitors = competition.get("competitors", [])
-        for comp in competitors:
-            for stat in comp.get("statistics", []):
-                if "avg" not in stat.get("name", "").lower():
-                    stats.append({
-                        "team": comp.get("team", {}).get("displayName", ""),
-                        "team_logo": comp.get("team", {}).get("logo", ""),
-                        "name": stat.get("name", ""),
-                        "value": stat.get("displayValue", "")
-                    })
+        for comp in competition.get("competitors", []):
+            team_info = comp.get("team", {})
+            team_name = team_info.get("displayName", "")
+            team_logo = team_info.get("logo", "")
+            for category in comp.get("statistics", []):
+                for stat in category.get("stats", []):
+                    if "avg" not in stat.get("name", "").lower():
+                        stats.append({
+                            "team": team_name,
+                            "team_logo": team_logo,
+                            "name": stat.get("name", ""),
+                            "value": stat.get("displayValue", "")
+                        })
 
         results.append({
             "id": game["id"],
