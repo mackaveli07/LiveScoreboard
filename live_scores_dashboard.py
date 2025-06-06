@@ -66,6 +66,8 @@ if "cache_timestamps" not in st.session_state:
     st.session_state.cache_timestamps = {}
 if "show_refresh_overlay" not in st.session_state:
     st.session_state.show_refresh_overlay = False
+if "selected_sport" not in st.session_state:
+    st.session_state.selected_sport = list(SPORTS.keys())[0]
 
 # Helper function
 score_cache = {}
@@ -165,12 +167,21 @@ col1, col2 = st.sidebar.columns(2)
 if col1.button("🔁 Refresh Now"):
     st.session_state.last_refresh = time.time()
     st.session_state.show_refresh_overlay = True
-    for cfg in SPORTS.values():
-        _ = get_scores(cfg["path"])
+    sport_cfg = SPORTS[st.session_state.selected_sport]
+    _ = get_scores(sport_cfg["path"])
     st.rerun()
 
 if col2.button("⏯ Toggle Auto-Refresh"):
     st.session_state.auto_refresh = not st.session_state.auto_refresh
+
+# Main content
+st.title("📻 Live Sports Scores Dashboard")
+st.markdown("Real-time updates with team logos and stats.")
+
+date_selection = st.sidebar.date_input("Select date (for past games):", datetime.today())
+selected_sport = st.sidebar.selectbox("Select a sport:", list(SPORTS.keys()))
+st.session_state.selected_sport = selected_sport
+formatted_date = date_selection.strftime("%Y%m%d")
 
 # Refresh logic
 now = time.time()
@@ -179,8 +190,8 @@ should_refresh = st.session_state.auto_refresh and (now - st.session_state.last_
 if should_refresh:
     st.session_state.last_refresh = now
     st.session_state.show_refresh_overlay = True
-    for cfg in SPORTS.values():
-        _ = get_scores(cfg["path"])
+    sport_cfg = SPORTS[st.session_state.selected_sport]
+    _ = get_scores(sport_cfg["path"])
     st.rerun()
 
 # Invalidate expired cache
@@ -193,11 +204,4 @@ if st.session_state.get("show_refresh_overlay"):
     st.markdown("<div class='refresh-overlay'>Refreshing...</div>", unsafe_allow_html=True)
     st.session_state.show_refresh_overlay = False
 
-# Main content
-st.title("📻 Live Sports Scores Dashboard")
-st.markdown("Real-time updates with team logos and stats.")
-
-date_selection = st.sidebar.date_input("Select date (for past games):", datetime.today())
-selected_sport = st.sidebar.selectbox("Select a sport:", list(SPORTS.keys()))
-formatted_date = date_selection.strftime("%Y%m%d")
-display_scores(selected_sport, formatted_date)
+display_scores(st.session_state.selected_sport, formatted_date)
