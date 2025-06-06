@@ -13,6 +13,11 @@ st.markdown("""
         0% {opacity: 0;}
         100% {opacity: 1;}
     }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.03); }
+        100% { transform: scale(1); }
+    }
     .fade-in {
         animation: fadeIn 0.8s ease-in;
     }
@@ -37,6 +42,9 @@ st.markdown("""
         font-weight: bold;
         animation: fadeIn 0.5s ease-in;
     }
+    .refresh-animation {
+        animation: pulse 1s ease-in-out;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -44,7 +52,7 @@ SPORTS = {
     "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
     "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
     "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏒"}
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏂"}
 }
 
 TEAM_COLORS = {
@@ -140,6 +148,7 @@ def display_scores(sport_name, date):
             if t2['possession']:
                 st.markdown("🏈 Possession")
 
+        st.markdown("<div class='refresh-animation'></div>", unsafe_allow_html=True)
         st.markdown("---")
 
 # Sidebar controls
@@ -154,12 +163,13 @@ if st.sidebar.button("⏸ Toggle Auto-Refresh"):
     st.session_state.auto_refresh = not st.session_state.auto_refresh
 
 if st.session_state.auto_refresh:
+    st.markdown("<div class='refresh-animation'>Refreshing...</div>", unsafe_allow_html=True)
     time.sleep(2)
     st.cache_data.clear()
     st.rerun()
 
 # Main content
-st.title("🎻 Live Sports Scores Dashboard")
+st.title("🏛 Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos and stats.")
 
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
