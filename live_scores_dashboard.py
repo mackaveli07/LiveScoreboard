@@ -5,7 +5,21 @@ from datetime import datetime
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
-# Timer-based manual refresh every 5 seconds without auto rerun on load
+# Inject blinking CSS
+st.markdown("""
+<style>
+.blinker {
+  animation: blinker 1s linear infinite;
+  color: red;
+  font-weight: bold;
+}
+@keyframes blinker {
+  50% { opacity: 0; }
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Initialize session states
 if "last_refresh" not in st.session_state:
     st.session_state.last_refresh = time.time()
 
@@ -14,6 +28,9 @@ if "auto_refresh" not in st.session_state:
 
 if "schedule_cache" not in st.session_state:
     st.session_state.schedule_cache = {}
+
+if "game_score_cache" not in st.session_state:
+    st.session_state.game_score_cache = {}
 
 # Sidebar controls
 col1, col2 = st.sidebar.columns(2)
@@ -28,6 +45,7 @@ if st.session_state.auto_refresh and time.time() - st.session_state.last_refresh
     st.session_state.last_refresh = time.time()
     st.rerun()
 
+# Sports and team colors
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
     "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
@@ -43,11 +61,11 @@ TEAM_COLORS = {
     "NYR": "#0038A8", "TOR": "#00205B", "VGK": "#B4975A"
 }
 
-game_score_cache = {}
-
 def get_scores(sport_path, date=None):
     cache_key = f"{sport_path}-{date}"
-    if cache_key in st.session_state.schedule_cache:
+    cache_age = time.time() - st.session_state.last_refresh
+
+    if cache_key in st.session_state.schedule_cache and cache_age < 5:
         return st.session_state.schedule_cache[cache_key]
 
     base_url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard"
@@ -134,8 +152,14 @@ def display_scores(sport_name, date):
         stats = game.get("stats", [])
 
         game_id = game['id']
-        previous_scores = game_score_cache.get(game_id, (None, None))
-        game_score_cache[game_id] = (team1["score"], team2["score"])
+        previous_scores = st.session_state.game_score_cache.get(game_id, (None, None))
+        st.session_state.game_score_cache[game_id] = (team1["score"], team2["score"])
+
+        score1_changed = previous_scores[0] is not None and team1["score"] != previous_scores[0]
+        score2_changed = previous_scores[1] is not None and team2["score"] != previous_scores[1]
+
+        score1_display = f'<span class="{"blinker" if score1_changed else ""}">{team1["score"]}</span>'
+        score2_display = f'<span class="{"blinker" if score2_changed else ""}">{team2["score"]}</span>'
 
         color1 = TEAM_COLORS.get(team1["abbreviation"], "#f0f0f0")
         color2 = TEAM_COLORS.get(team2["abbreviation"], "#f0f0f0")
@@ -147,7 +171,7 @@ def display_scores(sport_name, date):
             with col1:
                 st.image(team1["logo"], width=60)
                 st.markdown(f"### {team1['name']}")
-                st.markdown(f"**Score:** {team1['score']}")
+                st.markdown(f"**Score:** {score1_display}", unsafe_allow_html=True)
                 if team1["possession"]:
                     st.markdown("🏈 Possession")
 
@@ -162,7 +186,7 @@ def display_scores(sport_name, date):
             with col3:
                 st.image(team2["logo"], width=60)
                 st.markdown(f"### {team2['name']}")
-                st.markdown(f"**Score:** {team2['score']}")
+                st.markdown(f"**Score:** {score2_display}", unsafe_allow_html=True)
                 if team2["possession"]:
                     st.markdown("🏈 Possession")
 
@@ -186,7 +210,7 @@ def display_scores(sport_name, date):
                 else:
                     st.markdown("No stats available.")
 
-# UI
+# Main UI
 st.title("📻 Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos and stats.")
 
