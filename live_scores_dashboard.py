@@ -10,79 +10,6 @@ SPORTS = {
     "NHL (Hockey)": {"path": "hockey/nhl"}
 }
 
-TEAM_COLORS = {
-    "NFL": {
-        "New England Patriots": "#002244",
-        "Green Bay Packers": "#203731",
-        "Dallas Cowboys": "#041E42",
-        "Philadelphia Eagles": "#004C54",
-    },
-    "NBA": {
-        "Miami Heat": "#98002E",
-        "Golden State Warriors": "#1D428A",
-        "Los Angeles Lakers": "#552583",
-        "Boston Celtics": "#007A33",
-    },
-    "MLB": {
-        "Boston Red Sox": "#BD3039",
-        "New York Yankees": "#132448",
-        "Chicago Cubs": "#0E3386",
-        "Los Angeles Dodgers": "#005A9C",
-    },
-    "NHL": {
-        "Chicago Blackhawks": "#CF0A2C",
-        "Boston Bruins": "#FFB81C",
-        "Toronto Maple Leafs": "#00205B",
-        "Montreal Canadiens": "#AF1E2D",
-    }
-}
-
-st.markdown("""
-    <style>
-    .stat-card {
-        background: #ffffff;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        margin: 8px 0;
-        padding: 12px 16px;
-        display: flex;
-        align-items: center;
-        animation: fadeIn 0.5s ease-in-out;
-        transition: all 0.3s ease;
-    }
-    .stat-card:hover {
-        background: #f0f4f8;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-    }
-    .stat-logo {
-        width: 32px;
-        height: 32px;
-        object-fit: contain;
-        margin-right: 12px;
-        border-radius: 4px;
-        background: #eee;
-        padding: 2px;
-    }
-    .stat-text {
-        flex-grow: 1;
-    }
-    .stat-name {
-        font-weight: 600;
-        color: #222;
-        font-size: 15px;
-    }
-    .stat-value {
-        font-weight: bold;
-        color: #1f77b4;
-        font-size: 15px;
-    }
-    @keyframes fadeIn {
-        0% { opacity: 0; transform: translateY(5px); }
-        100% { opacity: 1; transform: translateY(0); }
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 # Cache for scores
 game_score_cache = {}
 
@@ -186,32 +113,8 @@ def display_scores(sport_name):
 
             with st.expander("📊 Show Game Stats"):
                 if stats:
-                    team_stats = {}
                     for stat in stats:
-                        team = stat.get("team", "Unknown Team")
-                        if team not in team_stats:
-                            team_stats[team] = []
-                        team_stats[team].append(stat)
-
-                    for team_name, stat_list in team_stats.items():
-                        logo = next((t['logo'] for t in game["teams"] if t['name'] == team_name), "")
-                        league = sport_name.split(" ")[0]
-                        team_color = TEAM_COLORS.get(league, {}).get(team_name, "#1f77b4")
-
-                        with st.expander(f"🟢 {team_name} Stats"):
-                            for stat in stat_list:
-                                st.markdown(
-                                    f"""
-                                    <div class=\"stat-card\" style=\"border-left: 5px solid {team_color};\">
-                                        <img src=\"{logo}\" class=\"stat-logo\" />
-                                        <div class=\"stat-text\">
-                                            <div class=\"stat-name\">{stat['name']}</div>
-                                        </div>
-                                        <div class=\"stat-value\">{stat['value']}</div>
-                                    </div>
-                                    """,
-                                    unsafe_allow_html=True
-                                )
+                        st.markdown(f"- {stat.get('name', '')}: {stat.get('displayValue', '')}")
                 else:
                     st.markdown("No stats available.")
 
