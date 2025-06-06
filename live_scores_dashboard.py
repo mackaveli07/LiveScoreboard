@@ -1,63 +1,158 @@
-# New additions at the top
-from datetime import timedelta
+import streamlit as st
+import requests
+import time
+from datetime import datetime
+import streamlit.components.v1 as components
 
-# Add this below SPORT and TEAM_COLORS dictionaries
-def get_team_schedule(team_abbr, sport_path):
-    cache_key = f"schedule-{sport_path}-{team_abbr}"
-    if cache_key in st.session_state.schedule_cache:
-        return st.session_state.schedule_cache[cache_key]
+st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
-    url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/teams/{team_abbr}/schedule"
+# Animation CSS
+st.markdown("""
+    <style>
+    @keyframes fadeIn {
+        0% {opacity: 0;}
+        100% {opacity: 1;}
+    }
+    .fade-in {
+        animation: fadeIn 0.8s ease-in;
+    }
+    .blinking {
+        animation: blinker 1s linear infinite;
+    }
+    @keyframes blinker {
+        50% { opacity: 0.5; }
+    }
+    .refresh-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2em;
+        font-weight: bold;
+        animation: fadeIn 0.5s ease-in;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+SPORTS = {
+    "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
+    "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
+    "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏒"}
+}
+
+TEAM_COLORS = {
+    "NE": "#002244", "DAL": "#003594", "GB": "#203731", "KC": "#E31837", "PHI": "#004C54",
+    "SF": "#AA0000", "CHI": "#0B162A", "PIT": "#FFB612",
+    "LAL": "#552583", "BOS": "#007A33", "GSW": "#1D428A", "MIA": "#98002E", "NYK": "#F58426",
+    "NYY": "#003087", "LAD": "#005A9C", "CHC": "#0E3386", "HOU": "#EB6E1F",
+    "NYR": "#0038A8", "TOR": "#00205B", "VGK": "#B4975A"
+}
+
+score_cache = {}
+
+@st.cache_data(ttl=30)
+def get_scores(sport_path, date=None):
+    url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard"
+    if date:
+        url += f"?dates={date}"
     try:
         response = requests.get(url)
         data = response.json()
     except Exception as e:
-        st.error(f"Error fetching team schedule: {e}")
+        st.error(f"Error fetching scores: {e}")
         return []
 
-    games = []
+    results = []
     for event in data.get("events", []):
         comp = event['competitions'][0]
-        opponent = comp['competitors'][1] if comp['competitors'][0]['team']['abbreviation'] == team_abbr else comp['competitors'][0]
-        is_home = comp['competitors'][0]['team']['abbreviation'] == team_abbr
-        games.append({
-            "date": event.get("date", ""),
-            "opponent": opponent['team']['displayName'],
-            "opponent_logo": opponent['team']['logo'],
-            "home": is_home,
+        teams = comp['competitors']
+        if len(teams) != 2:
+            continue
+        t1, t2 = teams
+
+        possession = comp.get("situation", {}).get("possession")
+        results.append({
+            "id": event['id'],
             "status": comp['status']['type']['shortDetail'],
-            "score": f"{comp['competitors'][0]['score']} - {comp['competitors'][1]['score']}"
+            "teams": [
+                {
+                    "name": t1['team']['displayName'],
+                    "score": t1['score'],
+                    "logo": t1['team']['logo'],
+                    "abbreviation": t1['team']['abbreviation'],
+                    "possession": t1['team']['id'] == possession
+                },
+                {
+                    "name": t2['team']['displayName'],
+                    "score": t2['score'],
+                    "logo": t2['team']['logo'],
+                    "abbreviation": t2['team']['abbreviation'],
+                    "possession": t2['team']['id'] == possession
+                }
+            ],
+            "period": comp['status'].get("period", ""),
+            "clock": comp['status'].get("displayClock", "")
         })
 
-    st.session_state.schedule_cache[cache_key] = games
-    return games
+    return results
 
-# Replace this block near the bottom under Main content section
-team_options = {}
-for sport_name, sport_data in SPORTS.items():
-    try:
-        teams_url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_data['path']}/teams"
-        resp = requests.get(teams_url)
-        data = resp.json()
-        for item in data.get("sports", [])[0].get("leagues", [])[0].get("teams", []):
-            team = item['team']
-            team_options[f"{team['displayName']} ({sport_name})"] = (team['abbreviation'], sport_data['path'])
-    except:
-        continue
+def display_scores(sport_name, date):
+    sport_cfg = SPORTS[sport_name]
+    scores = get_scores(sport_cfg['path'], date)
 
-selected_team_key = st.sidebar.selectbox("📅 View Team Schedule", ["None"] + list(team_options.keys()))
+    if not scores:
+        st.info("No games available.")
+        return
 
-if selected_team_key != "None":
-    team_abbr, sport_path = team_options[selected_team_key]
-    st.subheader(f"🗓 Schedule for {selected_team_key}")
-    schedule = get_team_schedule(team_abbr, sport_path)
-    for game in schedule:
-        col1, col2, col3 = st.columns([1, 3, 3])
+    for game in scores:
+        t1, t2 = game['teams']
+        game_id = game['id']
+        prev = score_cache.get(game_id, (None, None))
+        score_cache[game_id] = (t1['score'], t2['score'])
+        b1 = " blinking" if prev[0] != t1['score'] and prev[0] is not None else ""
+        b2 = " blinking" if prev[1] != t2['score'] and prev[1] is not None else ""
+
+        col1, col2, col3 = st.columns([4, 2, 4])
         with col1:
-            st.image(game['opponent_logo'], width=40)
+            st.image(t1['logo'], width=60)
+            st.markdown(f"### {t1['name']}")
+            st.markdown(f"<div class='fade-in{b1}'><strong>{t1['score']}</strong></div>", unsafe_allow_html=True)
+            if t1['possession']:
+                st.markdown("🏈 Possession")
+
         with col2:
-            st.markdown(f"**vs {'@' if not game['home'] else ''}{game['opponent']}**")
-            st.markdown(f"🕒 {datetime.strptime(game['date'], '%Y-%m-%dT%H:%MZ').strftime('%b %d, %Y')}")
+            st.markdown(f"### VS")
+            st.markdown(f"**{game['status']}**")
+            st.markdown(f"Period: {game['period']}")
+            st.markdown(f"Clock: {game['clock']}")
+
         with col3:
-            st.markdown(f"{game['status']} — {game['score']}")
-    st.stop()  # Stop further rendering of live scores when viewing schedule
+            st.image(t2['logo'], width=60)
+            st.markdown(f"### {t2['name']}")
+            st.markdown(f"<div class='fade-in{b2}'><strong>{t2['score']}</strong></div>", unsafe_allow_html=True)
+            if t2['possession']:
+                st.markdown("🏈 Possession")
+
+        st.markdown("---")
+
+# Sidebar controls
+st.sidebar.title("Controls")
+if st.sidebar.button("🔁 Refresh Now"):
+    st.cache_data.clear()
+
+# Main content
+st.title("📻 Live Sports Scores Dashboard")
+st.markdown("Real-time updates with team logos and stats.")
+
+selected_date = st.sidebar.date_input("Select date:", datetime.today())
+selected_sport = st.sidebar.selectbox("Choose a sport:", list(SPORTS.keys()))
+formatted_date = selected_date.strftime("%Y%m%d")
+
+display_scores(selected_sport, formatted_date)
