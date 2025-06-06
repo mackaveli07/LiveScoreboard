@@ -144,11 +144,22 @@ def display_scores(sport_name, date):
 
 # Sidebar controls
 st.sidebar.title("Controls")
+if "auto_refresh" not in st.session_state:
+    st.session_state.auto_refresh = False
+
 if st.sidebar.button("🔁 Refresh Now"):
     st.cache_data.clear()
 
+if st.sidebar.button("⏸ Toggle Auto-Refresh"):
+    st.session_state.auto_refresh = not st.session_state.auto_refresh
+
+if st.session_state.auto_refresh:
+    time.sleep(2)
+    st.cache_data.clear()
+    st.rerun()
+
 # Main content
-st.title("📻 Live Sports Scores Dashboard")
+st.title("🎻 Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos and stats.")
 
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
