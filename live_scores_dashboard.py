@@ -4,14 +4,25 @@ import time
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
-# Timer-based manual refresh every 5 seconds
+# Timer-based manual refresh every 5 seconds without auto rerun on load
 if "last_refresh" not in st.session_state:
     st.session_state.last_refresh = time.time()
 
-# Add refresh button
-if st.sidebar.button("🔁 Refresh Scores") or time.time() - st.session_state.last_refresh > 5:
+if "auto_refresh" not in st.session_state:
+    st.session_state.auto_refresh = False
+
+# Sidebar controls
+col1, col2 = st.sidebar.columns(2)
+if col1.button("🔁 Refresh Now"):
     st.session_state.last_refresh = time.time()
-    st.experimental_rerun()
+
+if col2.button("⏯ Toggle Auto-Refresh"):
+    st.session_state.auto_refresh = not st.session_state.auto_refresh
+
+# Auto refresh logic
+if st.session_state.auto_refresh and time.time() - st.session_state.last_refresh > 5:
+    st.session_state.last_refresh = time.time()
+    st.rerun()
 
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl"},
