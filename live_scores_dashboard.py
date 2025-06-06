@@ -34,7 +34,6 @@ st.markdown("""
     .first { top: 0; left: 50%; transform: translate(-50%, -50%); }
     .second { top: 50%; left: 100%; transform: translate(-50%, -50%); }
     .third { top: 100%; left: 50%; transform: translate(-50%, -50%); }
-    .home { top: 50%; left: 0; transform: translate(-50%, -50%); }
     </style>
 """, unsafe_allow_html=True)
 
@@ -140,18 +139,13 @@ def display_scores(sport_name, date):
                 st.markdown(f"Clock: {game['clock']}")
             else:
                 st.markdown(f"Inning: {game['period']}")
-                diamond_html = """
+                diamond_html = f"""
                 <div class='diamond'>
-                    <div class='base first {f}'></div>
-                    <div class='base second {s}'></div>
-                    <div class='base third {t}'></div>
-                    <div class='base home'></div>
+                    <div class='base first {'occupied' if game['on_first'] else ''}'></div>
+                    <div class='base second {'occupied' if game['on_second'] else ''}'></div>
+                    <div class='base third {'occupied' if game['on_third'] else ''}'></div>
                 </div>
-                """.format(
-                    f="occupied" if game['on_first'] else "",
-                    s="occupied" if game['on_second'] else "",
-                    t="occupied" if game['on_third'] else ""
-                )
+                """
                 st.markdown(diamond_html, unsafe_allow_html=True)
 
         with col3:
