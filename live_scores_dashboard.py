@@ -88,10 +88,14 @@ def get_scores(sport_path, date=None):
         home = [t for t in teams if t['homeAway'] == 'home'][0]
         away = [t for t in teams if t['homeAway'] == 'away'][0]
 
-        possession = comp.get("situation", {}).get("possession")
-        on_first = comp.get("situation", {}).get("onFirst")
-        on_second = comp.get("situation", {}).get("onSecond")
-        on_third = comp.get("situation", {}).get("onThird")
+        situation = comp.get("situation", {})
+        possession = situation.get("possession")
+        on_first = situation.get("onFirst")
+        on_second = situation.get("onSecond")
+        on_third = situation.get("onThird")
+        balls = situation.get("balls")
+        strikes = situation.get("strikes")
+        outs = situation.get("outs")
 
         results.append({
             "id": event['id'],
@@ -116,7 +120,10 @@ def get_scores(sport_path, date=None):
             "clock": comp['status'].get("displayClock", ""),
             "on_first": on_first,
             "on_second": on_second,
-            "on_third": on_third
+            "on_third": on_third,
+            "balls": balls,
+            "strikes": strikes,
+            "outs": outs
         })
 
     return results
@@ -164,6 +171,8 @@ def display_scores(sport_name, date):
                 </div>
                 """
                 st.markdown(diamond_html, unsafe_allow_html=True)
+                st.markdown(f"**Outs:** {game['outs']}  ")
+                st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
 
         with col3:
             st.image(t2['logo'], width=60)
