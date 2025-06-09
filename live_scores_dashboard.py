@@ -150,7 +150,7 @@ def display_scores(sport_name, date):
 
         color1 = TEAM_COLORS.get(t1['abbreviation'], '#ddd')
         color2 = TEAM_COLORS.get(t2['abbreviation'], '#ccc')
-        box_style = f"background: linear-gradient(135deg, {color1}, {color2}); padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
+        box_style = f"background: linear-gradient(90deg, {color1}, {color2}); padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
 
         with st.container():
             st.markdown(f"<div class='score-box' style='{box_style}'>", unsafe_allow_html=True)
