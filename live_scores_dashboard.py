@@ -51,6 +51,13 @@ st.markdown("""
     .first { bottom: 0; right: 0; transform: translate(50%, 50%) rotate(45deg); }
     .second { top: 0; left: 50%; transform: translate(-50%, -50%) rotate(45deg); }
     .third { bottom: 0; left: 0; transform: translate(-50%, 50%) rotate(45deg); }
+    .score-container {
+        background: linear-gradient(to right, var(--t1-color), var(--t2-color));
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 3px solid #ccc;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -58,7 +65,7 @@ SPORTS = {
     "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
     "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
     "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏒"}
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏂"}
 }
 
 TEAM_COLORS = {
@@ -181,13 +188,9 @@ def display_scores(sport_name, date):
         score1_html = f"<div class='score-box {'flash' if t1_changed else ''}' style='background:{t1_color}; color:white'>{t1['score']}</div>"
         score2_html = f"<div class='score-box {'flash' if t2_changed else ''}' style='background:{t2_color}; color:white'>{t2['score']}</div>"
 
-        # Gradient background container
         st.markdown(
             f"""
-            <div style="background: linear-gradient(to right, {t1_color}, {t2_color});
-                        border-radius: 15px;
-                        padding: 15px;
-                        margin-bottom: 20px;">
+            <div class='score-container' style="--t1-color: {t1_color}; --t2-color: {t2_color};">
             """,
             unsafe_allow_html=True
         )
