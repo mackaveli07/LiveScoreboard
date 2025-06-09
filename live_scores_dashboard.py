@@ -3,7 +3,7 @@ import requests
 import time
 from datetime import datetime
 import streamlit.components.v1 as components
-from team_colors_all_leagues import TEAM_COLORS  # External file for team colors
+
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
