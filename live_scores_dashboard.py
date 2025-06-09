@@ -3,6 +3,7 @@ import requests
 import time
 from datetime import datetime
 import streamlit.components.v1 as components
+from team_colors import TEAM_COLORS  # External file for team colors
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
@@ -54,13 +55,6 @@ st.markdown("""
         50% { opacity: 0; }
         100% { opacity: 1; }
     }
-    .score-box {
-        background: linear-gradient(135deg, #ffffff, #f0f0f0);
-        padding: 1em;
-        border-radius: 12px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        margin-bottom: 1em;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -69,15 +63,6 @@ SPORTS = {
     "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
     "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
     "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🛂"}
-}
-
-TEAM_COLORS = {
-    # abbreviated for brevity...
-    "NE": "#002244", "DAL": "#003594", "GB": "#203731", "KC": "#E31837", "PHI": "#004C54",
-    "SF": "#AA0000", "CHI": "#0B162A", "PIT": "#FFB612",
-    "LAL": "#552583", "BOS": "#007A33", "GSW": "#1D428A", "MIA": "#98002E", "NYK": "#F58426",
-    "NYY": "#003087", "LAD": "#005A9C", "CHC": "#0E3386", "HOU": "#EB6E1F",
-    "NYR": "#0038A8", "TOR": "#00205B", "VGK": "#B4975A"
 }
 
 score_cache = {}
@@ -163,8 +148,12 @@ def display_scores(sport_name, date):
         flash1 = f"<div class='score-blink' style='color:{TEAM_COLORS.get(t1['abbreviation'], '#000')}'>{t1['score']}</div>" if b1 else f"<strong>{t1['score']}</strong>"
         flash2 = f"<div class='score-blink' style='color:{TEAM_COLORS.get(t2['abbreviation'], '#000')}'>{t2['score']}</div>" if b2 else f"<strong>{t2['score']}</strong>"
 
+        color1 = TEAM_COLORS.get(t1['abbreviation'], '#ddd')
+        color2 = TEAM_COLORS.get(t2['abbreviation'], '#ccc')
+        box_style = f"background: linear-gradient(135deg, {color1}, {color2}); padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
+
         with st.container():
-            st.markdown("<div class='score-box'>", unsafe_allow_html=True)
+            st.markdown(f"<div class='score-box' style='{box_style}'>", unsafe_allow_html=True)
             col1, col2, col3 = st.columns([4, 2, 4])
             with col1:
                 st.image(t1['logo'], width=60)
