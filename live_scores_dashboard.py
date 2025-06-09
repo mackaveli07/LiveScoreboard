@@ -6,7 +6,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
-# Animation CSS
+# Animation and Gradient CSS
 st.markdown("""
     <style>
     .blinking {
@@ -54,6 +54,13 @@ st.markdown("""
         50% { opacity: 0; }
         100% { opacity: 1; }
     }
+    .score-box {
+        background: linear-gradient(135deg, #ffffff, #f0f0f0);
+        padding: 1em;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        margin-bottom: 1em;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -65,7 +72,6 @@ SPORTS = {
 }
 
 TEAM_COLORS = {
-    # abbreviated for brevity...
     "NE": "#002244", "DAL": "#003594", "GB": "#203731", "KC": "#E31837", "PHI": "#004C54",
     "SF": "#AA0000", "CHI": "#0B162A", "PIT": "#FFB612",
     "LAL": "#552583", "BOS": "#007A33", "GSW": "#1D428A", "MIA": "#98002E", "NYK": "#F58426",
@@ -156,6 +162,8 @@ def display_scores(sport_name, date):
         flash1 = f"<div class='score-blink' style='color:{TEAM_COLORS.get(t1['abbreviation'], '#000')}'>{t1['score']}</div>" if b1 else f"<strong>{t1['score']}</strong>"
         flash2 = f"<div class='score-blink' style='color:{TEAM_COLORS.get(t2['abbreviation'], '#000')}'>{t2['score']}</div>" if b2 else f"<strong>{t2['score']}</strong>"
 
+        st.markdown("<div class='score-box'>", unsafe_allow_html=True)
+
         col1, col2, col3 = st.columns([4, 2, 4])
         with col1:
             st.image(t1['logo'], width=60)
@@ -190,6 +198,7 @@ def display_scores(sport_name, date):
             if t2['possession']:
                 st.markdown("🏈 Possession")
 
+        st.markdown("</div>", unsafe_allow_html=True)
         st.markdown("---")
 
 # Sidebar controls
