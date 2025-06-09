@@ -2,10 +2,10 @@ import streamlit as st
 import requests
 import time
 from datetime import datetime
+from team_colors import TEAM_COLORS  # Full dictionary of all MLB, NBA, NFL, NHL teams
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
-# CSS styles for animations and diamond
 st.markdown("""
     <style>
     .blinking {
@@ -54,13 +54,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-from team_colors import TEAM_COLORS  # Assuming this file contains full dictionary of team colors
-
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
     "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
     "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🎲"}
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏒"}
 }
 
 score_cache = {}
@@ -87,10 +85,6 @@ def get_scores(sport_path, date=None):
         home = [t for t in teams if t['homeAway'] == 'home'][0]
         away = [t for t in teams if t['homeAway'] == 'away'][0]
 
-        status_type = comp['status']['type']
-        if show_live_only and status_type['state'] not in ['in', 'pre']:
-            continue
-
         situation = comp.get("situation", {})
         possession = situation.get("possession")
         on_first = situation.get("onFirst")
@@ -100,13 +94,13 @@ def get_scores(sport_path, date=None):
         strikes = situation.get("strikes")
         outs = situation.get("outs")
         pitcher = situation.get("pitcher", {}).get("athlete", {}).get("displayName")
-        next_batter = situation.get("batter", {}).get("athlete", {}).get("displayName")
-        on_deck = situation.get("onDeck", {}).get("athlete", {}).get("displayName")
-        in_hole = situation.get("inHole", {}).get("athlete", {}).get("displayName")
+        next_batters = situation.get("batterUp", {}).get("summary")
+        if isinstance(next_batters, str):
+            next_batters = [next_batters]
 
         results.append({
             "id": event['id'],
-            "status": status_type['shortDetail'],
+            "status": comp['status']['type']['shortDetail'],
             "teams": [
                 {
                     "name": away['team']['displayName'],
@@ -132,36 +126,10 @@ def get_scores(sport_path, date=None):
             "strikes": strikes,
             "outs": outs,
             "pitcher": pitcher,
-            "next_batter": next_batter,
-            "on_deck": on_deck,
-            "in_hole": in_hole
+            "next_batters": next_batters
         })
 
     return results
-
-st.sidebar.title("Controls")
-if "auto_refresh" not in st.session_state:
-    st.session_state.auto_refresh = False
-if "show_live_only" not in st.session_state:
-    st.session_state.show_live_only = True
-
-refresh_now = st.sidebar.button("\U0001f504 Refresh Now")
-if refresh_now:
-    st.cache_data.clear()
-    st.rerun()
-
-toggle_refresh = st.sidebar.button("⏯ Toggle Auto-Refresh")
-if toggle_refresh:
-    st.session_state.auto_refresh = not st.session_state.auto_refresh
-
-show_live_only = st.sidebar.checkbox("Show only live/in-progress games", value=True)
-
-st.title("\U0001f3df Live Sports Scoreboard")
-st.markdown("Live updates with team logos, stats, and animations.")
-
-selected_date = st.sidebar.date_input("Select date:", datetime.today())
-selected_sport = st.sidebar.selectbox("Choose a sport:", list(SPORTS.keys()))
-formatted_date = selected_date.strftime("%Y%m%d")
 
 def display_scores(sport_name, date):
     sport_cfg = SPORTS[sport_name]
@@ -186,7 +154,18 @@ def display_scores(sport_name, date):
         score1_html = f"<div class='score-box {'flash' if t1_changed else ''}' style='background:{t1_color}; color:white'>{t1['score']}</div>"
         score2_html = f"<div class='score-box {'flash' if t2_changed else ''}' style='background:{t2_color}; color:white'>{t2['score']}</div>"
 
+        st.markdown(
+            f"""
+            <div style="background: linear-gradient(to right, {t1_color}, {t2_color});
+                        border-radius: 15px;
+                        padding: 15px;
+                        margin-bottom: 20px;">
+            """,
+            unsafe_allow_html=True
+        )
+
         col1, col2, col3 = st.columns([4, 2, 4])
+
         with col1:
             st.image(t1['logo'], width=60)
             st.markdown(f"### {t1['name']}")
@@ -212,14 +191,10 @@ def display_scores(sport_name, date):
                 st.markdown(diamond_html, unsafe_allow_html=True)
                 st.markdown(f"**Outs:** {game['outs']}")
                 st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
-                if game['pitcher']:
-                    st.markdown(f"**Pitcher:** {game['pitcher']}")
-                if game['next_batter']:
-                    st.markdown(f"**Next Batter:** {game['next_batter']}")
-                if game['on_deck']:
-                    st.markdown(f"**On Deck:** {game['on_deck']}")
-                if game['in_hole']:
-                    st.markdown(f"**In Hole:** {game['in_hole']}")
+                if game.get("pitcher"):
+                    st.markdown(f"**Pitching:** {game['pitcher']}")
+                if game.get("next_batters"):
+                    st.markdown(f"**Next Batters:** {', '.join(game['next_batters'])}")
 
         with col3:
             st.image(t2['logo'], width=60)
@@ -228,7 +203,27 @@ def display_scores(sport_name, date):
             if t2['possession']:
                 st.markdown("🏈 Possession")
 
-        st.markdown("---")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+# Sidebar controls
+st.sidebar.title("Controls")
+if "auto_refresh" not in st.session_state:
+    st.session_state.auto_refresh = False
+
+if st.sidebar.button("🔄 Refresh Now"):
+    st.cache_data.clear()
+    st.rerun()
+
+if st.sidebar.button("⎯ Toggle Auto-Refresh"):
+    st.session_state.auto_refresh = not st.session_state.auto_refresh
+
+# Main layout
+st.title("🏟 Live Sports Scoreboard")
+st.markdown("Live updates with team logos, stats, and animations.")
+
+selected_date = st.sidebar.date_input("Select date:", datetime.today())
+selected_sport = st.sidebar.selectbox("Choose a sport:", list(SPORTS.keys()))
+formatted_date = selected_date.strftime("%Y%m%d")
 
 display_scores(selected_sport, formatted_date)
 
