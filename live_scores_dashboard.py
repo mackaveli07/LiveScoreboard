@@ -268,6 +268,19 @@ def get_scores(sport_path, date=None):
         })
 
     return results
+    def colored_score_box(score, color):
+    return f"""
+        <div style='
+            display:inline-block;
+            padding:8px 16px;
+            margin: 0 4px;
+            border-radius:12px;
+            background-color:{color};
+            color:white;
+            font-weight:bold;
+            font-size:20px;
+        '>{score}</div>
+    """
 
 def display_scores(sport_name, date):
     sport_cfg = SPORTS[sport_name]
