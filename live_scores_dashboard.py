@@ -6,7 +6,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
-# Animation and Gradient CSS
+# Animation and Styling CSS
 st.markdown("""
     <style>
     .blinking {
@@ -72,6 +72,7 @@ SPORTS = {
 }
 
 TEAM_COLORS = {
+    # abbreviated for brevity...
     "NE": "#002244", "DAL": "#003594", "GB": "#203731", "KC": "#E31837", "PHI": "#004C54",
     "SF": "#AA0000", "CHI": "#0B162A", "PIT": "#FFB612",
     "LAL": "#552583", "BOS": "#007A33", "GSW": "#1D428A", "MIA": "#98002E", "NYK": "#F58426",
@@ -162,44 +163,43 @@ def display_scores(sport_name, date):
         flash1 = f"<div class='score-blink' style='color:{TEAM_COLORS.get(t1['abbreviation'], '#000')}'>{t1['score']}</div>" if b1 else f"<strong>{t1['score']}</strong>"
         flash2 = f"<div class='score-blink' style='color:{TEAM_COLORS.get(t2['abbreviation'], '#000')}'>{t2['score']}</div>" if b2 else f"<strong>{t2['score']}</strong>"
 
-        st.markdown("<div class='score-box'>", unsafe_allow_html=True)
+        with st.container():
+            st.markdown("<div class='score-box'>", unsafe_allow_html=True)
+            col1, col2, col3 = st.columns([4, 2, 4])
+            with col1:
+                st.image(t1['logo'], width=60)
+                st.markdown(f"### {t1['name']}")
+                st.markdown(flash1, unsafe_allow_html=True)
+                if t1['possession']:
+                    st.markdown("🏈 Possession")
 
-        col1, col2, col3 = st.columns([4, 2, 4])
-        with col1:
-            st.image(t1['logo'], width=60)
-            st.markdown(f"### {t1['name']}")
-            st.markdown(flash1, unsafe_allow_html=True)
-            if t1['possession']:
-                st.markdown("🏈 Possession")
+            with col2:
+                st.markdown(f"### VS")
+                st.markdown(f"**{game['status']}**")
+                if sport_name != "MLB (Baseball)":
+                    st.markdown(f"Period: {game['period']}")
+                    st.markdown(f"Clock: {game['clock']}")
+                else:
+                    st.markdown(f"Inning: {game['period']}")
+                    diamond_html = f"""
+                    <div class='diamond'>
+                        <div class='base second {'occupied' if game['on_second'] else ''}'></div>
+                        <div class='base third {'occupied' if game['on_third'] else ''}'></div>
+                        <div class='base first {'occupied' if game['on_first'] else ''}'></div>
+                    </div>
+                    """
+                    st.markdown(diamond_html, unsafe_allow_html=True)
+                    st.markdown(f"**Outs:** {game['outs']}")
+                    st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
 
-        with col2:
-            st.markdown(f"### VS")
-            st.markdown(f"**{game['status']}**")
-            if sport_name != "MLB (Baseball)":
-                st.markdown(f"Period: {game['period']}")
-                st.markdown(f"Clock: {game['clock']}")
-            else:
-                st.markdown(f"Inning: {game['period']}")
-                diamond_html = f"""
-                <div class='diamond'>
-                    <div class='base second {'occupied' if game['on_second'] else ''}'></div>
-                    <div class='base third {'occupied' if game['on_third'] else ''}'></div>
-                    <div class='base first {'occupied' if game['on_first'] else ''}'></div>
-                </div>
-                """
-                st.markdown(diamond_html, unsafe_allow_html=True)
-                st.markdown(f"**Outs:** {game['outs']}")
-                st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
-
-        with col3:
-            st.image(t2['logo'], width=60)
-            st.markdown(f"### {t2['name']}")
-            st.markdown(flash2, unsafe_allow_html=True)
-            if t2['possession']:
-                st.markdown("🏈 Possession")
-
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.markdown("---")
+            with col3:
+                st.image(t2['logo'], width=60)
+                st.markdown(f"### {t2['name']}")
+                st.markdown(flash2, unsafe_allow_html=True)
+                if t2['possession']:
+                    st.markdown("🏈 Possession")
+            st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("---")
 
 # Sidebar controls
 st.sidebar.title("Controls")
