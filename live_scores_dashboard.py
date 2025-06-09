@@ -55,14 +55,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 SPORTS = {
-    "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
-    "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
-    "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏒"}
+    "NFL (Football)": {"path": "football/nfl", "icon": "\ud83c\udfc8"},
+    "NBA (Basketball)": {"path": "basketball/nba", "icon": "\ud83c\udfc0"},
+    "MLB (Baseball)": {"path": "baseball/mlb", "icon": "\u26be"},
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "\ud83c\udfd2"}
 }
 
 TEAM_COLORS = {
-  
     "Arizona Diamondbacks": {"primary": "#A71930", "secondary": "#E3D4AD"},
     "Atlanta Braves": {"primary": "#CE1141", "secondary": "#13274F"},
     "Baltimore Orioles": {"primary": "#DF4601", "secondary": "#000000"},
@@ -93,8 +92,6 @@ TEAM_COLORS = {
     "Texas Rangers": {"primary": "#003278", "secondary": "#C0111F"},
     "Toronto Blue Jays": {"primary": "#134A8E", "secondary": "#1D2D5C"},
     "Washington Nationals": {"primary": "#AB0003", "secondary": "#11225B"},
-
-
 }
 
 score_cache = {}
@@ -175,8 +172,8 @@ def display_scores(sport_name, date):
         prev = score_cache.get(game_id, (None, None))
         score_cache[game_id] = (t1['score'], t2['score'])
 
-        t1_color = TEAM_COLORS.get(t1['abbreviation'], "#444")
-        t2_color = TEAM_COLORS.get(t2['abbreviation'], "#444")
+        t1_color = TEAM_COLORS.get(t1['name'], {"primary": "#444"})["primary"]
+        t2_color = TEAM_COLORS.get(t2['name'], {"primary": "#444"})["primary"]
 
         t1_changed = prev[0] != t1['score'] and prev[0] is not None
         t2_changed = prev[1] != t2['score'] and prev[1] is not None
@@ -190,7 +187,7 @@ def display_scores(sport_name, date):
             st.markdown(f"### {t1['name']}")
             st.markdown(score1_html, unsafe_allow_html=True)
             if t1['possession']:
-                st.markdown("🏈 Possession")
+                st.markdown("\ud83c\udfc8 Possession")
 
         with col2:
             st.markdown(f"### VS")
@@ -216,7 +213,7 @@ def display_scores(sport_name, date):
             st.markdown(f"### {t2['name']}")
             st.markdown(score2_html, unsafe_allow_html=True)
             if t2['possession']:
-                st.markdown("🏈 Possession")
+                st.markdown("\ud83c\udfc8 Possession")
 
         st.markdown("---")
 
@@ -225,15 +222,15 @@ st.sidebar.title("Controls")
 if "auto_refresh" not in st.session_state:
     st.session_state.auto_refresh = False
 
-if st.sidebar.button("🔄 Refresh Now"):
+if st.sidebar.button("\ud83d\udd04 Refresh Now"):
     st.cache_data.clear()
     st.rerun()
 
-if st.sidebar.button("⏯ Toggle Auto-Refresh"):
+if st.sidebar.button("\u23ef Toggle Auto-Refresh"):
     st.session_state.auto_refresh = not st.session_state.auto_refresh
 
 # Main layout
-st.title("🏟 Live Sports Scoreboard")
+st.title("\ud83c\udfdf Live Sports Scoreboard")
 st.markdown("Live updates with team logos, stats, and animations.")
 
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
