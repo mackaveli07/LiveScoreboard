@@ -55,14 +55,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 SPORTS = {
-    "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
-    "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
-    "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🎲"}
+    "NFL (Football)": {"path": "football/nfl", "icon": "\U0001f3c8"},
+    "NBA (Basketball)": {"path": "basketball/nba", "icon": "\U0001f3c0"},
+    "MLB (Baseball)": {"path": "baseball/mlb", "icon": "\u26be"},
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "\U0001f3b2"}
 }
-
-TEAM_COLORS = {
-  
+team_colors = {
     # MLB
     "Arizona Diamondbacks": {"primary": "#A71930", "secondary": "#E3D4AD"},
     "Atlanta Braves": {"primary": "#CE1141", "secondary": "#13274F"},
@@ -194,11 +192,22 @@ TEAM_COLORS = {
     "Vegas Golden Knights": {"primary": "#B4975A", "secondary": "#333F42"},
     "Washington Capitals": {"primary": "#041E42", "secondary": "#C8102E"},
     "Winnipeg Jets": {"primary": "#041E42", "secondary": "#AC162C"}
-
-
 }
 
+
 score_cache = {}
+
+@st.cache_data(ttl=30)
+def fetch_player_names(ids):
+    if not ids:
+        return {}
+    try:
+        url = f"https://site.api.espn.com/apis/common/v3/sports/baseball/mlb/athletes?ids={','.join(map(str, ids))}"
+        resp = requests.get(url)
+        data = resp.json()
+        return {str(p['id']): p['fullName'] for p in data.get('athletes', [])}
+    except Exception as e:
+        return {}
 
 @st.cache_data(ttl=30)
 def get_scores(sport_path, date=None):
@@ -223,7 +232,7 @@ def get_scores(sport_path, date=None):
         away = [t for t in teams if t['homeAway'] == 'away'][0]
 
         status_type = comp['status']['type']
-        if show_live_only and status_type['state'] not in ['in', 'pre']:  # filter based on toggle
+        if show_live_only and status_type['state'] not in ['in', 'pre']:
             continue
 
         situation = comp.get("situation", {})
@@ -234,6 +243,9 @@ def get_scores(sport_path, date=None):
         balls = situation.get("balls")
         strikes = situation.get("strikes")
         outs = situation.get("outs")
+        pitcher_id = situation.get("pitcher")
+        batter_id = situation.get("batter")
+        next_up_ids = situation.get("battersLock", [])
 
         results.append({
             "id": event['id'],
@@ -261,7 +273,10 @@ def get_scores(sport_path, date=None):
             "on_third": on_third,
             "balls": balls,
             "strikes": strikes,
-            "outs": outs
+            "outs": outs,
+            "pitcher_id": pitcher_id,
+            "batter_id": batter_id,
+            "next_up_ids": next_up_ids
         })
 
     return results
@@ -273,19 +288,19 @@ if "auto_refresh" not in st.session_state:
 if "show_live_only" not in st.session_state:
     st.session_state.show_live_only = True
 
-refresh_now = st.sidebar.button("🔄 Refresh Now")
+refresh_now = st.sidebar.button("\U0001f504 Refresh Now")
 if refresh_now:
     st.cache_data.clear()
     st.rerun()
 
-toggle_refresh = st.sidebar.button("⏯ Toggle Auto-Refresh")
+toggle_refresh = st.sidebar.button("\u23EF Toggle Auto-Refresh")
 if toggle_refresh:
     st.session_state.auto_refresh = not st.session_state.auto_refresh
 
 show_live_only = st.sidebar.checkbox("Show only live/in-progress games", value=True)
 
 # Main layout
-st.title("🏟 Live Sports Scoreboard")
+st.title("\U0001f3df Live Sports Scoreboard")
 st.markdown("Live updates with team logos, stats, and animations.")
 
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
@@ -295,6 +310,13 @@ formatted_date = selected_date.strftime("%Y%m%d")
 def display_scores(sport_name, date):
     sport_cfg = SPORTS[sport_name]
     scores = get_scores(sport_cfg['path'], date)
+
+    all_ids = set()
+    for g in scores:
+        if sport_name == "MLB (Baseball)":
+            all_ids.update(filter(None, [g.get("pitcher_id"), g.get("batter_id")]))
+            all_ids.update(g.get("next_up_ids", []))
+    name_map = fetch_player_names(all_ids)
 
     if not scores:
         st.info("No games available.")
@@ -321,7 +343,7 @@ def display_scores(sport_name, date):
             st.markdown(f"### {t1['name']}")
             st.markdown(score1_html, unsafe_allow_html=True)
             if t1['possession']:
-                st.markdown("🏈 Possession")
+                st.markdown("\U0001f3c8 Possession")
 
         with col2:
             st.markdown(f"### VS")
@@ -341,13 +363,20 @@ def display_scores(sport_name, date):
                 st.markdown(diamond_html, unsafe_allow_html=True)
                 st.markdown(f"**Outs:** {game['outs']}")
                 st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
+                pitcher = name_map.get(str(game.get("pitcher_id")), "N/A")
+                batter = name_map.get(str(game.get("batter_id")), "N/A")
+                next_up = [name_map.get(str(i), "N/A") for i in game.get("next_up_ids", [])]
+                st.markdown(f"**Pitching:** {pitcher}")
+                st.markdown(f"**At bat:** {batter}")
+                if next_up:
+                    st.markdown("**Next up:** " + ", ".join(next_up[:3]))
 
         with col3:
             st.image(t2['logo'], width=60)
             st.markdown(f"### {t2['name']}")
             st.markdown(score2_html, unsafe_allow_html=True)
             if t2['possession']:
-                st.markdown("🏈 Possession")
+                st.markdown("\U0001f3c8 Possession")
 
         st.markdown("---")
 
