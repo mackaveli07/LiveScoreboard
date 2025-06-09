@@ -64,7 +64,7 @@ SPORTS = {
     "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
     "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🛂"}
 }
-TEAM_COLORS = {
+team_colors = {
     # MLB
     "Arizona Diamondbacks": {"primary": "#A71930", "secondary": "#E3D4AD"},
     "Atlanta Braves": {"primary": "#CE1141", "secondary": "#13274F"},
