@@ -3,7 +3,12 @@ import requests
 import time
 from datetime import datetime
 import streamlit.components.v1 as components
-from team_colors_all_leagues import TEAM_COLORS  # External file for team colors
+
+try:
+    from team_colors_all_leagues import TEAM_COLORS
+except ImportError:
+    TEAM_COLORS = {}
+    st.warning("Could not import TEAM_COLORS. Please ensure 'team_colors_all_leagues.py' exists and defines TEAM_COLORS.")
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
@@ -81,13 +86,16 @@ def get_scores(sport_path, date=None):
 
     results = []
     for event in data.get("events", []):
-        comp = event['competitions'][0]
-        teams = comp['competitors']
+        comp = event.get('competitions', [{}])[0]
+        teams = comp.get('competitors', [])
         if len(teams) != 2:
             continue
 
-        home = [t for t in teams if t['homeAway'] == 'home'][0]
-        away = [t for t in teams if t['homeAway'] == 'away'][0]
+        home = next((t for t in teams if t.get('homeAway') == 'home'), None)
+        away = next((t for t in teams if t.get('homeAway') == 'away'), None)
+
+        if not home or not away:
+            continue
 
         situation = comp.get("situation", {})
         possession = situation.get("possession")
@@ -99,26 +107,26 @@ def get_scores(sport_path, date=None):
         outs = situation.get("outs")
 
         results.append({
-            "id": event['id'],
-            "status": comp['status']['type']['shortDetail'],
+            "id": event.get('id'),
+            "status": comp.get('status', {}).get('type', {}).get('shortDetail', ''),
             "teams": [
                 {
-                    "name": away['team']['displayName'],
-                    "score": away['score'],
-                    "logo": away['team']['logo'],
-                    "abbreviation": away['team']['abbreviation'],
-                    "possession": away['team']['id'] == possession
+                    "name": away['team'].get('displayName', 'Away'),
+                    "score": away.get('score', '0'),
+                    "logo": away['team'].get('logo', ''),
+                    "abbreviation": away['team'].get('abbreviation', 'UNK'),
+                    "possession": away['team'].get('id') == possession
                 },
                 {
-                    "name": home['team']['displayName'],
-                    "score": home['score'],
-                    "logo": home['team']['logo'],
-                    "abbreviation": home['team']['abbreviation'],
-                    "possession": home['team']['id'] == possession
+                    "name": home['team'].get('displayName', 'Home'),
+                    "score": home.get('score', '0'),
+                    "logo": home['team'].get('logo', ''),
+                    "abbreviation": home['team'].get('abbreviation', 'UNK'),
+                    "possession": home['team'].get('id') == possession
                 }
             ],
-            "period": comp['status'].get("period", ""),
-            "clock": comp['status'].get("displayClock", ""),
+            "period": comp.get('status', {}).get("period", ""),
+            "clock": comp.get('status', {}).get("displayClock", ""),
             "on_first": on_first,
             "on_second": on_second,
             "on_third": on_third,
@@ -128,91 +136,3 @@ def get_scores(sport_path, date=None):
         })
 
     return results
-
-def display_scores(sport_name, date):
-    sport_cfg = SPORTS[sport_name]
-    scores = get_scores(sport_cfg['path'], date)
-
-    if not scores:
-        st.info("No games available.")
-        return
-
-    for game in scores:
-        t1, t2 = game['teams']
-        game_id = game['id']
-        prev = score_cache.get(game_id, (None, None))
-        score_cache[game_id] = (t1['score'], t2['score'])
-        b1 = prev[0] != t1['score'] and prev[0] is not None
-        b2 = prev[1] != t2['score'] and prev[1] is not None
-
-        flash1 = f"<div class='score-blink' style='color:{TEAM_COLORS.get(t1['abbreviation'], '#000')}'>{t1['score']}</div>" if b1 else f"<strong>{t1['score']}</strong>"
-        flash2 = f"<div class='score-blink' style='color:{TEAM_COLORS.get(t2['abbreviation'], '#000')}'>{t2['score']}</div>" if b2 else f"<strong>{t2['score']}</strong>"
-
-        color1 = TEAM_COLORS.get(t1['abbreviation'], '#ddd')
-        color2 = TEAM_COLORS.get(t2['abbreviation'], '#ccc')
-        box_style = f"background: linear-gradient(to right, {color1}, {color2}); padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
-
-        with st.container():
-            st.markdown(f"<div class='score-box' style='{box_style}'>", unsafe_allow_html=True)
-            col1, col2, col3 = st.columns([4, 2, 4])
-            with col1:
-                st.image(t1['logo'], width=60)
-                st.markdown(f"### {t1['name']}")
-                st.markdown(flash1, unsafe_allow_html=True)
-                if t1['possession']:
-                    st.markdown("🏈 Possession")
-
-            with col2:
-                st.markdown(f"### VS")
-                st.markdown(f"**{game['status']}**")
-                if sport_name != "MLB (Baseball)":
-                    st.markdown(f"Period: {game['period']}")
-                    st.markdown(f"Clock: {game['clock']}")
-                else:
-                    st.markdown(f"Inning: {game['period']}")
-                    diamond_html = f"""
-                    <div class='diamond'>
-                        <div class='base second {'occupied' if game['on_second'] else ''}'></div>
-                        <div class='base third {'occupied' if game['on_third'] else ''}'></div>
-                        <div class='base first {'occupied' if game['on_first'] else ''}'></div>
-                    </div>
-                    """
-                    st.markdown(diamond_html, unsafe_allow_html=True)
-                    st.markdown(f"**Outs:** {game['outs']}")
-                    st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
-
-            with col3:
-                st.image(t2['logo'], width=60)
-                st.markdown(f"### {t2['name']}")
-                st.markdown(flash2, unsafe_allow_html=True)
-                if t2['possession']:
-                    st.markdown("🏈 Possession")
-            st.markdown("</div>", unsafe_allow_html=True)
-            st.markdown("---")
-
-# Sidebar controls
-st.sidebar.title("Controls")
-if "auto_refresh" not in st.session_state:
-    st.session_state.auto_refresh = False
-
-if st.sidebar.button(":arrows_counterclockwise: Refresh Now"):
-    st.cache_data.clear()
-    st.rerun()
-
-if st.sidebar.button(":pause_button: Toggle Auto-Refresh"):
-    st.session_state.auto_refresh = not st.session_state.auto_refresh
-
-# Main content
-st.title(":classical_building: Live Sports Scores Dashboard")
-st.markdown("Real-time updates with team logos and stats.")
-
-selected_date = st.sidebar.date_input("Select date:", datetime.today())
-selected_sport = st.sidebar.selectbox("Choose a sport:", list(SPORTS.keys()))
-formatted_date = selected_date.strftime("%Y%m%d")
-
-display_scores(selected_sport, formatted_date)
-
-if st.session_state.auto_refresh:
-    time.sleep(2)
-    st.cache_data.clear()
-    st.rerun()
