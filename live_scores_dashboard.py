@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import time
 from datetime import datetime
-from team_colors import TEAM_COLORS  # Full dictionary of all MLB, NBA, NFL, NHL teams
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
