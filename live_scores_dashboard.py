@@ -2,9 +2,11 @@ import streamlit as st
 import requests
 import time
 from datetime import datetime
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
+# Animation CSS
 st.markdown("""
     <style>
     .blinking {
@@ -12,24 +14,6 @@ st.markdown("""
     }
     @keyframes blinker {
         50% { opacity: 0.5; }
-    }
-    @keyframes flash {
-        0% { background-color: white; color: black; }
-        50% { background-color: black; color: white; }
-        100% { background-color: white; color: black; }
-    }
-    .score-box {
-        padding: 8px 12px;
-        border-radius: 10px;
-        font-weight: bold;
-        font-size: 24px;
-        display: inline-block;
-        min-width: 60px;
-        text-align: center;
-        margin-top: 4px;
-    }
-    .flash {
-        animation: flash 1s infinite;
     }
     .diamond {
         width: 50px;
@@ -50,6 +34,18 @@ st.markdown("""
     .first { bottom: 0; right: 0; transform: translate(50%, 50%) rotate(45deg); }
     .second { top: 0; left: 50%; transform: translate(-50%, -50%) rotate(45deg); }
     .third { bottom: 0; left: 0; transform: translate(-50%, 50%) rotate(45deg); }
+    .scoring-indicator {
+        animation: flash 1s infinite;
+        font-weight: bold;
+        padding: 0.25em 0.5em;
+        border-radius: 5px;
+        display: inline-block;
+    }
+    @keyframes flash {
+        0% { opacity: 1; }
+        50% { opacity: 0.2; }
+        100% { opacity: 1; }
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -57,7 +53,15 @@ SPORTS = {
     "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
     "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
     "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏒"}
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🛂"}
+}
+
+TEAM_COLORS = {
+    "NE": "#002244", "DAL": "#003594", "GB": "#203731", "KC": "#E31837", "PHI": "#004C54",
+    "SF": "#AA0000", "CHI": "#0B162A", "PIT": "#FFB612",
+    "LAL": "#552583", "BOS": "#007A33", "GSW": "#1D428A", "MIA": "#98002E", "NYK": "#F58426",
+    "NYY": "#003087", "LAD": "#005A9C", "CHC": "#0E3386", "HOU": "#EB6E1F",
+    "NYR": "#0038A8", "TOR": "#00205B", "VGK": "#B4975A"
 }
 
 score_cache = {}
@@ -92,10 +96,6 @@ def get_scores(sport_path, date=None):
         balls = situation.get("balls")
         strikes = situation.get("strikes")
         outs = situation.get("outs")
-        pitcher = situation.get("pitcher", {}).get("athlete", {}).get("displayName")
-        next_batters = situation.get("batterUp", {}).get("summary")
-        if isinstance(next_batters, str):
-            next_batters = [next_batters]
 
         results.append({
             "id": event['id'],
@@ -123,9 +123,7 @@ def get_scores(sport_path, date=None):
             "on_third": on_third,
             "balls": balls,
             "strikes": strikes,
-            "outs": outs,
-            "pitcher": pitcher,
-            "next_batters": next_batters
+            "outs": outs
         })
 
     return results
@@ -143,32 +141,17 @@ def display_scores(sport_name, date):
         game_id = game['id']
         prev = score_cache.get(game_id, (None, None))
         score_cache[game_id] = (t1['score'], t2['score'])
+        b1 = " blinking" if prev[0] != t1['score'] and prev[0] is not None else ""
+        b2 = " blinking" if prev[1] != t2['score'] and prev[1] is not None else ""
 
-        t1_color = TEAM_COLORS.get(t1['name'], {"primary": "#444"})["primary"]
-        t2_color = TEAM_COLORS.get(t2['name'], {"primary": "#444"})["primary"]
-
-        t1_changed = prev[0] != t1['score'] and prev[0] is not None
-        t2_changed = prev[1] != t2['score'] and prev[1] is not None
-
-        score1_html = f"<div class='score-box {'flash' if t1_changed else ''}' style='background:{t1_color}; color:white'>{t1['score']}</div>"
-        score2_html = f"<div class='score-box {'flash' if t2_changed else ''}' style='background:{t2_color}; color:white'>{t2['score']}</div>"
-
-        st.markdown(
-            f"""
-            <div style="background: linear-gradient(to right, {t1_color}, {t2_color});
-                        border-radius: 15px;
-                        padding: 15px;
-                        margin-bottom: 20px;">
-            """,
-            unsafe_allow_html=True
-        )
+        flash1 = f"<div class='scoring-indicator' style='background:{TEAM_COLORS.get(t1['abbreviation'], '#ccc')}'>{t1['score']}</div>" if b1 else f"<strong>{t1['score']}</strong>"
+        flash2 = f"<div class='scoring-indicator' style='background:{TEAM_COLORS.get(t2['abbreviation'], '#ccc')}'>{t2['score']}</div>" if b2 else f"<strong>{t2['score']}</strong>"
 
         col1, col2, col3 = st.columns([4, 2, 4])
-
         with col1:
             st.image(t1['logo'], width=60)
             st.markdown(f"### {t1['name']}")
-            st.markdown(score1_html, unsafe_allow_html=True)
+            st.markdown(flash1, unsafe_allow_html=True)
             if t1['possession']:
                 st.markdown("🏈 Possession")
 
@@ -188,37 +171,33 @@ def display_scores(sport_name, date):
                 </div>
                 """
                 st.markdown(diamond_html, unsafe_allow_html=True)
-                st.markdown(f"**Outs:** {game['outs']}")
+                st.markdown(f"**Outs:** {game['outs']}  ")
                 st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
-                if game.get("pitcher"):
-                    st.markdown(f"**Pitching:** {game['pitcher']}")
-                if game.get("next_batters"):
-                    st.markdown(f"**Next Batters:** {', '.join(game['next_batters'])}")
 
         with col3:
             st.image(t2['logo'], width=60)
             st.markdown(f"### {t2['name']}")
-            st.markdown(score2_html, unsafe_allow_html=True)
+            st.markdown(flash2, unsafe_allow_html=True)
             if t2['possession']:
                 st.markdown("🏈 Possession")
 
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("---")
 
 # Sidebar controls
 st.sidebar.title("Controls")
 if "auto_refresh" not in st.session_state:
     st.session_state.auto_refresh = False
 
-if st.sidebar.button("🔄 Refresh Now"):
+if st.sidebar.button(":arrows_counterclockwise: Refresh Now"):
     st.cache_data.clear()
     st.rerun()
 
-if st.sidebar.button("⎯ Toggle Auto-Refresh"):
+if st.sidebar.button(":pause_button: Toggle Auto-Refresh"):
     st.session_state.auto_refresh = not st.session_state.auto_refresh
 
-# Main layout
-st.title("🏟 Live Sports Scoreboard")
-st.markdown("Live updates with team logos, stats, and animations.")
+# Main content
+st.title(":classical_building: Live Sports Scores Dashboard")
+st.markdown("Real-time updates with team logos and stats.")
 
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
 selected_sport = st.sidebar.selectbox("Choose a sport:", list(SPORTS.keys()))
