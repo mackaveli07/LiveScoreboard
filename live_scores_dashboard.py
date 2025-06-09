@@ -2,11 +2,10 @@ import streamlit as st
 import requests
 import time
 from datetime import datetime
-import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
-# Animation CSS
+# CSS styles for animations and diamond
 st.markdown("""
     <style>
     .blinking {
@@ -14,6 +13,24 @@ st.markdown("""
     }
     @keyframes blinker {
         50% { opacity: 0.5; }
+    }
+    @keyframes flash {
+        0% { background-color: white; color: black; }
+        50% { background-color: black; color: white; }
+        100% { background-color: white; color: black; }
+    }
+    .score-box {
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-weight: bold;
+        font-size: 24px;
+        display: inline-block;
+        min-width: 60px;
+        text-align: center;
+        margin-top: 4px;
+    }
+    .flash {
+        animation: flash 1s infinite;
     }
     .diamond {
         width: 50px;
@@ -34,18 +51,6 @@ st.markdown("""
     .first { bottom: 0; right: 0; transform: translate(50%, 50%) rotate(45deg); }
     .second { top: 0; left: 50%; transform: translate(-50%, -50%) rotate(45deg); }
     .third { bottom: 0; left: 0; transform: translate(-50%, 50%) rotate(45deg); }
-    .scoring-indicator {
-        animation: flash 1s infinite;
-        font-weight: bold;
-        padding: 0.25em 0.5em;
-        border-radius: 5px;
-        display: inline-block;
-    }
-    @keyframes flash {
-        0% { opacity: 1; }
-        50% { opacity: 0.2; }
-        100% { opacity: 1; }
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -53,15 +58,43 @@ SPORTS = {
     "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
     "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
     "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🛂"}
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏒"}
 }
 
 TEAM_COLORS = {
-    "NE": "#002244", "DAL": "#003594", "GB": "#203731", "KC": "#E31837", "PHI": "#004C54",
-    "SF": "#AA0000", "CHI": "#0B162A", "PIT": "#FFB612",
-    "LAL": "#552583", "BOS": "#007A33", "GSW": "#1D428A", "MIA": "#98002E", "NYK": "#F58426",
-    "NYY": "#003087", "LAD": "#005A9C", "CHC": "#0E3386", "HOU": "#EB6E1F",
-    "NYR": "#0038A8", "TOR": "#00205B", "VGK": "#B4975A"
+  
+    "Arizona Diamondbacks": {"primary": "#A71930", "secondary": "#E3D4AD"},
+    "Atlanta Braves": {"primary": "#CE1141", "secondary": "#13274F"},
+    "Baltimore Orioles": {"primary": "#DF4601", "secondary": "#000000"},
+    "Boston Red Sox": {"primary": "#BD3039", "secondary": "#0C2340"},
+    "Chicago White Sox": {"primary": "#27251F", "secondary": "#C4CED4"},
+    "Chicago Cubs": {"primary": "#0E3386", "secondary": "#CC3433"},
+    "Cincinnati Reds": {"primary": "#C6011F", "secondary": "#000000"},
+    "Cleveland Guardians": {"primary": "#0C2340", "secondary": "#E31937"},
+    "Colorado Rockies": {"primary": "#333366", "secondary": "#C4CED4"},
+    "Detroit Tigers": {"primary": "#0C2340", "secondary": "#FA4616"},
+    "Houston Astros": {"primary": "#002D62", "secondary": "#EB6E1F"},
+    "Kansas City Royals": {"primary": "#004687", "secondary": "#C09A5B"},
+    "Los Angeles Angels": {"primary": "#BA0021", "secondary": "#003263"},
+    "Los Angeles Dodgers": {"primary": "#005A9C", "secondary": "#EF3E42"},
+    "Miami Marlins": {"primary": "#00A3E0", "secondary": "#EF3340"},
+    "Milwaukee Brewers": {"primary": "#12284B", "secondary": "#FFC52F"},
+    "Minnesota Twins": {"primary": "#002B5C", "secondary": "#D31145"},
+    "New York Yankees": {"primary": "#003087", "secondary": "#E4002B"},
+    "New York Mets": {"primary": "#002D72", "secondary": "#FF5910"},
+    "Oakland Athletics": {"primary": "#003831", "secondary": "#EFB21E"},
+    "Philadelphia Phillies": {"primary": "#E81828", "secondary": "#002D72"},
+    "Pittsburgh Pirates": {"primary": "#FDB827", "secondary": "#27251F"},
+    "San Diego Padres": {"primary": "#2F241D", "secondary": "#FFC425"},
+    "San Francisco Giants": {"primary": "#FD5A1E", "secondary": "#27251F"},
+    "Seattle Mariners": {"primary": "#005C5C", "secondary": "#C4CED4"},
+    "St. Louis Cardinals": {"primary": "#C41E3A", "secondary": "#0C2340"},
+    "Tampa Bay Rays": {"primary": "#092C5C", "secondary": "#8FBCE6"},
+    "Texas Rangers": {"primary": "#003278", "secondary": "#C0111F"},
+    "Toronto Blue Jays": {"primary": "#134A8E", "secondary": "#1D2D5C"},
+    "Washington Nationals": {"primary": "#AB0003", "secondary": "#11225B"},
+
+
 }
 
 score_cache = {}
@@ -141,17 +174,21 @@ def display_scores(sport_name, date):
         game_id = game['id']
         prev = score_cache.get(game_id, (None, None))
         score_cache[game_id] = (t1['score'], t2['score'])
-        b1 = " blinking" if prev[0] != t1['score'] and prev[0] is not None else ""
-        b2 = " blinking" if prev[1] != t2['score'] and prev[1] is not None else ""
 
-        flash1 = f"<div class='scoring-indicator' style='background:{TEAM_COLORS.get(t1['abbreviation'], '#ccc')}'>{t1['score']}</div>" if b1 else f"<strong>{t1['score']}</strong>"
-        flash2 = f"<div class='scoring-indicator' style='background:{TEAM_COLORS.get(t2['abbreviation'], '#ccc')}'>{t2['score']}</div>" if b2 else f"<strong>{t2['score']}</strong>"
+        t1_color = TEAM_COLORS.get(t1['abbreviation'], "#444")
+        t2_color = TEAM_COLORS.get(t2['abbreviation'], "#444")
+
+        t1_changed = prev[0] != t1['score'] and prev[0] is not None
+        t2_changed = prev[1] != t2['score'] and prev[1] is not None
+
+        score1_html = f"<div class='score-box {'flash' if t1_changed else ''}' style='background:{t1_color}; color:white'>{t1['score']}</div>"
+        score2_html = f"<div class='score-box {'flash' if t2_changed else ''}' style='background:{t2_color}; color:white'>{t2['score']}</div>"
 
         col1, col2, col3 = st.columns([4, 2, 4])
         with col1:
             st.image(t1['logo'], width=60)
             st.markdown(f"### {t1['name']}")
-            st.markdown(flash1, unsafe_allow_html=True)
+            st.markdown(score1_html, unsafe_allow_html=True)
             if t1['possession']:
                 st.markdown("🏈 Possession")
 
@@ -171,13 +208,13 @@ def display_scores(sport_name, date):
                 </div>
                 """
                 st.markdown(diamond_html, unsafe_allow_html=True)
-                st.markdown(f"**Outs:** {game['outs']}  ")
+                st.markdown(f"**Outs:** {game['outs']}")
                 st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
 
         with col3:
             st.image(t2['logo'], width=60)
             st.markdown(f"### {t2['name']}")
-            st.markdown(flash2, unsafe_allow_html=True)
+            st.markdown(score2_html, unsafe_allow_html=True)
             if t2['possession']:
                 st.markdown("🏈 Possession")
 
@@ -188,16 +225,16 @@ st.sidebar.title("Controls")
 if "auto_refresh" not in st.session_state:
     st.session_state.auto_refresh = False
 
-if st.sidebar.button(":arrows_counterclockwise: Refresh Now"):
+if st.sidebar.button("🔄 Refresh Now"):
     st.cache_data.clear()
     st.rerun()
 
-if st.sidebar.button(":pause_button: Toggle Auto-Refresh"):
+if st.sidebar.button("⏯ Toggle Auto-Refresh"):
     st.session_state.auto_refresh = not st.session_state.auto_refresh
 
-# Main content
-st.title(":classical_building: Live Sports Scores Dashboard")
-st.markdown("Real-time updates with team logos and stats.")
+# Main layout
+st.title("🏟 Live Sports Scoreboard")
+st.markdown("Live updates with team logos, stats, and animations.")
 
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
 selected_sport = st.sidebar.selectbox("Choose a sport:", list(SPORTS.keys()))
