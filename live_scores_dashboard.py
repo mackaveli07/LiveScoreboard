@@ -62,7 +62,7 @@ SPORTS = {
 }
 
 TEAM_COLORS = {
-   team_colors = {
+  
     # MLB
     "Arizona Diamondbacks": {"primary": "#A71930", "secondary": "#E3D4AD"},
     "Atlanta Braves": {"primary": "#CE1141", "secondary": "#13274F"},
@@ -194,7 +194,7 @@ TEAM_COLORS = {
     "Vegas Golden Knights": {"primary": "#B4975A", "secondary": "#333F42"},
     "Washington Capitals": {"primary": "#041E42", "secondary": "#C8102E"},
     "Winnipeg Jets": {"primary": "#041E42", "secondary": "#AC162C"}
-}
+
 
 }
 
