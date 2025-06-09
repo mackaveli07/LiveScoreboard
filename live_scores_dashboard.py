@@ -3,7 +3,7 @@ import requests
 import time
 from datetime import datetime
 import streamlit.components.v1 as components
-
+from team_colors_all_leagues import TEAM_COLORS  # External file for team colors
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
@@ -64,40 +64,6 @@ SPORTS = {
     "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
     "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🛂"}
 }
-TEAM_COLORS = {
-    "NE": "#002244", "MIA": "#008E97", "BUF": "#00338D", "NYJ": "#125740",
-    "DAL": "#041E42", "PHI": "#004C54", "NYG": "#0B2265", "WAS": "#773141",
-    "KC": "#E31837", "DEN": "#FB4F14", "LV": "#000000", "LAC": "#002A5E",
-    "GB": "#203731", "CHI": "#0B162A", "MIN": "#4F2683", "DET": "#0076B6",
-    "BAL": "#241773", "PIT": "#FFB612", "CLE": "#311D00", "CIN": "#FB4F14",
-    "SF": "#AA0000", "SEA": "#002244", "LAR": "#003594", "ARI": "#97233F",
-    "ATL": "#A71930", "NO": "#D3BC8D", "CAR": "#0085CA", "TB": "#D50A0A",
-    "IND": "#002C5F", "TEN": "#4B92DB", "JAX": "#006778", "HOU": "#03202F",
-    "BOS": "#007A33", "BKN": "#000000", "NYK": "#006BB6", "PHI": "#006BB6",
-    "TOR": "#CE1141", "CHI": "#CE1141", "CLE": "#860038", "DET": "#C8102E",
-    "IND": "#FDBB30", "MIL": "#00471B", "ATL": "#E03A3E", "CHA": "#1D1160",
-    "MIA": "#98002E", "ORL": "#0077C0", "WAS": "#002B5C", "DEN": "#0E2240",
-    "MIN": "#0C2340", "OKC": "#007AC1", "POR": "#E03A3E", "UTA": "#002B5C",
-    "GSW": "#1D428A", "LAC": "#C8102E", "LAL": "#552583", "PHX": "#1D1160",
-    "SAC": "#5A2D81", "DAL": "#00538C", "HOU": "#CE1141", "MEM": "#5D76A9",
-    "NOP": "#0C2340", "SAS": "#C4CED4",
-    "NYY": "#003087", "BOS": "#BD3039", "TOR": "#134A8E", "BAL": "#DF4601",
-    "TB": "#092C5C", "CHW": "#27251F", "CLE": "#0C2340", "DET": "#0C2340",
-    "KC": "#004687", "MIN": "#002B5C", "HOU": "#EB6E1F", "LAA": "#BA0021",
-    "OAK": "#003831", "SEA": "#005C5C", "TEX": "#003278", "ATL": "#CE1141",
-    "MIA": "#00A3E0", "NYM": "#002D72", "PHI": "#E81828", "WSH": "#AB0003",
-    "CHC": "#0E3386", "CIN": "#C6011F", "MIL": "#12284B", "PIT": "#FDB827",
-    "STL": "#C41E3A", "ARI": "#A71930", "COL": "#33006F", "LAD": "#005A9C",
-    "SD": "#2F241D", "SF": "#FD5A1E",
-    "ANA": "#FC4C02", "BOS": "#FFB81C", "BUF": "#002654", "CGY": "#C8102E",
-    "CAR": "#CC0000", "CHI": "#CF0A2C", "COL": "#6F263D", "CBJ": "#002654",
-    "DAL": "#006847", "DET": "#CE1126", "EDM": "#041E42", "FLA": "#041E42",
-    "LAK": "#111111", "MIN": "#154734", "MTL": "#AF1E2D", "NSH": "#FFB81C",
-    "NJD": "#CE1126", "NYI": "#00539B", "NYR": "#0038A8", "OTT": "#E31837",
-    "PHI": "#F74902", "PIT": "#FCB514", "SJS": "#006D75", "SEA": "#001628",
-    "STL": "#002F87", "TBL": "#002868", "TOR": "#00205B", "VAN": "#00205B",
-    "VGK": "#B4975A", "WSH": "#041E42", "WPG": "#041E42"
-}
 
 score_cache = {}
 
@@ -132,6 +98,9 @@ def get_scores(sport_path, date=None):
         strikes = situation.get("strikes")
         outs = situation.get("outs")
 
+        pitcher = situation.get("pitcher", {}).get("athlete", {}).get("displayName")
+        batter = situation.get("batter", {}).get("athlete", {}).get("displayName")
+
         results.append({
             "id": event['id'],
             "status": comp['status']['type']['shortDetail'],
@@ -158,7 +127,9 @@ def get_scores(sport_path, date=None):
             "on_third": on_third,
             "balls": balls,
             "strikes": strikes,
-            "outs": outs
+            "outs": outs,
+            "pitcher": pitcher,
+            "batter": batter
         })
 
     return results
@@ -214,6 +185,10 @@ def display_scores(sport_name, date):
                     st.markdown(diamond_html, unsafe_allow_html=True)
                     st.markdown(f"**Outs:** {game['outs']}")
                     st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
+                    if game.get("pitcher"):
+                        st.markdown(f"**Pitcher:** {game['pitcher']}")
+                    if game.get("batter"):
+                        st.markdown(f"**Batter:** {game['batter']}")
 
             with col3:
                 st.image(t2['logo'], width=60)
@@ -238,7 +213,7 @@ if st.sidebar.button(":pause_button: Toggle Auto-Refresh"):
 
 # Main content
 st.title(":classical_building: Live Sports Scores Dashboard")
-st.markdown("Real-time updates with team logos and stats.")
+st.markdown("Your one stop for all sports scores and lines.")
 
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
 selected_sport = st.sidebar.selectbox("Choose a sport:", list(SPORTS.keys()))
@@ -250,4 +225,3 @@ if st.session_state.auto_refresh:
     time.sleep(2)
     st.cache_data.clear()
     st.rerun()
-
