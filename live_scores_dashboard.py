@@ -55,10 +55,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 SPORTS = {
-    "NFL (Football)": {"path": "football/nfl", "icon": "\ud83c\udfc8"},
-    "NBA (Basketball)": {"path": "basketball/nba", "icon": "\ud83c\udfc0"},
-    "MLB (Baseball)": {"path": "baseball/mlb", "icon": "\u26be"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "\ud83c\udfd2"}
+    "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
+    "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
+    "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
+    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🏒"}
 }
 
 TEAM_COLORS = {
@@ -187,7 +187,7 @@ def display_scores(sport_name, date):
             st.markdown(f"### {t1['name']}")
             st.markdown(score1_html, unsafe_allow_html=True)
             if t1['possession']:
-                st.markdown("\ud83c\udfc8 Possession")
+                st.markdown("🏈 Possession")
 
         with col2:
             st.markdown(f"### VS")
@@ -213,7 +213,7 @@ def display_scores(sport_name, date):
             st.markdown(f"### {t2['name']}")
             st.markdown(score2_html, unsafe_allow_html=True)
             if t2['possession']:
-                st.markdown("\ud83c\udfc8 Possession")
+                st.markdown("🏈 Possession")
 
         st.markdown("---")
 
@@ -222,15 +222,17 @@ st.sidebar.title("Controls")
 if "auto_refresh" not in st.session_state:
     st.session_state.auto_refresh = False
 
-if st.sidebar.button("\ud83d\udd04 Refresh Now"):
+refresh_now = st.sidebar.button("\U0001f504 Refresh Now")
+if refresh_now:
     st.cache_data.clear()
     st.rerun()
 
-if st.sidebar.button("\u23ef Toggle Auto-Refresh"):
+toggle_refresh = st.sidebar.button("\u23ef Toggle Auto-Refresh")
+if toggle_refresh:
     st.session_state.auto_refresh = not st.session_state.auto_refresh
 
 # Main layout
-st.title("\ud83c\udfdf Live Sports Scoreboard")
+st.title("\U0001f3df Live Sports Scoreboard")
 st.markdown("Live updates with team logos, stats, and animations.")
 
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
