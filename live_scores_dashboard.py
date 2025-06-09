@@ -268,7 +268,7 @@ def get_scores(sport_path, date=None):
         })
 
     return results
-    def colored_score_box(score, color):
+ def colored_score_box(score, color):
     return f"""
         <div style='
             display:inline-block;
