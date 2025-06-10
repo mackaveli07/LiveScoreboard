@@ -44,15 +44,16 @@ st.markdown("""
         100% { opacity: 1; }
     }
 
-    .score-box {
+    .team-score-box {
         color: white;
         font-weight: bold;
         text-align: center;
-        padding: 0.3em 0.6em;
-        border-radius: 6px;
+        padding: 1em;
+        border-radius: 8px;
         display: inline-block;
-        min-width: 30px;
+        min-width: 60px;
         border: 2px solid black;
+        margin-top: 0.5em;
     }
     </style>
 """, unsafe_allow_html=True)
