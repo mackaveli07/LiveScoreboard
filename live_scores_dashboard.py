@@ -273,7 +273,8 @@ def display_scores(sport_name, date):
         gradient_style = f"background: linear-gradient(to right, {color1}, {color2});"
         box_style = f"{gradient_style} padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
 
-       with st.container():
+      
+with st.container():
     st.markdown(f"<div class='score-box' style='{box_style}'>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([4, 2, 4])
 
@@ -294,7 +295,7 @@ def display_scores(sport_name, date):
             if sport_name == "NFL (Football)":
                 possession_team = next((t['name'] for t in game['teams'] if t['possession']), None)
                 yard_line = comp.get("situation", {}).get("yardLine")
-                direction = "right"  # or determine from comp if available
+                direction = "right"
                 if possession_team and yard_line:
                     try:
                         yard = int(yard_line)
@@ -320,14 +321,14 @@ def display_scores(sport_name, date):
             if game.get("batter"):
                 st.markdown(f"**Batter:** {game['batter']}")
 
-            with col3:
-                st.image(t2['logo'], width=60)
-                st.markdown(f"### {t2['name']}")
-                st.markdown(flash2, unsafe_allow_html=True)
-                if t2['possession']:
-                    st.markdown("🏈 Possession")
-            st.markdown("</div>", unsafe_allow_html=True)
-            st.markdown("---")
+    with col3:
+        st.image(t2['logo'], width=60)
+        st.markdown(f"### {t2['name']}")
+        st.markdown(flash2, unsafe_allow_html=True)
+        if t2['possession']:
+            st.markdown("🏈 Possession")
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # --- Sidebar ---
 st.sidebar.title("Controls")
