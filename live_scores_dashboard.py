@@ -325,7 +325,7 @@ def display_scores(sport_name, date):
                 if sport_name != "MLB (Baseball)":
                     st.markdown(f"Period: {game['period']}")
                     st.markdown(f"Clock: {game['clock']}")
-               else:
+    else:
     st.markdown(f"Inning: {game['period']}")
     diamond_html = f"""
         <div class='diamond'>
