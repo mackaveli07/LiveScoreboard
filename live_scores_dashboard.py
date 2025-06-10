@@ -43,6 +43,17 @@ st.markdown("""
         50% { opacity: 0; }
         100% { opacity: 1; }
     }
+
+    .score-box {
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        padding: 0.3em 0.6em;
+        border-radius: 6px;
+        display: inline-block;
+        min-width: 30px;
+        border: 2px solid black;
+    }
     </style>
 """, unsafe_allow_html=True)
 SPORTS = {
