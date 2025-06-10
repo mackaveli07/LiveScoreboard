@@ -345,37 +345,39 @@ def display_scores(sport_name, date):
                                         st.progress(yard / 100)
                                     except:
                                         st.markdown("**Field Position:** Unknown")
-                else:
-                  
-                    st.markdown(f"Inning: {game['period']}")
-                
-                    diamond_html = f"""
-                    <div class="diamond">
-                        <div class="base second {'occupied' if game['on_second'] else ''}"></div>
-                        <div class="base third {'occupied' if game['on_third'] else ''}"></div>
-                        <div class="base first {'occupied' if game['on_first'] else ''}"></div>
-                    </div>
-                    """
-                
-                    st.markdown(diamond_html, unsafe_allow_html=True)
-                    st.markdown(f"**Outs:** {game['outs']}")
-                    st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
+               else:
+    st.markdown(f"Inning: {game['period']}")
+
+    diamond_html = f"""
+    <div class="diamond">
+        <div class="base second {'occupied' if game['on_second'] else ''}"></div>
+        <div class="base third {'occupied' if game['on_third'] else ''}"></div>
+        <div class="base first {'occupied' if game['on_first'] else ''}"></div>
+    </div>
+    """
+
+    st.markdown(diamond_html, unsafe_allow_html=True)
+    st.markdown(f"**Outs:** {game['outs']}")
+    st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
 
     if game.get("pitcher"):
         st.markdown(f"**Pitcher:** {game['pitcher']}")
+
     if game.get("batter"):
         st.markdown(f"**Batter:** {game['batter']}")
 
-        with col3:
-            st.image(t2['logo'], width=60)
-            st.markdown(score2_html, unsafe_allow_html=True)
-                if t2['possession']:
-                    st.markdown("🏈 Possession")
+with col3:
+    st.image(t2['logo'], width=60)
+    st.markdown(score2_html, unsafe_allow_html=True)
 
-            st.markdown("</div>", unsafe_allow_html=True)
+    if t2['possession']:
+        st.markdown("🏈 Possession")
+
+st.markdown("</div>", unsafe_allow_html=True)
 
 # --- Sidebar ---
 st.sidebar.title("Controls")
+
 if "auto_refresh" not in st.session_state:
     st.session_state.auto_refresh = False
 
