@@ -349,15 +349,16 @@ def display_scores(sport_name, date):
                     st.markdown(f"Inning: {game['period']}")
                     diamond_html = f'''
    diamond_html = f'''
-    <div class="diamond">
-        <div class="base second {'occupied' if game['on_second'] else ''}"></div>
-        <div class="base third {'occupied' if game['on_third'] else ''}"></div>
-        <div class="base first {'occupied' if game['on_first'] else ''}"></div>
-    </div>
+<div class="diamond">
+    <div class="base second {'occupied' if game['on_second'] else ''}"></div>
+    <div class="base third {'occupied' if game['on_third'] else ''}"></div>
+    <div class="base first {'occupied' if game['on_first'] else ''}"></div>
+</div>
+'''
 
-                    st.markdown(diamond_html, unsafe_allow_html=True)
-                    st.markdown(f"**Outs:** {game['outs']}")
-                    st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
+                st.markdown(diamond_html, unsafe_allow_html=True)
+                st.markdown(f"**Outs:** {game['outs']}")
+                st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
                     if game.get("pitcher"):
                         st.markdown(f"**Pitcher:** {game['pitcher']}")
                     if game.get("batter"):
