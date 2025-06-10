@@ -80,7 +80,7 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
-""", unsafe_allow_html=True)
+
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
     "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
