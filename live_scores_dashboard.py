@@ -48,17 +48,23 @@ st.markdown("""
         padding: 0.6em;
         margin-top: 0.5em;
         border-radius: 10px;
-        display: inline-block;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         border: 2px solid black;
-    }
-    .team-score-box {
         color: white;
         font-weight: bold;
+        min-width: 80px;
+    }
+    .team-name {
+        font-size: 1.1em;
+        margin-bottom: 0.3em;
         text-align: center;
-        padding: 0.4em 0.8em;
-        border-radius: 6px;
-        display: inline-block;
-        min-width: 30px;
+    }
+    .team-score-box {
+       font-size: 1.4em;
+        text-align: center;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -288,7 +294,7 @@ def display_scores(sport_name, date):
 
             with col1:
                 st.image(t1['logo'], width=60)
-                st.markdown(f"### {t1['name']}")
+                
                 st.markdown(flash1, unsafe_allow_html=True)
                 if t1['possession']:
                     st.markdown("🏈 Possession")
@@ -330,7 +336,7 @@ def display_scores(sport_name, date):
 
             with col3:
                 st.image(t2['logo'], width=60)
-                st.markdown(f"### {t2['name']}")
+               
                 st.markdown(flash2, unsafe_allow_html=True)
                 if t2['possession']:
                     st.markdown("🏈 Possession")
