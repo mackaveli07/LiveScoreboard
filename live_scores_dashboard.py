@@ -357,7 +357,7 @@ def display_scores(sport_name, date):
 st.markdown(diamond_html, unsafe_allow_html=True)
 '''
                     """
-                        st.markdown(diamond_html, unsafe_allow_html=True)
+                    st.markdown(diamond_html, unsafe_allow_html=True)
                     st.markdown(f"**Outs:** {game['outs']}")
                     st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
                     if game.get("pitcher"):
