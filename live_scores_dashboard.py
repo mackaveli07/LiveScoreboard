@@ -43,7 +43,6 @@ st.markdown("""
         50% { opacity: 0; }
         100% { opacity: 1; }
     }
-
     .team-score-wrapper {
         padding: 0.6em;
         margin-top: 0.5em;
@@ -63,10 +62,24 @@ st.markdown("""
         text-align: center;
     }
     .team-score-box {
-       font-size: 1.4em;
+        font-size: 1.4em;
         text-align: center;
     }
+    .scoring-popup {
+        animation: fadeOut 2s ease-out forwards;
+        font-size: 1.2em;
+        color: yellow;
+        font-weight: bold;
+        position: relative;
+        top: -8px;
+    }
+    @keyframes fadeOut {
+        0% { opacity: 1; top: -8px; }
+        50% { opacity: 1; top: -20px; }
+        100% { opacity: 0; top: -30px; }
+    }
     </style>
+""", unsafe_allow_html=True)
 """, unsafe_allow_html=True)
 SPORTS = {
     "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
@@ -273,6 +286,19 @@ def display_scores(sport_name, date):
         b1 = prev[0] != t1['score'] and prev[0] is not None
         b2 = prev[1] != t2['score'] and prev[1] is not None
 
+        popup1 = ""
+        popup2 = ""
+        if sport_name == "NBA (Basketball)":
+            try:
+                delta1 = int(t1['score']) - int(prev[0]) if prev[0] is not None else 0
+                delta2 = int(t2['score']) - int(prev[1]) if prev[1] is not None else 0
+                if delta1 > 0:
+                    popup1 = f"<div class='scoring-popup'>+{delta1}</div>"
+                if delta2 > 0:
+                    popup2 = f"<div class='scoring-popup'>+{delta2}</div>"
+            except:
+                pass
+
         color1 = TEAM_COLORS.get(t1['name'], {}).get('primary', '#ddd')
         color1b = TEAM_COLORS.get(t1['name'], {}).get('secondary', '#aaa')
         color2 = TEAM_COLORS.get(t2['name'], {}).get('primary', '#ccc')
@@ -280,23 +306,26 @@ def display_scores(sport_name, date):
 
         score1_html = f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color1}, {color1b})'>" \
                        + f"<div class='team-name'>{t1['name']}</div>" \
+                       + popup1 \
                        + (f"<div class='team-score-box score-blink'>{t1['score']}</div>" if b1 else f"<div class='team-score-box'>{t1['score']}</div>") + "</div>"
 
         score2_html = f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color2}, {color2b})'>" \
                        + f"<div class='team-name'>{t2['name']}</div>" \
+                       + popup2 \
                        + (f"<div class='team-score-box score-blink'>{t2['score']}</div>" if b2 else f"<div class='team-score-box'>{t2['score']}</div>") + "</div>"
 
         gradient_style = f"background: linear-gradient(to right, {color1}, {color2});"
         box_style = f"{gradient_style} padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
+
         with st.container():
             st.markdown(f"<div class='score-box' style='{box_style}'>", unsafe_allow_html=True)
             col1, col2, col3 = st.columns([4, 2, 4])
 
-        with col1:
-            st.image(t1['logo'], width=60)
-            st.markdown(score1_html, unsafe_allow_html=True)
-            if t1['possession']:
-                st.markdown("🏈 Possession")
+            with col1:
+                st.image(t1['logo'], width=60)
+                st.markdown(score1_html, unsafe_allow_html=True)
+                if t1['possession']:
+                    st.markdown("🏈 Possession")
 
             with col2:
                 st.markdown("### VS")
@@ -335,7 +364,6 @@ def display_scores(sport_name, date):
 
             with col3:
                 st.image(t2['logo'], width=60)
-               
                 st.markdown(score2_html, unsafe_allow_html=True)
                 if t2['possession']:
                     st.markdown("🏈 Possession")
