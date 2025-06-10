@@ -279,16 +279,17 @@ def display_scores(sport_name, date):
                     st.markdown(f"Period: {game['period']}")
                     st.markdown(f"Clock: {game['clock']}")
                     if sport_name == "NFL (Football)":
-                        if t1['possession']:
-                            yard = game.get("yard_line")
-                            if yard:
-                                try:
-                                    yard = int(yard)
-                                    yard = max(0, min(100, yard))
-                                    st.markdown(f"**{t1['name']} Offense - Ball on {yard} yard line**")
-                                    st.progress(yard / 100)
-                                except:
-                                    st.markdown("**Field Position:** Unknown")
+                        for team in game['teams']:
+                            if team['possession']:
+                                yard = game.get("yard_line")
+                                if yard:
+                                    try:
+                                        yard = int(yard)
+                                        yard = max(0, min(100, yard))
+                                        st.markdown(f"**{team['name']} Offense - Ball on {yard} yard line**")
+                                        st.progress(yard / 100)
+                                    except:
+                                        st.markdown("**Field Position:** Unknown")
                 else:
                     st.markdown(f"Inning: {game['period']}")
                     diamond_html = f"""
