@@ -283,7 +283,7 @@ def display_scores(sport_name, date):
                 if t1['possession']:
                     st.markdown("🏈 Possession")
 
-           with col2:
+         with col2:
                 st.markdown("### VS")
                 st.markdown(f"**{game['status']}**")
                 if sport_name != "MLB (Baseball)":
