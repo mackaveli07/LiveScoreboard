@@ -295,7 +295,7 @@ def display_scores(sport_name, date):
             with col1:
                 st.image(t1['logo'], width=60)
                 
-                st.markdown(flash1, unsafe_allow_html=True)
+               st.markdown(score1_html, unsafe_allow_html=True)
                 if t1['possession']:
                     st.markdown("🏈 Possession")
 
@@ -337,7 +337,7 @@ def display_scores(sport_name, date):
             with col3:
                 st.image(t2['logo'], width=60)
                
-                st.markdown(flash2, unsafe_allow_html=True)
+                st.markdown(score2_html, unsafe_allow_html=True)
                 if t2['possession']:
                     st.markdown("🏈 Possession")
 
