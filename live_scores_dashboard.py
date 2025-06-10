@@ -348,6 +348,7 @@ def display_scores(sport_name, date):
                 else:
                     st.markdown(f"Inning: {game['period']}")
                     diamond_html = f'''
+   diamond_html = f'''
     <div class="diamond">
         <div class="base second {'occupied' if game['on_second'] else ''}"></div>
         <div class="base third {'occupied' if game['on_third'] else ''}"></div>
