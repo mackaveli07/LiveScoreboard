@@ -347,8 +347,8 @@ def display_scores(sport_name, date):
                             st.progress(yard / 100)
                         except:
                             st.markdown("**Field Position:** Unknown")
-    else:
-        st.markdown(f"Inning: {game['period']}")
+                        else:
+                            st.markdown(f"Inning: {game['period']}")
 
         diamond_html = f"""
         <div class="diamond">
