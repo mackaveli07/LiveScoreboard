@@ -283,12 +283,25 @@ def display_scores(sport_name, date):
                 if t1['possession']:
                     st.markdown("🏈 Possession")
 
-            with col2:
+           with col2:
                 st.markdown("### VS")
                 st.markdown(f"**{game['status']}**")
                 if sport_name != "MLB (Baseball)":
                     st.markdown(f"Period: {game['period']}")
                     st.markdown(f"Clock: {game['clock']}")
+                    # NFL Field Position Feature
+                    if sport_name == "NFL (Football)":
+                        possession_team = next((t['name'] for t in game['teams'] if t['possession']), None)
+                        yard_line = comp.get("situation", {}).get("yardLine")
+                        direction = "right"  # or determine from comp if available
+                        if possession_team and yard_line:
+                            try:
+                                yard = int(yard_line)
+                                yard = max(0, min(100, yard))
+                                st.markdown(f"**{possession_team} Offense - Ball on {yard_line} yard line**")
+                                st.progress(yard / 100)
+                            except:
+                                st.markdown("**Field Position:** Unknown")
                 else:
                     st.markdown(f"Inning: {game['period']}")
                     diamond_html = f"""
