@@ -346,7 +346,7 @@ def display_scores(sport_name, date):
                                     except:
                                         st.markdown("**Field Position:** Unknown")
                 else:
-                   else:
+                  
     st.markdown(f"Inning: {game['period']}")
 
     diamond_html = f"""
