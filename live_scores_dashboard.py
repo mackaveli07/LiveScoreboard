@@ -354,6 +354,8 @@ def display_scores(sport_name, date):
     <div class="base first {'occupied' if game['on_first'] else ''}"></div>
 </div>
 '''
+st.markdown(diamond_html, unsafe_allow_html=True)
+'''
                     """
                         st.markdown(diamond_html, unsafe_allow_html=True)
                     st.markdown(f"**Outs:** {game['outs']}")
