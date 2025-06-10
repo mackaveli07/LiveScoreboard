@@ -366,9 +366,9 @@ def display_scores(sport_name, date):
     if game.get("batter"):
         st.markdown(f"**Batter:** {game['batter']}")
 
-            with col3:
-                st.image(t2['logo'], width=60)
-                st.markdown(score2_html, unsafe_allow_html=True)
+        with col3:
+            st.image(t2['logo'], width=60)
+            st.markdown(score2_html, unsafe_allow_html=True)
                 if t2['possession']:
                     st.markdown("🏈 Possession")
 
