@@ -347,7 +347,7 @@ def display_scores(sport_name, date):
                                         st.markdown("**Field Position:** Unknown")
                 else:
                     st.markdown(f"Inning: {game['period']}")
-                    diamond_html = f'''
+                   
 diamond_html = f"""
 <div class="diamond">
     <div class="base second {'occupied' if game['on_second'] else ''}"></div>
