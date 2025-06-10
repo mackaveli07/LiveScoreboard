@@ -250,14 +250,16 @@ def display_scores(sport_name, date):
         b1 = prev[0] != t1['score'] and prev[0] is not None
         b2 = prev[1] != t2['score'] and prev[1] is not None
 
+        color1 = TEAM_COLORS.get(t1['name'], {}).get('primary', '#ddd')
+        color2 = TEAM_COLORS.get(t2['name'], {}).get('primary', '#ccc') 
+        
         sec1 = TEAM_COLORS.get(t1['name'], {}).get('secondary', '#f00')
         sec2 = TEAM_COLORS.get(t2['name'], {}).get('secondary', '#0f0')
 
         flash1 = f"<div class='score-blink' style='color:{sec1}'>{t1['score']}</div>" if b1 else f"<strong>{t1['score']}</strong>"
         flash2 = f"<div class='score-blink' style='color:{sec2}'>{t2['score']}</div>" if b2 else f"<strong>{t2['score']}</strong>"
 
-        color1 = TEAM_COLORS.get(t1['name'], {}).get('primary', '#ddd')
-        color2 = TEAM_COLORS.get(t2['name'], {}).get('primary', '#ccc')
+       
         gradient_style = f"background: linear-gradient(to right, {color1}, {color2});"
         box_style = f"{gradient_style} padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
 
