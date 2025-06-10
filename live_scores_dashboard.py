@@ -327,45 +327,46 @@ def display_scores(sport_name, date):
                 if t1['possession']:
                     st.markdown("🏈 Possession")
 
-            with col2:
-                st.markdown("### VS")
-                st.markdown(f"**{game['status']}**")
-                if sport_name != "MLB (Baseball)":
-                    st.markdown(f"Period: {game['period']}")
-                    st.markdown(f"Clock: {game['clock']}")
-                    if sport_name == "NFL (Football)":
-                        for team in game['teams']:
-                            if team['possession']:
-                                yard = game.get("yard_line")
-                                if yard:
-                                    try:
-                                        yard = int(yard)
-                                        yard = max(0, min(100, yard))
-                                        st.markdown(f"**{team['name']} Offense - Ball on {yard} yard line**")
-                                        st.progress(yard / 100)
-                                    except:
-                                        st.markdown("**Field Position:** Unknown")
-               else:
-    st.markdown(f"Inning: {game['period']}")
+           with col2:
+    st.markdown("### VS")
+    st.markdown(f"**{game['status']}**")
 
-    diamond_html = f"""
-    <div class="diamond">
-        <div class="base second {'occupied' if game['on_second'] else ''}"></div>
-        <div class="base third {'occupied' if game['on_third'] else ''}"></div>
-        <div class="base first {'occupied' if game['on_first'] else ''}"></div>
-    </div>
-    """
+    if sport_name != "MLB (Baseball)":
+        st.markdown(f"Period: {game['period']}")
+        st.markdown(f"Clock: {game['clock']}")
 
-    st.markdown(diamond_html, unsafe_allow_html=True)
-    st.markdown(f"**Outs:** {game['outs']}")
-    st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
+        if sport_name == "NFL (Football)":
+            for team in game['teams']:
+                if team['possession']:
+                    yard = game.get("yard_line")
+                    if yard:
+                        try:
+                            yard = int(yard)
+                            yard = max(0, min(100, yard))
+                            st.markdown(f"**{team['name']} Offense - Ball on {yard} yard line**")
+                            st.progress(yard / 100)
+                        except:
+                            st.markdown("**Field Position:** Unknown")
+    else:
+        st.markdown(f"Inning: {game['period']}")
 
-    if game.get("pitcher"):
-        st.markdown(f"**Pitcher:** {game['pitcher']}")
+        diamond_html = f"""
+        <div class="diamond">
+            <div class="base second {'occupied' if game['on_second'] else ''}"></div>
+            <div class="base third {'occupied' if game['on_third'] else ''}"></div>
+            <div class="base first {'occupied' if game['on_first'] else ''}"></div>
+        </div>
+        """
 
-    if game.get("batter"):
-        st.markdown(f"**Batter:** {game['batter']}")
+        st.markdown(diamond_html, unsafe_allow_html=True)
+        st.markdown(f"**Outs:** {game['outs']}")
+        st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
 
+        if game.get("pitcher"):
+            st.markdown(f"**Pitcher:** {game['pitcher']}")
+
+        if game.get("batter"):
+            st.markdown(f"**Batter:** {game['batter']}")
 with col3:
     st.image(t2['logo'], width=60)
     st.markdown(score2_html, unsafe_allow_html=True)
