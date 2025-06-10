@@ -321,13 +321,15 @@ def display_scores(sport_name, date):
             st.markdown(f"<div class='score-box' style='{box_style}'>", unsafe_allow_html=True)
             col1, col2, col3 = st.columns([4, 2, 4])
 
-            with col1:
-                st.image(t1['logo'], width=60)
-                st.markdown(score1_html, unsafe_allow_html=True)
-                if t1['possession']:
-                    st.markdown("🏈 Possession")
+          col1, col2, col3 = st.columns([1, 2, 1])
 
-           with col2:
+with col1:
+    st.image(t1['logo'], width=60)
+    st.markdown(score1_html, unsafe_allow_html=True)
+    if t1['possession']:
+        st.markdown("🏈 Possession")
+
+with col2:
     st.markdown("### VS")
     st.markdown(f"**{game['status']}**")
 
@@ -347,8 +349,8 @@ def display_scores(sport_name, date):
                             st.progress(yard / 100)
                         except:
                             st.markdown("**Field Position:** Unknown")
-                        else:
-                            st.markdown(f"Inning: {game['period']}")
+    else:
+        st.markdown(f"Inning: {game['period']}")
 
         diamond_html = f"""
         <div class="diamond">
@@ -364,15 +366,15 @@ def display_scores(sport_name, date):
 
         if game.get("pitcher"):
             st.markdown(f"**Pitcher:** {game['pitcher']}")
-
         if game.get("batter"):
             st.markdown(f"**Batter:** {game['batter']}")
+
 with col3:
     st.image(t2['logo'], width=60)
     st.markdown(score2_html, unsafe_allow_html=True)
-
     if t2['possession']:
         st.markdown("🏈 Possession")
+
 
 st.markdown("</div>", unsafe_allow_html=True)
 
