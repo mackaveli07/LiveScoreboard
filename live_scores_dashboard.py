@@ -244,7 +244,6 @@ TEAM_COLORS = {
 
 
 score_cache = {}
-@st.cache_data(ttl=30)
 
 @st.cache_data(ttl=30)
 def get_scores(sport_path, date):
@@ -272,8 +271,20 @@ def get_scores(sport_path, date):
             "id": event['id'],
             "status": comp['status']['type']['shortDetail'],
             "teams": [
-                {"name": away['team']['displayName'], "score": away['score'], "logo": away['team']['logo'], "abbreviation": away['team']['abbreviation'], "possession": away['team']['id'] == situation.get("possession")},
-                {"name": home['team']['displayName'], "score": home['score'], "logo": home['team']['logo'], "abbreviation": home['team']['abbreviation'], "possession": home['team']['id'] == situation.get("possession")}
+                {
+                    "name": away['team']['displayName'],
+                    "score": away['score'],
+                    "logo": away['team']['logo'],
+                    "abbreviation": away['team']['abbreviation'],
+                    "possession": away['team']['id'] == situation.get("possession")
+                },
+                {
+                    "name": home['team']['displayName'],
+                    "score": home['score'],
+                    "logo": home['team']['logo'],
+                    "abbreviation": home['team']['abbreviation'],
+                    "possession": home['team']['id'] == situation.get("possession")
+                }
             ],
             "period": comp['status'].get("period", ""),
             "clock": comp['status'].get("displayClock", ""),
@@ -287,7 +298,9 @@ def get_scores(sport_path, date):
             "batter": situation.get("batter", {}).get("athlete", {}).get("displayName"),
             "yard_line": situation.get("yardLine")
         })
+
     return results
+
 
 score_cache = {}
 
@@ -304,11 +317,11 @@ def display_scores(sport_name, date):
         game_id = game['id']
         prev = score_cache.get(game_id, (None, None))
         score_cache[game_id] = (t1['score'], t2['score'])
+
         b1 = prev[0] != t1['score'] and prev[0] is not None
         b2 = prev[1] != t2['score'] and prev[1] is not None
 
-        popup1 = ""
-        popup2 = ""
+        popup1 = popup2 = ""
         if sport_name == "NBA (Basketball)":
             try:
                 delta1 = int(t1['score']) - int(prev[0]) if prev[0] is not None else 0
@@ -325,15 +338,19 @@ def display_scores(sport_name, date):
         color2 = TEAM_COLORS.get(t2['name'], {}).get('primary', '#ccc')
         color2b = TEAM_COLORS.get(t2['name'], {}).get('secondary', '#bbb')
 
-        score1_html = f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color1}, {color1b})'>" \
-                       + f"<div class='team-name'>{t1['name']}</div>" \
-                       + popup1 \
-                       + (f"<div class='team-score-box score-blink'>{t1['score']}</div>" if b1 else f"<div class='team-score-box'>{t1['score']}</div>") + "</div>"
+        score1_html = (
+            f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color1}, {color1b})'>"
+            f"<div class='team-name'>{t1['name']}</div>{popup1}"
+            f"{'<div class=\"team-score-box score-blink\">' if b1 else '<div class=\"team-score-box\">'}{t1['score']}</div>"
+            "</div>"
+        )
 
-        score2_html = f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color2}, {color2b})'>" \
-                       + f"<div class='team-name'>{t2['name']}</div>" \
-                       + popup2 \
-                       + (f"<div class='team-score-box score-blink'>{t2['score']}</div>" if b2 else f"<div class='team-score-box'>{t2['score']}</div>") + "</div>"
+        score2_html = (
+            f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color2}, {color2b})'>"
+            f"<div class='team-name'>{t2['name']}</div>{popup2}"
+            f"{'<div class=\"team-score-box score-blink\">' if b2 else '<div class=\"team-score-box\">'}{t2['score']}</div>"
+            "</div>"
+        )
 
         gradient_style = f"background: linear-gradient(to right, {color1}, {color2});"
         box_style = f"{gradient_style} padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
@@ -348,33 +365,32 @@ def display_scores(sport_name, date):
                 if t1['possession']:
                     st.markdown("🏈 Possession")
 
-           with col2:
+            with col2:
                 st.markdown("### VS")
                 st.markdown(f"**{game['status']}**")
-            
+
                 if sport_name == "MLB (Baseball)":
                     st.markdown(f"Inning: {game['period']}")
-            
+
                     diamond_html = f"""
-                    <div class="diamond">
-                        <div class="base second {'occupied' if game['on_second'] else ''}"></div>
-                        <div class="base third {'occupied' if game['on_third'] else ''}"></div>
-                        <div class="base first {'occupied' if game['on_first'] else ''}"></div>
-                    </div>
+                        <div class="diamond">
+                            <div class="base second {'occupied' if game['on_second'] else ''}"></div>
+                            <div class="base third {'occupied' if game['on_third'] else ''}"></div>
+                            <div class="base first {'occupied' if game['on_first'] else ''}"></div>
+                        </div>
                     """
                     st.markdown(diamond_html, unsafe_allow_html=True)
                     st.markdown(f"**Outs:** {game['outs']}")
                     st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
-            
+
                     if game.get("pitcher"):
                         st.markdown(f"**Pitcher:** {game['pitcher']}")
                     if game.get("batter"):
                         st.markdown(f"**Batter:** {game['batter']}")
-            
+
                 elif sport_name == "NFL (Football)":
                     st.markdown(f"Period: {game['period']}")
                     st.markdown(f"Clock: {game['clock']}")
-            
                     for team in game['teams']:
                         if team['possession']:
                             yard = game.get("yard_line")
@@ -386,35 +402,18 @@ def display_scores(sport_name, date):
                                     st.progress(yard / 100)
                                 except:
                                     st.markdown("**Field Position:** Unknown")
-            
+
                 elif sport_name == "NBA (Basketball)":
                     st.markdown(f"Quarter: {game['period']}")
                     st.markdown(f"Clock: {game['clock']}")
-            
+
                 elif sport_name == "NHL (Hockey)":
                     st.markdown(f"Period: {game['period']}")
                     st.markdown(f"Clock: {game['clock']}")
-            
+
                 else:
                     st.markdown(f"Period: {game['period']}")
                     st.markdown(f"Clock: {game['clock']}")
-
-
-                    diamond_html = f"""
-                    <div class="diamond">
-                        <div class="base second {'occupied' if game['on_second'] else ''}"></div>
-                        <div class="base third {'occupied' if game['on_third'] else ''}"></div>
-                        <div class="base first {'occupied' if game['on_first'] else ''}"></div>
-                    </div>
-                    """
-                    st.markdown(diamond_html, unsafe_allow_html=True)
-                    st.markdown(f"**Outs:** {game['outs']}")
-                    st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
-
-                    if game.get("pitcher"):
-                        st.markdown(f"**Pitcher:** {game['pitcher']}")
-                    if game.get("batter"):
-                        st.markdown(f"**Batter:** {game['batter']}")
 
             with col3:
                 st.image(t2['logo'], width=60)
