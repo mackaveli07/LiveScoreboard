@@ -244,6 +244,51 @@ TEAM_COLORS = {
 
 
 score_cache = {}
+@st.cache_data(ttl=30)
+def get_scores(sport_path, date):
+    url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard?dates={date}"
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        st.error(f"Error fetching scores for {sport_path}: {e}")
+        return []
+
+    results = []
+    for event in data.get("events", []):
+        comp = event['competitions'][0]
+        teams = comp['competitors']
+        if len(teams) != 2:
+            continue
+
+        home = next(t for t in teams if t['homeAway'] == 'home')
+        away = next(t for t in teams if t['homeAway'] == 'away')
+        situation = comp.get("situation", {})
+
+        results.append({
+            "id": event['id'],
+            "status": comp['status']['type']['shortDetail'],
+            "teams": [
+                {"name": away['team']['displayName'], "score": away['score'], "logo": away['team']['logo'], "abbreviation": away['team']['abbreviation'], "possession": away['team']['id'] == situation.get("possession")},
+                {"name": home['team']['displayName'], "score": home['score'], "logo": home['team']['logo'], "abbreviation": home['team']['abbreviation'], "possession": home['team']['id'] == situation.get("possession")}
+            ],
+            "period": comp['status'].get("period", ""),
+            "clock": comp['status'].get("displayClock", ""),
+            "on_first": situation.get("onFirst"),
+            "on_second": situation.get("onSecond"),
+            "on_third": situation.get("onThird"),
+            "balls": situation.get("balls"),
+            "strikes": situation.get("strikes"),
+            "outs": situation.get("outs"),
+            "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName"),
+            "batter": situation.get("batter", {}).get("athlete", {}).get("displayName"),
+            "yard_line": situation.get("yardLine")
+        })
+    return results
+
+score_cache = {}
+
 
 def display_scores(sport_name, date):
     sport_cfg = SPORTS[sport_name]
