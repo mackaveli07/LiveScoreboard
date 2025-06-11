@@ -289,11 +289,13 @@ def display_scores(sport_name, date):
                        + (f"<div class='team-score-box score-blink'>{t2['score']}</div>" if b2 else f"<div class='team-score-box'>{t2['score']}</div>") + "</div>"
 
         backgrounds = {
-    "NFL (Football)": "linear-gradient(#3b7a57, #2e5d44)",  # grassy field
-    "NBA (Basketball)": "linear-gradient(#deb887, #d2b48c)",  # hardwood
-    "MLB (Baseball)": "linear-gradient(#228b22, #6b8e23)",  # infield grass
-    "NHL (Hockey)": "linear-gradient(#e0f7fa, #b2ebf2)"  # ice
-}
+            "NFL (Football)": "linear-gradient(#3b7a57, #2e5d44)",  # grassy field
+            "NBA (Basketball)": "linear-gradient(#deb887, #d2b48c)",  # hardwood
+            "MLB (Baseball)": "linear-gradient(#228b22, #6b8e23)",  # infield grass
+            "NHL (Hockey)": "linear-gradient(#e0f7fa, #b2ebf2)"  # ice
+        }
+        background_style = backgrounds.get(sport_name, f"linear-gradient(to right, {color1}, {color2})")
+        gradient_style = f"background: {background_style};"
 background_style = backgrounds.get(sport_name, f"linear-gradient(to right, {color1}, {color2})")
 gradient_style = f"background: {background_style};"
 box_style = f"{gradient_style} padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
