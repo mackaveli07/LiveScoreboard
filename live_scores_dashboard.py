@@ -347,7 +347,7 @@ def display_scores(sport_name, date):
     gradient_style = f"background: {background_style};"
     box_style = f"{gradient_style} padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
 
-        with st.container():
+    with st.container():
             st.markdown(f"<div class='score-box' style='{box_style}'>", unsafe_allow_html=True)
             col1, col2, col3 = st.columns([1, 2, 1])
 
