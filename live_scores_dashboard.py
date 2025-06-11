@@ -245,7 +245,7 @@ TEAM_COLORS = {
 
 score_cache = {}
 @st.cache_data(ttl=30)
-@st.cache_data(ttl=30)
+
 def get_scores(sport_path, date):
     url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard?dates={date}"
     try:
