@@ -305,8 +305,28 @@ def display_scores(sport_name, date):
         b1 = prev[0] != t1['score'] and prev[0] is not None
         b2 = prev[1] != t2['score'] and prev[1] is not None
 
-        popup1 = ""
-        popup2 = ""
+        # ✅ Toast and sound on score change
+        if b1 or b2:
+            toast_html = f"""
+            <div style="position: fixed; top: 20px; right: 20px; background-color: #333; color: white;
+                        padding: 10px 20px; border-radius: 8px; z-index: 9999; font-weight: bold;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.3); animation: fadeout 3s ease-in-out forwards;">
+                🎉 Score Update: {t1['name']} {t1['score']} - {t2['score']} {t2['name']}
+            </div>
+            <style>
+            @keyframes fadeout {{
+                0% {{ opacity: 1; }}
+                80% {{ opacity: 1; }}
+                100% {{ opacity: 0; }}
+            }}
+            </style>
+            <audio autoplay>
+                <source src="https://www.soundjay.com/buttons/sounds/button-16.mp3" type="audio/mpeg">
+            </audio>
+            """
+            st.markdown(toast_html, unsafe_allow_html=True)
+
+        popup1 = popup2 = ""
         if sport_name == "NBA (Basketball)":
             try:
                 delta1 = int(t1['score']) - int(prev[0]) if prev[0] is not None else 0
@@ -324,14 +344,14 @@ def display_scores(sport_name, date):
         color2b = TEAM_COLORS.get(t2['name'], {}).get('secondary', '#bbb')
 
         score1_html = f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color1}, {color1b})'>" \
-                       + f"<div class='team-name'>{t1['name']}</div>" \
-                       + popup1 \
-                       + (f"<div class='team-score-box score-blink'>{t1['score']}</div>" if b1 else f"<div class='team-score-box'>{t1['score']}</div>") + "</div>"
+                      f"<div class='team-name'>{t1['name']}</div>" \
+                      f"{popup1}" \
+                      f"<div class='team-score-box {'score-blink' if b1 else ''}'>{t1['score']}</div></div>"
 
         score2_html = f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color2}, {color2b})'>" \
-                       + f"<div class='team-name'>{t2['name']}</div>" \
-                       + popup2 \
-                       + (f"<div class='team-score-box score-blink'>{t2['score']}</div>" if b2 else f"<div class='team-score-box'>{t2['score']}</div>") + "</div>"
+                      f"<div class='team-name'>{t2['name']}</div>" \
+                      f"{popup2}" \
+                      f"<div class='team-score-box {'score-blink' if b2 else ''}'>{t2['score']}</div></div>"
 
         gradient_style = f"background: linear-gradient(to right, {color1}, {color2});"
         box_style = f"{gradient_style} padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
@@ -346,54 +366,12 @@ def display_scores(sport_name, date):
                 if t1['possession']:
                     st.markdown("🏈 Possession")
 
-           with col2:
-                    st.markdown("### VS")
-                    st.markdown(f"**{game['status']}**")
+            with col2:
+                st.markdown("### VS")
+                st.markdown(f"**{game['status']}**")
 
-                    if sport_name == "MLB (Baseball)":
-                        st.markdown(f"Inning: {game['period']}")
-
-                        diamond_html = f"""
-                        <div class="diamond">
-                            <div class="base second {'occupied' if game['on_second'] else ''}"></div>
-                            <div class="base third {'occupied' if game['on_third'] else ''}"></div>
-                            <div class="base first {'occupied' if game['on_first'] else ''}"></div>
-                        </div>
-                        """
-                        st.markdown(diamond_html, unsafe_allow_html=True)
-                        st.markdown(f"**Outs:** {game['outs']}")
-                        st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
-
-                        if game.get("pitcher"):
-                            st.markdown(f"**Pitcher:** {game['pitcher']}")
-                        if game.get("batter"):
-                            st.markdown(f"**Batter:** {game['batter']}")
-
-                    elif sport_name == "NBA (Basketball)":
-                        st.markdown(f"Quarter: {game['period']}")
-                        st.markdown(f"Clock: {game['clock']}")
-
-                    elif sport_name == "NHL (Hockey)":
-                        st.markdown(f"Period: {game['period']}")
-                        st.markdown(f"Clock: {game['clock']}")
-
-                    else:
-                        st.markdown(f"Period: {game['period']}")
-                        st.markdown(f"Clock: {game['clock']}")
-
-                        if sport_name == "NFL (Football)":
-                            for team in game['teams']:
-                                if team['possession']:
-                                    yard = game.get("yard_line")
-                                    if yard:
-                                        try:
-                                            yard = int(yard)
-                                            yard = max(0, min(100, yard))
-                                            st.markdown(f"**{team['name']} Offense - Ball on {yard} yard line**")
-                                            st.progress(yard / 100)
-                                        except:
-                                            st.markdown("**Field Position:** Unknown")
-
+                if sport_name == "MLB (Baseball)":
+                    st.markdown(f"Inning: {game['period']}")
                     diamond_html = f"""
                     <div class="diamond">
                         <div class="base second {'occupied' if game['on_second'] else ''}"></div>
@@ -404,11 +382,28 @@ def display_scores(sport_name, date):
                     st.markdown(diamond_html, unsafe_allow_html=True)
                     st.markdown(f"**Outs:** {game['outs']}")
                     st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
-
                     if game.get("pitcher"):
                         st.markdown(f"**Pitcher:** {game['pitcher']}")
                     if game.get("batter"):
                         st.markdown(f"**Batter:** {game['batter']}")
+
+                elif sport_name in ["NBA (Basketball)", "NHL (Hockey)"]:
+                    st.markdown(f"Period: {game['period']}")
+                    st.markdown(f"Clock: {game['clock']}")
+
+                elif sport_name == "NFL (Football)":
+                    st.markdown(f"Quarter: {game['period']}")
+                    st.markdown(f"Clock: {game['clock']}")
+                    for team in game['teams']:
+                        if team['possession']:
+                            yard = game.get("yard_line")
+                            if yard:
+                                try:
+                                    yard = int(yard)
+                                    st.markdown(f"**{team['name']} Offense - Ball on {yard} yard line**")
+                                    st.progress(yard / 100)
+                                except:
+                                    st.markdown("**Field Position:** Unknown")
 
             with col3:
                 st.image(t2['logo'], width=60)
@@ -417,37 +412,3 @@ def display_scores(sport_name, date):
                     st.markdown("🏈 Possession")
 
             st.markdown("</div>", unsafe_allow_html=True)
-
-# --- Sidebar ---
-st.sidebar.title("Controls")
-
-if "auto_refresh" not in st.session_state:
-    st.session_state.auto_refresh = False
-
-if st.sidebar.button(":arrows_counterclockwise: Refresh Now"):
-    st.cache_data.clear()
-    st.rerun()
-
-if st.sidebar.button(":pause_button: Toggle Auto-Refresh"):
-    st.session_state.auto_refresh = not st.session_state.auto_refresh
-
-st.title(":classical_building: Live Sports Scores Dashboard")
-st.markdown("Real-time updates with team logos and stats.")
-
-selected_date = st.sidebar.date_input("Select date:", datetime.today())
-formatted_date = selected_date.strftime("%Y%m%d")
-
-for sport_name, sport_cfg in SPORTS.items():
-    scores = get_scores(sport_cfg['path'], formatted_date)
-    if scores:
-        col_logo, col_title = st.columns([1, 5])
-        with col_logo:
-            st.image(sport_cfg['icon'], width=80, output_format="PNG")
-        with col_title:
-            st.markdown(f"### {sport_name}")
-        display_scores(sport_name, formatted_date)
-
-if st.session_state.auto_refresh:
-    time.sleep(2)
-    st.cache_data.clear()
-    st.rerun()
