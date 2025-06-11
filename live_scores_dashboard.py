@@ -412,7 +412,6 @@ def display_scores(sport_name, date):
                     st.markdown(f"Clock: {game['clock']}")
 
                 else:
-                    # Generic fallback: Only period and clock (no baseball data!)
                     st.markdown(f"Period: {game['period']}")
                     st.markdown(f"Clock: {game['clock']}")
 
@@ -423,6 +422,7 @@ def display_scores(sport_name, date):
                     st.markdown("🏈 Possession")
 
             st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 # --- Sidebar ---
