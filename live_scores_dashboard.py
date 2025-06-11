@@ -429,7 +429,7 @@ def display_scores(sport_name, date):
 st.sidebar.title("Controls")
 
 if "auto_refresh" not in st.session_state:
-    st.session_state.auto_refresh = False
+    st.session_state.auto_refresh = True
 
 if st.sidebar.button(":arrows_counterclockwise: Refresh Now"):
     st.cache_data.clear()
