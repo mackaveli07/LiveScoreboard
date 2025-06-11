@@ -426,7 +426,7 @@ formatted_date = selected_date.strftime("%Y%m%d")
 
 for sport_name, sport_cfg in SPORTS.items():
      scores = get_scores(sport_cfg['path'], formatted_date)
-        if scores:
+     if scores:
             col_logo, col_title = st.columns([1, 5])
             with col_logo:
                 st.image(sport_cfg['icon'], width=80, output_format="PNG")
