@@ -268,6 +268,9 @@ def get_scores(sport_path, date=None):
         })
     return results
 
+# --- Main Display ---
+# (Keep all your constants, TEAM_COLORS, SPORTS, and get_scores function as-is)
+
 # --- Display Scores ---
 def display_scores(sport_name, date):
     sport_cfg = SPORTS[sport_name]
@@ -316,7 +319,7 @@ def display_scores(sport_name, date):
         gradient_style = f"background: linear-gradient(to right, {color1}, {color2});"
         box_style = f"{gradient_style} padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
 
-    with st.container():
+        with st.container():
             st.markdown(f"<div class='score-box' style='{box_style}'>", unsafe_allow_html=True)
             col1, col2, col3 = st.columns([1, 2, 1])
 
@@ -372,6 +375,7 @@ def display_scores(sport_name, date):
                     st.markdown("🏈 Possession")
 
             st.markdown("</div>", unsafe_allow_html=True)
+
 # --- Sidebar ---
 st.sidebar.title("Controls")
 
@@ -385,7 +389,6 @@ if st.sidebar.button(":arrows_counterclockwise: Refresh Now"):
 if st.sidebar.button(":pause_button: Toggle Auto-Refresh"):
     st.session_state.auto_refresh = not st.session_state.auto_refresh
 
-# --- Main Display ---
 st.title(":classical_building: Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos and stats.")
 
