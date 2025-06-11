@@ -396,11 +396,11 @@ selected_date = st.sidebar.date_input("Select date:", datetime.today())
 
 formatted_date = selected_date.strftime("%Y%m%d")
 
-for sport in SPORTS.keys():
-    scores = get_scores(SPORTS[sport]['path'], formatted_date)
+for sport_name, sport_cfg in SPORTS.items():
+    scores = get_scores(sport_cfg['path'], formatted_date)
     if scores:
-        st.header(f"{SPORTS[sport]['icon']} {sport}")
-        display_scores(sport, formatted_date)
+        st.header(f"{sport_cfg['icon']} {sport_name}")
+        display_scores(sport_name, formatted_date)
 
 
 if st.session_state.auto_refresh:
