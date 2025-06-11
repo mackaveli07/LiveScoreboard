@@ -38,9 +38,9 @@ st.markdown("""
         background-color: #228B22;
         border-color: #145214;
     }
-    .first { bottom: 0; right: 0; transform: translate(50%, 50%) rotate(45deg); }
+    .first { bottom: 15%; right: 10%; transform: translate(50%, 50%) rotate(45deg); }
     .second { top: 0; left: 50%; transform: translate(-50%, -50%) rotate(45deg); }
-    .third { bottom: 0; left: 0; transform: translate(-50%, 50%) rotate(45deg); }
+     .third { bottom: 15%; left: 10%; transform: translate(-50%, 50%) rotate(45deg); }
     .score-blink {
         animation: blinkScore 1s step-start 0s infinite;
     }
