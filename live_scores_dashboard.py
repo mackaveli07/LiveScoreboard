@@ -419,7 +419,7 @@ with col_logo:
     st.image(sport_cfg['icon'], width=60)
 with col_title:
     st.markdown(f"### {sport_name}")
-        display_scores(sport_name, formatted_date)
+    display_scores(sport_name, formatted_date)
 
 
 if st.session_state.auto_refresh:
