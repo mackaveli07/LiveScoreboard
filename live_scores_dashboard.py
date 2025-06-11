@@ -245,35 +245,7 @@ TEAM_COLORS = {
 
 score_cache = {}
 @st.cache_data(ttl=30)
-def show_score_toast(message: str):
-    st.markdown(f"""
-        <div style="
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #333;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            z-index: 9999;
-            font-weight: bold;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            animation: fadeout 3s ease-in-out forwards;
-        ">
-            🎉 {message}
-        </div>
-        <style>
-        @keyframes fadeout {{
-            0% {{ opacity: 1; }}
-            80% {{ opacity: 1; }}
-            100% {{ opacity: 0; }}
-        }}
-        </style>
-        <audio autoplay>
-            <source src="https://www.soundjay.com/buttons/sounds/button-16.mp3" type="audio/mpeg">
-        </audio>
-    """, unsafe_allow_html=True)
-
+@st.cache_data(ttl=30)
 def get_scores(sport_path, date):
     url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard?dates={date}"
     try:
@@ -299,8 +271,20 @@ def get_scores(sport_path, date):
             "id": event['id'],
             "status": comp['status']['type']['shortDetail'],
             "teams": [
-                {"name": away['team']['displayName'], "score": away['score'], "logo": away['team']['logo'], "abbreviation": away['team']['abbreviation'], "possession": away['team']['id'] == situation.get("possession")},
-                {"name": home['team']['displayName'], "score": home['score'], "logo": home['team']['logo'], "abbreviation": home['team']['abbreviation'], "possession": home['team']['id'] == situation.get("possession")}
+                {
+                    "name": away['team']['displayName'],
+                    "score": away['score'],
+                    "logo": away['team']['logo'],
+                    "abbreviation": away['team']['abbreviation'],
+                    "possession": away['team']['id'] == situation.get("possession")
+                },
+                {
+                    "name": home['team']['displayName'],
+                    "score": home['score'],
+                    "logo": home['team']['logo'],
+                    "abbreviation": home['team']['abbreviation'],
+                    "possession": home['team']['id'] == situation.get("possession")
+                }
             ],
             "period": comp['status'].get("period", ""),
             "clock": comp['status'].get("displayClock", ""),
