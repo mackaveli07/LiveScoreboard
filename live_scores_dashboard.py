@@ -372,7 +372,7 @@ for sport_name, sport_cfg in SPORTS.items():
     if scores:
         col_logo, col_title = st.columns([1, 5])
         with col_logo:
-        st.image(sport_cfg['icon'], width=80, output_format="PNG")
+            st.image(sport_cfg['icon'], width=80, output_format="PNG")
         with col_title:
             st.markdown(f"### {sport_name}")
         display_scores(sport_name, formatted_date)
