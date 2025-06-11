@@ -245,6 +245,35 @@ TEAM_COLORS = {
 
 score_cache = {}
 @st.cache_data(ttl=30)
+def show_score_toast(message: str):
+    st.markdown(f"""
+        <div style="
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            z-index: 9999;
+            font-weight: bold;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            animation: fadeout 3s ease-in-out forwards;
+        ">
+            🎉 {message}
+        </div>
+        <style>
+        @keyframes fadeout {{
+            0% {{ opacity: 1; }}
+            80% {{ opacity: 1; }}
+            100% {{ opacity: 0; }}
+        }}
+        </style>
+        <audio autoplay>
+            <source src="https://www.soundjay.com/buttons/sounds/button-16.mp3" type="audio/mpeg">
+        </audio>
+    """, unsafe_allow_html=True)
+
 def get_scores(sport_path, date):
     url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard?dates={date}"
     try:
@@ -305,26 +334,9 @@ def display_scores(sport_name, date):
         b1 = prev[0] != t1['score'] and prev[0] is not None
         b2 = prev[1] != t2['score'] and prev[1] is not None
 
-        # ✅ Toast and sound on score change
+        # ✅ Show toast and play sound on score change
         if b1 or b2:
-            toast_html = f"""
-            <div style="position: fixed; top: 20px; right: 20px; background-color: #333; color: white;
-                        padding: 10px 20px; border-radius: 8px; z-index: 9999; font-weight: bold;
-                        box-shadow: 0 2px 6px rgba(0,0,0,0.3); animation: fadeout 3s ease-in-out forwards;">
-                🎉 Score Update: {t1['name']} {t1['score']} - {t2['score']} {t2['name']}
-            </div>
-            <style>
-            @keyframes fadeout {{
-                0% {{ opacity: 1; }}
-                80% {{ opacity: 1; }}
-                100% {{ opacity: 0; }}
-            }}
-            </style>
-            <audio autoplay>
-                <source src="https://www.soundjay.com/buttons/sounds/button-16.mp3" type="audio/mpeg">
-            </audio>
-            """
-            st.markdown(toast_html, unsafe_allow_html=True)
+            show_score_toast(f"Score Update: {t1['name']} {t1['score']} - {t2['score']} {t2['name']}")
 
         popup1 = popup2 = ""
         if sport_name == "NBA (Basketball)":
