@@ -346,11 +346,31 @@ def display_scores(sport_name, date):
                 if t1['possession']:
                     st.markdown("🏈 Possession")
 
+           ...(unchanged parts above)...
             with col2:
                 st.markdown("### VS")
                 st.markdown(f"**{game['status']}**")
 
-                if sport_name != "MLB (Baseball)":
+                if sport_name == "MLB (Baseball)":
+                    st.markdown(f"Inning: {game['period']}")
+
+                    diamond_html = f"""
+                    <div class="diamond">
+                        <div class="base second {'occupied' if game['on_second'] else ''}"></div>
+                        <div class="base third {'occupied' if game['on_third'] else ''}"></div>
+                        <div class="base first {'occupied' if game['on_first'] else ''}"></div>
+                    </div>
+                    """
+                    st.markdown(diamond_html, unsafe_allow_html=True)
+                    st.markdown(f"**Outs:** {game['outs']}")
+                    st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
+
+                    if game.get("pitcher"):
+                        st.markdown(f"**Pitcher:** {game['pitcher']}")
+                    if game.get("batter"):
+                        st.markdown(f"**Batter:** {game['batter']}")
+
+                else:
                     st.markdown(f"Period: {game['period']}")
                     st.markdown(f"Clock: {game['clock']}")
 
@@ -366,6 +386,8 @@ def display_scores(sport_name, date):
                                         st.progress(yard / 100)
                                     except:
                                         st.markdown("**Field Position:** Unknown")
+...(unchanged parts below)...
+
                 else:
                     st.markdown(f"Inning: {game['period']}")
 
