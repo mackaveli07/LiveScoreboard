@@ -90,9 +90,9 @@ SPORTS = {
         "path": "basketball/nba",
         "icon": "https://upload.wikimedia.org/wikipedia/en/0/03/National_Basketball_Association_logo.svg"
     },
-    "MLB (Baseball)": {
+     "MLB (Baseball)": {
         "path": "baseball/mlb",
-        "icon": "https://upload.wikimedia.org/wikipedia/en/a/a6/Major_League_Baseball_logo.svg"
+        "icon": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/MLB_Logo.svg/320px-MLB_Logo.svg.png"
     },
     "NHL (Hockey)": {
         "path": "hockey/nhl",
