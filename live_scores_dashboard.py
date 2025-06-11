@@ -393,16 +393,15 @@ st.title(":classical_building: Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos and stats.")
 
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
-selected_sport = st.sidebar.selectbox("Choose a sport:", ["All Sports"] + list(SPORTS.keys()))
+
 formatted_date = selected_date.strftime("%Y%m%d")
 
-if selected_sport == "All Sports":
-    for sport in SPORTS.keys():
+for sport in SPORTS.keys():
+    scores = get_scores(SPORTS[sport]['path'], formatted_date)
+    if scores:
         st.header(f"{SPORTS[sport]['icon']} {sport}")
         display_scores(sport, formatted_date)
-else:
-    display_scores(selected_sport, formatted_date)
-display_scores(selected_sport, formatted_date)
+
 
 if st.session_state.auto_refresh:
     time.sleep(2)
