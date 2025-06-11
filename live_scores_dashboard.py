@@ -370,6 +370,14 @@ def display_scores(sport_name, date):
                     if game.get("batter"):
                         st.markdown(f"**Batter:** {game['batter']}")
 
+                elif sport_name == "NBA (Basketball)":
+                    st.markdown(f"Quarter: {game['period']}")
+                    st.markdown(f"Clock: {game['clock']}")
+
+                elif sport_name == "NHL (Hockey)":
+                    st.markdown(f"Period: {game['period']}")
+                    st.markdown(f"Clock: {game['clock']}")
+
                 else:
                     st.markdown(f"Period: {game['period']}")
                     st.markdown(f"Clock: {game['clock']}")
@@ -386,8 +394,6 @@ def display_scores(sport_name, date):
                                         st.progress(yard / 100)
                                     except:
                                         st.markdown("**Field Position:** Unknown")
-
-                else:
                     st.markdown(f"Inning: {game['period']}")
 
                     diamond_html = f"""
