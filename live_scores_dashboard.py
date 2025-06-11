@@ -293,10 +293,7 @@ def get_scores(sport_path, date=None):
 # (Keep all your constants, TEAM_COLORS, SPORTS, and get_scores function as-is)
 
 # --- Display Scores ---
-def display_scores(sport_name, date):
-    sport_cfg = SPORTS[sport_name]
-    scores = get_scores(sport_cfg['path'], date)
-
+def display_scores(sport_name, scores):
     if not scores:
         st.info("No games available.")
         return
@@ -432,7 +429,7 @@ for sport_name, sport_cfg in SPORTS.items():
                 st.image(sport_cfg['icon'], width=80, output_format="PNG")
             with col_title:
                 st.markdown(f"### {sport_name}")
-            display_scores(sport_name, formatted_date)
+           display_scores(sport_name, scores)
 
   
         
