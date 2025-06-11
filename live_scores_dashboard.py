@@ -293,9 +293,11 @@ def get_scores(sport_path, date=None):
 # (Keep all your constants, TEAM_COLORS, SPORTS, and get_scores function as-is)
 
 # --- Display Scores ---
-def display_scores(sport_name, scores):
+def display_scores(sport_name, date):
+    sport_cfg = SPORTS[sport_name]
+    scores = get_scores(sport_cfg['path'], date)
+
     if not scores:
-        st.info("No games available.")
         return
 
     for game in scores:
@@ -335,16 +337,16 @@ def display_scores(sport_name, scores):
                        + (f"<div class='team-score-box score-blink'>{t2['score']}</div>" if b2 else f"<div class='team-score-box'>{t2['score']}</div>") + "</div>"
 
         backgrounds = {
-        "NFL (Football)": "linear-gradient(#3b7a57, #2e5d44)",  # grassy field
-        "NBA (Basketball)": "linear-gradient(#deb887, #d2b48c)",  # hardwood
-        "MLB (Baseball)": "linear-gradient(#228b22, #6b8e23)",  # infield grass
-        "NHL (Hockey)": "linear-gradient(#e0f7fa, #b2ebf2)"  # ice
-    }
-    background_style = backgrounds.get(sport_name, f"linear-gradient(to right, {color1}, {color2})")
-    gradient_style = f"background: {background_style};"
-    box_style = f"{gradient_style} padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
+    "NFL (Football)": "linear-gradient(#3b7a57, #2e5d44)",  # grassy field
+    "NBA (Basketball)": "linear-gradient(#deb887, #d2b48c)",  # hardwood
+    "MLB (Baseball)": "linear-gradient(#228b22, #6b8e23)",  # infield grass
+    "NHL (Hockey)": "linear-gradient(#e0f7fa, #b2ebf2)"  # ice
+}
+background_style = backgrounds.get(sport_name, f"linear-gradient(to right, {color1}, {color2})")
+gradient_style = f"background: {background_style};"
+        box_style = f"{gradient_style} padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
 
-    with st.container():
+        with st.container():
             st.markdown(f"<div class='score-box' style='{box_style}'>", unsafe_allow_html=True)
             col1, col2, col3 = st.columns([1, 2, 1])
 
@@ -418,21 +420,17 @@ st.title(":classical_building: Live Sports Scores Dashboard")
 st.markdown("Real-time updates with team logos and stats.")
 
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
-
 formatted_date = selected_date.strftime("%Y%m%d")
 
 for sport_name, sport_cfg in SPORTS.items():
-     scores = get_scores(sport_cfg['path'], formatted_date)
-     if scores:
-            col_logo, col_title = st.columns([1, 5])
-            with col_logo:
-                st.image(sport_cfg['icon'], width=80, output_format="PNG")
-            with col_title:
-                st.markdown(f"### {sport_name}")
-           display_scores(sport_name, scores)
-
-  
-        
+    scores = get_scores(sport_cfg['path'], formatted_date)
+    if scores:
+        col_logo, col_title = st.columns([1, 5])
+        with col_logo:
+            st.image(sport_cfg['icon'], width=80, output_format="PNG")
+        with col_title:
+            st.markdown(f"### {sport_name}")
+        display_scores(sport_name, formatted_date)
 
 if st.session_state.auto_refresh:
     time.sleep(2)
