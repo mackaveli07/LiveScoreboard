@@ -80,12 +80,27 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+# --- Sport Logos and Config ---
 SPORTS = {
-    "NFL (Football)": {"path": "football/nfl", "icon": "🏈"},
-    "NBA (Basketball)": {"path": "basketball/nba", "icon": "🏀"},
-    "MLB (Baseball)": {"path": "baseball/mlb", "icon": "⚾"},
-    "NHL (Hockey)": {"path": "hockey/nhl", "icon": "🛂"}
+    "NFL (Football)": {
+        "path": "football/nfl",
+        "icon": "https://upload.wikimedia.org/wikipedia/en/a/a2/National_Football_League_logo.svg"
+    },
+    "NBA (Basketball)": {
+        "path": "basketball/nba",
+        "icon": "https://upload.wikimedia.org/wikipedia/en/0/03/National_Basketball_Association_logo.svg"
+    },
+    "MLB (Baseball)": {
+        "path": "baseball/mlb",
+        "icon": "https://upload.wikimedia.org/wikipedia/en/a/a6/Major_League_Baseball_logo.svg"
+    },
+    "NHL (Hockey)": {
+        "path": "hockey/nhl",
+        "icon": "https://upload.wikimedia.org/wikipedia/en/3/3a/05_NHL_Shield.svg"
+    }
 }
+
+# --- Display Scores ---
 TEAM_COLORS = {
     # MLB
     "Arizona Diamondbacks": {"primary": "#A71930", "secondary": "#E3D4AD"},
