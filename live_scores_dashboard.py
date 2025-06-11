@@ -17,20 +17,26 @@ st.markdown("""
         50% { opacity: 0.5; }
     }
     .diamond {
-        width: 50px;
-        height: 50px;
+        width: 80px;
+        height: 80px;
         position: relative;
         margin: 10px auto;
+        background: radial-gradient(circle at center, #b0c4de 40%, transparent 41%);
+        border: 2px solid #666;
+        border-radius: 50%;
     }
     .base {
-        width: 12px;
-        height: 12px;
-        background-color: lightgray;
+        width: 14px;
+        height: 14px;
+        background-color: white;
+        border: 2px solid #999;
         position: absolute;
         transform: rotate(45deg);
+        z-index: 2;
     }
     .base.occupied {
-        background-color: green;
+        background-color: #228B22;
+        border-color: #145214;
     }
     .first { bottom: 0; right: 0; transform: translate(50%, 50%) rotate(45deg); }
     .second { top: 0; left: 50%; transform: translate(-50%, -50%) rotate(45deg); }
