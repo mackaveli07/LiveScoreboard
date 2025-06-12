@@ -5,7 +5,7 @@ from datetime import datetime
 from datetime import date
 import streamlit.components.v1 as components
 
-ODDS_API_KEY = "wk_dc555dda3f5ce0a1089bef978c1f4240"
+ODDS_API_KEY = "4c39fd0413dbcc55279d85ab18bcc6f0"
 if "last_odds_refresh_date" not in st.session_state:
     st.session_state.last_odds_refresh_date = date.today()
 else:
