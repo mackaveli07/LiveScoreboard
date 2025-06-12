@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 import streamlit.components.v1 as components
 
-ODDS_API_KEY = "a17f19558b3402206053bc01787a6b1b"
+ODDS_API_KEY = "e4ccda110ba4e3568ceb9a0d86276e51"
 
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
