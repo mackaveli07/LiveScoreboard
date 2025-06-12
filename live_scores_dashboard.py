@@ -23,7 +23,7 @@ st.markdown("""
     .blinking {
         animation: blinker 1s linear infinite;
     }
-    @keyframes blinkScore {
+@keyframes blinkScore {
         0% { opacity: 1; }
         50% { opacity: 0; }
         100% { opacity: 1; }
