@@ -405,7 +405,7 @@ def display_scores(sport_name, date, scores):
         score1_html = (
             f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color1}, {color1b})'>"
             f"<div class='team-name'>{t1['name']}</div>{popup1}"
-            f{'<div class=\'team-score-box score-blink\'>' if b1 else '<div class=\'team-score-box\'>'}{t1['score']}</div>"
+            f"<div class='team-score-box{' score-blink' if b1 else ''}'>{t1['score']}</div>"
             "</div>"
         )
 
