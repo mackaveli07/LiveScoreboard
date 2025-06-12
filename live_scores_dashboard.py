@@ -4,6 +4,8 @@ import time
 from datetime import datetime
 import streamlit.components.v1 as components
 
+ODDS_API_KEY = "a17f19558b3402206053bc01787a6b1b"
+
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
@@ -90,19 +92,23 @@ st.markdown("""
 SPORTS = {
     "NFL (Football)": {
         "path": "football/nfl",
-        "icon": "https://upload.wikimedia.org/wikipedia/en/a/a2/National_Football_League_logo.svg"
+        "icon": "https://upload.wikimedia.org/wikipedia/en/a/a2/National_Football_League_logo.svg",
+        "odds_key": "americanfootball_nfl"
     },
     "NBA (Basketball)": {
         "path": "basketball/nba",
-        "icon": "https://upload.wikimedia.org/wikipedia/en/0/03/National_Basketball_Association_logo.svg"
+        "icon": "https://upload.wikimedia.org/wikipedia/en/0/03/National_Basketball_Association_logo.svg",
+        "odds_key": "basketball_nba"
     },
      "MLB (Baseball)": {
         "path": "baseball/mlb",
-        "icon": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/MLB_Logo.svg/320px-MLB_Logo.svg.png"
+        "icon": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/MLB_Logo.svg/320px-MLB_Logo.svg",
+        "odds_key": "baseball_mlb"
     },
     "NHL (Hockey)": {
         "path": "hockey/nhl",
-        "icon": "https://upload.wikimedia.org/wikipedia/en/3/3a/05_NHL_Shield.svg"
+        "icon": "https://upload.wikimedia.org/wikipedia/en/3/3a/05_NHL_Shield.svg",
+        "odds_key": "icehockey_nhl"
     }
 }
 
@@ -301,6 +307,32 @@ def get_scores(sport_path, date):
 
     return results
 
+@st.cache_data(ttl=180)
+def get_odds_data(sport_key):
+    url = f"https://api.the-odds-api.com/v4/sports/{sport_key}/odds"
+    params = {
+        "apiKey": ODDS_API_KEY,
+        "regions": "us",
+        "markets": "spreads,totals",
+        "oddsFormat": "american"
+    }
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        st.warning(f"Odds API error: {e}")
+        return []
+
+def find_odds_for_game(game, odds_data):
+    team_names = [t['name'] for t in game['teams']]
+    for entry in odds_data:
+        teams = [entry['home_team'], entry['away_team']]
+        if all(any(name in team for team in teams) for name in team_names):
+            return entry
+    return None
+
 
 score_cache = {}
 
@@ -414,6 +446,33 @@ def display_scores(sport_name, date):
                 else:
                     st.markdown(f"Period: {game['period']}")
                     st.markdown(f"Clock: {game['clock']}")
+
+            def display_odds_for_game(game, sport_key):
+    odds_data = get_odds_data(sport_key)
+    matched_odds = find_odds_for_game(game, odds_data)
+
+    if matched_odds and matched_odds.get("bookmakers"):
+        bookmaker = matched_odds["bookmakers"][0]
+        spread = total = None
+
+        t1 = game['teams'][0]
+
+        for market in bookmaker.get("markets", []):
+            if market["key"] == "spreads":
+                for outcome in market["outcomes"]:
+                    if outcome["name"] == t1["name"]:
+                        spread = f"{outcome['name']} {outcome['point']:+}"
+            elif market["key"] == "totals":
+                for outcome in market["outcomes"]:
+                    total = f"O/U {outcome['point']}"
+
+        if spread or total:
+            st.markdown("### 🧾 Betting Odds")
+        if spread:
+            st.markdown(f"**Spread:** {spread}")
+        if total:
+            st.markdown(f"**Total:** {total}")
+
 
             with col3:
                 st.image(t2['logo'], width=60)
