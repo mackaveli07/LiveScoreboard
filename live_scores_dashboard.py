@@ -372,12 +372,9 @@ def display_odds_for_game(game, sport_key):
         if moneyline1 and moneyline2:
             st.markdown(f"**Moneyline:** {t1['name']} ({moneyline1:+}), {t2['name']} ({moneyline2:+})")
 
-def display_scores(sport_name, date):
+# --- FIXED display_scores with formatting fix & score pre-passing ---
+def display_scores(sport_name, date, scores):
     sport_cfg = SPORTS[sport_name]
-    scores = get_scores(sport_cfg['path'], date)
-
-    if not scores:
-        return
 
     for game in scores:
         t1, t2 = game['teams']
@@ -408,14 +405,14 @@ def display_scores(sport_name, date):
         score1_html = (
             f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color1}, {color1b})'>"
             f"<div class='team-name'>{t1['name']}</div>{popup1}"
-            f"{'<div class=\"team-score-box score-blink\">' if b1 else '<div class=\"team-score-box\">'}{t1['score']}</div>"
+            f{'<div class="team-score-box score-blink">' if b1 else '<div class="team-score-box">'}{t1['score']}</div>"
             "</div>"
         )
 
         score2_html = (
             f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color2}, {color2b})'>"
             f"<div class='team-name'>{t2['name']}</div>{popup2}"
-            f"{'<div class=\"team-score-box score-blink\">' if b2 else '<div class=\"team-score-box\">'}{t2['score']}</div>"
+            f{'<div class="team-score-box score-blink">' if b2 else '<div class="team-score-box">'}{t2['score']}</div>"
             "</div>"
         )
 
@@ -478,7 +475,8 @@ def display_scores(sport_name, date):
 
             st.markdown("</div>", unsafe_allow_html=True)
 
-# --- Sidebar ---
+# --- Main UI and Sidebar ---
+st.set_page_config(page_title="Live Sports Scores", layout="wide")
 st.sidebar.title("Controls")
 
 if "auto_refresh" not in st.session_state:
@@ -505,7 +503,7 @@ for sport_name, sport_cfg in SPORTS.items():
             st.image(sport_cfg['icon'], width=80, output_format="PNG")
         with col_title:
             st.markdown(f"### {sport_name}")
-        display_scores(sport_name, formatted_date)
+        display_scores(sport_name, formatted_date, scores)
 
 if st.session_state.auto_refresh:
     time.sleep(2)
