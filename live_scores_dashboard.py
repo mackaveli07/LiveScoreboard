@@ -403,17 +403,33 @@ def display_scores(sport_name, date, scores):
         color2 = TEAM_COLORS.get(t2['name'], {}).get('primary', '#ccc')
         color2b = TEAM_COLORS.get(t2['name'], {}).get('secondary', '#bbb')
 
+        score1_class = "team-score-box" + (" score-blink" if b1 else "")
+        score2_class = "team-score-box" + (" score-blink" if b2 else "")
+
+        popup1 = popup2 = ""
+
+        if sport_name in ["NBA (Basketball)", "NFL (Football)", "MLB (Baseball)", "NHL (Hockey)"]:
+            try:
+                delta1 = int(t1['score']) - int(prev[0]) if prev[0] is not None else 0
+                delta2 = int(t2['score']) - int(prev[1]) if prev[1] is not None else 0
+                if delta1 > 0:
+                    popup1 = f"<div class='scoring-popup'>+{delta1}</div>"
+                if delta2 > 0:
+                    popup2 = f"<div class='scoring-popup'>+{delta2}</div>"
+            except:
+                pass
+
         score1_html = (
             f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color1}, {color1b})'>"
             f"<div class='team-name'>{t1['name']}</div>{popup1}"
-            f"<div class='team-score-box{' score-blink' if b1 else ''}'>{t1['score']}</div>"
+            f"<div class='{score1_class}'>{t1['score']}</div>"
             "</div>"
         )
-
+        
         score2_html = (
-           f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color2}, {color2b})'>"
-           f"<div class='team-name'>{t2['name']}</div>{popup2}"
-           f"<div class='team-score-box{' score-blink' if b2 else ''}'>{t2['score']}</div>"
+            f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color2}, {color2b})'>"
+            f"<div class='team-name'>{t2['name']}</div>{popup2}"
+            f"<div class='{score2_class}'>{t2['score']}</div>"
             "</div>"
         )
 
