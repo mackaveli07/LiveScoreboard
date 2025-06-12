@@ -77,7 +77,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-    @keyframes blinkScore {
+ @keyframes blinkScore {
         0% { opacity: 1; }
         50% { opacity: 0; }
         100% { opacity: 1; }
