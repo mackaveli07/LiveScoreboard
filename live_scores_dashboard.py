@@ -291,8 +291,7 @@ def get_scores(sport_path, date):
                     "abbreviation": home['team']['abbreviation'],
                     "possession": home['team']['id'] == situation.get("possession")
                 }
-            ],
-            display_odds_for_game(game, sport_cfg['odds_key'])
+            ]
 
             "period": comp['status'].get("period", ""),
             "clock": comp['status'].get("displayClock", ""),
@@ -402,6 +401,8 @@ def display_scores(sport_name, date):
             with col2:
                 st.markdown("### VS")
                 st.markdown(f"**{game['status']}**")
+                display_odds_for_game(game, sport_cfg['odds_key'])
+
 
                 if sport_name == "MLB (Baseball)":
                     st.markdown(f"Inning: {game['period']}")
