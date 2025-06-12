@@ -276,7 +276,7 @@ def get_scores(sport_path, date):
         results.append({
             "id": event['id'],
             "status": comp['status']['type']['shortDetail'],
-            "teams": [
+            "teams":[
                 {
                     "name": away['team']['displayName'],
                     "score": away['score'],
