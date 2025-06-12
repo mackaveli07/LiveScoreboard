@@ -478,7 +478,7 @@ def display_scores(sport_name, date, scores):
             st.markdown("</div>", unsafe_allow_html=True)
 
 # --- Main UI and Sidebar ---
-st.set_page_config(page_title="Live Sports Scores", layout="wide")
+
 st.sidebar.title("Controls")
 
 if "auto_refresh" not in st.session_state:
