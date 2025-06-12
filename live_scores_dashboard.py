@@ -292,6 +292,8 @@ def get_scores(sport_path, date):
                     "possession": home['team']['id'] == situation.get("possession")
                 }
             ],
+            display_odds_for_game(game, sport_cfg['odds_key'])
+
             "period": comp['status'].get("period", ""),
             "clock": comp['status'].get("displayClock", ""),
             "on_first": situation.get("onFirst"),
