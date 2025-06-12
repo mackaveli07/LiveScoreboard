@@ -410,9 +410,9 @@ def display_scores(sport_name, date, scores):
         )
 
         score2_html = (
-            f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color2}, {color2b})'>"
-            f"<div class='team-name'>{t2['name']}</div>{popup2}"
-            f{'<div class=\'team-score-box score-blink\'>' if b2 else '<div class=\'team-score-box\'>'}{t2['score']}</div>"
+           f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color2}, {color2b})'>"
+           f"<div class='team-name'>{t2['name']}</div>{popup2}"
+           f"<div class='team-score-box{' score-blink' if b2 else ''}'>{t2['score']}</div>"
             "</div>"
         )
 
