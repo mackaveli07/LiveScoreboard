@@ -26,11 +26,10 @@ st.markdown("""
     @keyframes blinker {
         50% { opacity: 0.5; }
     }
-   st.markdown("""
-    <style>
+  
     .diamond {
-        width: 50px;
-        height: 50px;
+        width: 80px;
+        height: 80px;
         position: relative;
         margin: 10px auto;
         background: none;
