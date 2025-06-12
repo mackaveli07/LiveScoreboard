@@ -248,7 +248,6 @@ TEAM_COLORS = {
 }
 
 
-
 score_cache = {}
 
 @st.cache_data(ttl=30)
@@ -313,7 +312,7 @@ def get_odds_data(sport_key):
     params = {
         "apiKey": ODDS_API_KEY,
         "regions": "us",
-        "markets": "spreads,totals",
+        "markets": "spreads,totals,h2h",
         "oddsFormat": "american"
     }
 
@@ -339,8 +338,8 @@ def display_odds_for_game(game, sport_key):
 
     if matched_odds and matched_odds.get("bookmakers"):
         bookmaker = matched_odds["bookmakers"][0]
-        spread = total = None
-        t1 = game['teams'][0]
+        spread = total = moneyline1 = moneyline2 = None
+        t1, t2 = game['teams']
 
         for market in bookmaker.get("markets", []):
             if market["key"] == "spreads":
@@ -350,13 +349,21 @@ def display_odds_for_game(game, sport_key):
             elif market["key"] == "totals":
                 for outcome in market["outcomes"]:
                     total = f"O/U {outcome['point']}"
+            elif market["key"] == "h2h":
+                for outcome in market["outcomes"]:
+                    if outcome["name"] == t1["name"]:
+                        moneyline1 = outcome["price"]
+                    elif outcome["name"] == t2["name"]:
+                        moneyline2 = outcome["price"]
 
-        if spread or total:
+        if spread or total or (moneyline1 and moneyline2):
             st.markdown("### 🧾 Betting Odds")
         if spread:
             st.markdown(f"**Spread:** {spread}")
         if total:
             st.markdown(f"**Total:** {total}")
+        if moneyline1 and moneyline2:
+            st.markdown(f"**Moneyline:** {t1['name']} ({moneyline1:+}), {t2['name']} ({moneyline2:+})")
 
 def display_scores(sport_name, date):
     sport_cfg = SPORTS[sport_name]
@@ -478,7 +485,7 @@ if st.sidebar.button(":pause_button: Toggle Auto-Refresh"):
     st.session_state.auto_refresh = not st.session_state.auto_refresh
 
 st.title(":classical_building: Live Sports Scores Dashboard")
-st.markdown("Real-time updates with team logos and stats.")
+st.markdown("Real-time updates with team logos, stats, and betting odds.")
 
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
 formatted_date = selected_date.strftime("%Y%m%d")
