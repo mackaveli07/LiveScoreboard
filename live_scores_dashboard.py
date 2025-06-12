@@ -26,14 +26,15 @@ st.markdown("""
     @keyframes blinker {
         50% { opacity: 0.5; }
     }
+   st.markdown("""
+    <style>
     .diamond {
         width: 80px;
         height: 80px;
         position: relative;
         margin: 10px auto;
-        background: radial-gradient(circle at center, #b0c4de 40%, transparent 41%);
-        border: 2px solid #666;
-        border-radius: 50%;
+        background: none;
+        border: none;
     }
     .base {
         width: 14px;
@@ -48,12 +49,33 @@ st.markdown("""
         background-color: #228B22;
         border-color: #145214;
     }
-    .first { bottom: 15%; right: 10%; transform: translate(50%, 50%) rotate(0deg); }
-    .second { top: 0; left: 50%; transform: translate(-50%, -50%) rotate(45deg); }
-     .third { bottom: 15%; left: 10%; transform: translate(-50%, 50%) rotate(90deg); }
-    .score-blink {
-        animation: blinkScore 1s step-start 0s infinite;
+    .second {
+        top: 0;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(45deg);
     }
+    .first {
+        bottom: 10%;
+        right: 0;
+        transform: translate(50%, 50%) rotate(45deg);
+    }
+    .third {
+        bottom: 10%;
+        left: 0;
+        transform: translate(-50%, 50%) rotate(45deg);
+    }
+    .home {
+        bottom: 0;
+        left: 50%;
+        transform: translate(-50%, 50%) rotate(45deg);
+        border-color: transparent;
+        border-top: 2px solid #999;
+        border-left: 2px solid #999;
+        background: none;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
     @keyframes blinkScore {
         0% { opacity: 1; }
         50% { opacity: 0; }
