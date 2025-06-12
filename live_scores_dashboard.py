@@ -276,7 +276,7 @@ def get_scores(sport_path, date):
         results.append({
             "id": event['id'],
             "status": comp['status']['type']['shortDetail'],
-            "teams":[
+            "teams": [
                 {
                     "name": away['team']['displayName'],
                     "score": away['score'],
@@ -291,8 +291,7 @@ def get_scores(sport_path, date):
                     "abbreviation": home['team']['abbreviation'],
                     "possession": home['team']['id'] == situation.get("possession")
                 }
-            ]
-
+            ],
             "period": comp['status'].get("period", ""),
             "clock": comp['status'].get("displayClock", ""),
             "on_first": situation.get("onFirst"),
@@ -334,10 +333,31 @@ def find_odds_for_game(game, odds_data):
             return entry
     return None
 
+def display_odds_for_game(game, sport_key):
+    odds_data = get_odds_data(sport_key)
+    matched_odds = find_odds_for_game(game, odds_data)
 
-score_cache = {}
+    if matched_odds and matched_odds.get("bookmakers"):
+        bookmaker = matched_odds["bookmakers"][0]
+        spread = total = None
+        t1 = game['teams'][0]
 
-# --- Display Scores ---
+        for market in bookmaker.get("markets", []):
+            if market["key"] == "spreads":
+                for outcome in market["outcomes"]:
+                    if outcome["name"] == t1["name"]:
+                        spread = f"{outcome['name']} {outcome['point']:+}"
+            elif market["key"] == "totals":
+                for outcome in market["outcomes"]:
+                    total = f"O/U {outcome['point']}"
+
+        if spread or total:
+            st.markdown("### 🧾 Betting Odds")
+        if spread:
+            st.markdown(f"**Spread:** {spread}")
+        if total:
+            st.markdown(f"**Total:** {total}")
+
 def display_scores(sport_name, date):
     sport_cfg = SPORTS[sport_name]
     scores = get_scores(sport_cfg['path'], date)
@@ -403,10 +423,8 @@ def display_scores(sport_name, date):
                 st.markdown(f"**{game['status']}**")
                 display_odds_for_game(game, sport_cfg['odds_key'])
 
-
                 if sport_name == "MLB (Baseball)":
                     st.markdown(f"Inning: {game['period']}")
-
                     diamond_html = f"""
                         <div class="diamond">
                             <div class="base second {'occupied' if game['on_second'] else ''}"></div>
@@ -417,65 +435,26 @@ def display_scores(sport_name, date):
                     st.markdown(diamond_html, unsafe_allow_html=True)
                     st.markdown(f"**Outs:** {game['outs']}")
                     st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
-
                     if game.get("pitcher"):
                         st.markdown(f"**Pitcher:** {game['pitcher']}")
                     if game.get("batter"):
                         st.markdown(f"**Batter:** {game['batter']}")
 
-                elif sport_name == "NFL (Football)":
+                elif sport_name in ["NFL (Football)", "NBA (Basketball)", "NHL (Hockey)"]:
                     st.markdown(f"Period: {game['period']}")
                     st.markdown(f"Clock: {game['clock']}")
-                    for team in game['teams']:
-                        if team['possession']:
-                            yard = game.get("yard_line")
-                            if yard:
-                                try:
-                                    yard = int(yard)
-                                    yard = max(0, min(100, yard))
-                                    st.markdown(f"**{team['name']} Offense - Ball on {yard} yard line**")
-                                    st.progress(yard / 100)
-                                except:
-                                    st.markdown("**Field Position:** Unknown")
-
-                elif sport_name == "NBA (Basketball)":
-                    st.markdown(f"Quarter: {game['period']}")
-                    st.markdown(f"Clock: {game['clock']}")
-
-                elif sport_name == "NHL (Hockey)":
-                    st.markdown(f"Period: {game['period']}")
-                    st.markdown(f"Clock: {game['clock']}")
-
-                else:
-                    st.markdown(f"Period: {game['period']}")
-                    st.markdown(f"Clock: {game['clock']}")
-
-            def display_odds_for_game(game, sport_key):
-    odds_data = get_odds_data(sport_key)
-    matched_odds = find_odds_for_game(game, odds_data)
-
-    if matched_odds and matched_odds.get("bookmakers"):
-        bookmaker = matched_odds["bookmakers"][0]
-        spread = total = None
-
-        t1 = game['teams'][0]
-
-        for market in bookmaker.get("markets", []):
-            if market["key"] == "spreads":
-                for outcome in market["outcomes"]:
-                    if outcome["name"] == t1["name"]:
-                        spread = f"{outcome['name']} {outcome['point']:+}"
-            elif market["key"] == "totals":
-                for outcome in market["outcomes"]:
-                    total = f"O/U {outcome['point']}"
-
-        if spread or total:
-            st.markdown("### 🧾 Betting Odds")
-        if spread:
-            st.markdown(f"**Spread:** {spread}")
-        if total:
-            st.markdown(f"**Total:** {total}")
-
+                    if sport_name == "NFL (Football)":
+                        for team in game['teams']:
+                            if team['possession']:
+                                yard = game.get("yard_line")
+                                if yard:
+                                    try:
+                                        yard = int(yard)
+                                        yard = max(0, min(100, yard))
+                                        st.markdown(f"**{team['name']} Offense - Ball on {yard} yard line**")
+                                        st.progress(yard / 100)
+                                    except:
+                                        st.markdown("**Field Position:** Unknown")
 
             with col3:
                 st.image(t2['logo'], width=60)
@@ -484,8 +463,6 @@ def display_scores(sport_name, date):
                     st.markdown("🏈 Possession")
 
             st.markdown("</div>", unsafe_allow_html=True)
-
-
 
 # --- Sidebar ---
 st.sidebar.title("Controls")
