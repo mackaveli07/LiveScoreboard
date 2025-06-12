@@ -5,6 +5,13 @@ from datetime import datetime
 import streamlit.components.v1 as components
 
 ODDS_API_KEY = "e4ccda110ba4e3568ceb9a0d86276e51"
+if "last_odds_refresh_date" not in st.session_state:
+    st.session_state.last_odds_refresh_date = date.today()
+else:
+    today = date.today()
+    if st.session_state.last_odds_refresh_date != today:
+        get_odds_data.clear()
+        st.session_state.last_odds_refresh_date = today
 
 
 st.set_page_config(page_title="Live Sports Scores", layout="wide")
@@ -306,7 +313,7 @@ def get_scores(sport_path, date):
 
     return results
 
-@st.cache_data(ttl=86400)
+@st.cache_data(ttl=86400, show_spinner=False)
 def get_odds_data(sport_key):
     url = f"https://api.the-odds-api.com/v4/sports/{sport_key}/odds"
     params = {
