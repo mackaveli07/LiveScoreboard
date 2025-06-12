@@ -306,7 +306,7 @@ def get_scores(sport_path, date):
 
     return results
 
-@st.cache_data(ttl=180)
+@st.cache_data(ttl=86400)
 def get_odds_data(sport_key):
     url = f"https://api.the-odds-api.com/v4/sports/{sport_key}/odds"
     params = {
