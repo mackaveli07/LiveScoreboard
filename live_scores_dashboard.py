@@ -30,20 +30,20 @@ st.markdown("""
     }
 
     .diamond {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     position: relative;
-    margin: 10px auto;
+    margin: 20px auto;
     background: none;
-    border: none;
+    transform: rotate(45deg);
 }
 .base {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     background-color: white;
     border: 2px solid #999;
     position: absolute;
-    transform: rotate(45deg);
+    transform: rotate(-45deg);
     z-index: 2;
 }
 .base.occupied {
@@ -53,12 +53,12 @@ st.markdown("""
 .second {
     top: 0;
     left: 50%;
-    transform: translate(-50%, -50%) rotate(45deg);
+    transform: translate(-50%, -50%) rotate(-45deg);
 }
 .first {
-    bottom: 10%;
+    top: 50%;
     right: 0;
-    transform: translate(50%, 50%) rotate(45deg);
+    transform: translate(50%, -50%) rotate(-45deg);
 }
 .third {
     bottom: 10%;
@@ -66,13 +66,13 @@ st.markdown("""
     transform: translate(-50%, 50%) rotate(45deg);
 }
 .home {
-    bottom: 0;
-    left: 50%;
-    transform: translate(-50%, 50%) rotate(45deg);
-    border-color: transparent;
-    border-top: 2px solid #999;
-    border-left: 2px solid #999;
-    background: none;
+        bottom: 0;
+        left: 50%;
+        transform: translate(-50%, 50%) rotate(-45deg);
+        border-color: transparent;
+        border-top: 2px solid #999;
+        border-left: 2px solid #999;
+        background: none;
 }
 
     .team-score-wrapper {
@@ -462,10 +462,11 @@ def display_scores(sport_name, date, scores):
                 if sport_name == "MLB (Baseball)":
                     st.markdown(f"Inning: {game['period']}")
                     diamond_html = f"""
-                        <div class="diamond">
-                            <div class="base second {'occupied' if game['on_second'] else ''}"></div>
-                            <div class="base third {'occupied' if game['on_third'] else ''}"></div>
-                            <div class="base first {'occupied' if game['on_first'] else ''}"></div>
+                        <div class=\"diamond\">
+                            <div class=\"base second {'occupied' if situation.get('onSecond') else ''}\"></div>
+                            <div class=\"base third {'occupied' if situation.get('onThird') else ''}\"></div>
+                            <div class=\"base first {'occupied' if situation.get('onFirst') else ''}\"></div>
+                            <div class=\"base home\">
                         </div>
                     """
                     st.markdown(diamond_html, unsafe_allow_html=True)
