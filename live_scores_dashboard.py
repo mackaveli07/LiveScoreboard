@@ -78,6 +78,19 @@ st.markdown("""
         background-color: red;
         border-radius: 50%;
         transform: translate(-50%, -50%);
+        z-index: 3;
+    }
+    .mound {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 30px;
+        height: 30px;
+        background-color: #8B4513;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1;
+    } 
     }
 
     .team-score-wrapper {
