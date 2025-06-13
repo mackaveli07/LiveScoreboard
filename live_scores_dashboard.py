@@ -330,6 +330,8 @@ def get_scores(sport_path, date):
 
     return results
 
+LAST_GOOD_ODDS = {}
+
 @st.cache_data(ttl=86400, show_spinner=False)
 def get_odds_data(sport_key):
     url = f"https://api.the-odds-api.com/v4/sports/{sport_key}/odds"
@@ -343,10 +345,12 @@ def get_odds_data(sport_key):
     try:
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        LAST_GOOD_ODDS[sport_key] = data  # cache successful response
+        return data
     except Exception as e:
-        st.warning(f"Odds API error: {e}")
-        return []
+        st.warning(f"Odds API failed ({e}). Showing last known odds." if sport_key in LAST_GOOD_ODDS else f"Odds API error: {e}")
+        return LAST_GOOD_ODDS.get(sport_key, [])
 
 def find_odds_for_game(game, odds_data):
     team_names = [t['name'] for t in game['teams']]
