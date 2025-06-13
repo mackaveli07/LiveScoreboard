@@ -6,8 +6,7 @@ from datetime import date
 import streamlit.components.v1 as components
 from streamlit_autorefresh import st_autorefresh
 
-if "auto_refresh" not in st.session_state:
-    st.session_state.auto_refresh = True
+
 
 if st.session_state.auto_refresh:
     st_autorefresh(interval=5000, limit=None, key="auto-refresh")
