@@ -29,7 +29,7 @@ st.markdown("""
         100% { opacity: 1; }
     }
 
-    .diamond {
+.diamond {
     width: 120px;
     height: 120px;
     position: relative;
