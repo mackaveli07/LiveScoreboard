@@ -304,14 +304,12 @@ def get_scores(sport_path, date):
                     "name": away['team']['displayName'],
                     "score": away['score'],
                     "logo": away['team']['logo'],
-                    "abbreviation": away['team']['abbreviation'],
                     "possession": away['team']['id'] == situation.get("possession")
                 },
                 {
                     "name": home['team']['displayName'],
                     "score": home['score'],
                     "logo": home['team']['logo'],
-                    "abbreviation": home['team']['abbreviation'],
                     "possession": home['team']['id'] == situation.get("possession")
                 }
             ],
@@ -324,8 +322,7 @@ def get_scores(sport_path, date):
             "strikes": situation.get("strikes"),
             "outs": situation.get("outs"),
             "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName"),
-            "batter": situation.get("batter", {}).get("athlete", {}).get("displayName"),
-            "yard_line": situation.get("yardLine")
+            "batter": situation.get("batter", {}).get("athlete", {}).get("displayName")
         })
 
     return results
