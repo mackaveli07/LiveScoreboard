@@ -50,24 +50,26 @@ st.markdown("""
     background-color: yellow;
 }
 .second {
-    top: 0;
+    top: 5%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(45deg)
 }
 
 .third {
    top: 50%;
-   left: 0;
+   left: 5%;
    transform: translate(50%, -50%) rotate(45deg);
 }
 .first {
     top: 50%;
-    right: 0;
+    left: 95%;
+    transform: translate(-50%, -50%) rotate(45deg);
     
 }
 
 .home {
-    transform: translate(-50%, 50%) rotate(45deg);
+   top: 95%; 
+   transform: translate(-50%, -50%) rotate(45deg);
 }
 
 .pitcher {
