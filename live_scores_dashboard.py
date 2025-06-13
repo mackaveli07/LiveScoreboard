@@ -30,16 +30,17 @@ st.markdown("""
     }
 
 .diamond {
-        width: 120px;
-        height: 120px;
+        width: 30vw;
+        max-width: 150px;
+        aspect-ratio: 1 / 1;
         position: relative;
         margin: 20px auto;
         background: green;
         border-radius: 4px;
     }
     .base {
-        width: 20px;
-        height: 20px;
+        width: 16%;
+        height: 16%;
         background-color: white;
         border: 2px solid #555;
         position: absolute;
@@ -73,8 +74,8 @@ st.markdown("""
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 10px;
-        height: 10px;
+        width: 8%;
+        height: 8%;
         background-color: red;
         border-radius: 50%;
         transform: translate(-50%, -50%);
@@ -84,8 +85,8 @@ st.markdown("""
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 30px;
-        height: 30px;
+        width: 20%;
+        height: 20%;
         background-color: #8B4513;
         border-radius: 50%;
         transform: translate(-50%, -50%);
