@@ -458,6 +458,7 @@ def display_scores(sport_name, date, scores):
 
                 if sport_name == "MLB (Baseball)":
                     st.markdown(f"Inning: {game['period']}")
+                    situation = game.get("situation", {})
                     second_class = "occupied" if situation.get("onSecond") else ""
                     third_class = "occupied" if situation.get("onThird") else ""
                     first_class = "occupied" if situation.get("onFirst") else ""
@@ -470,12 +471,12 @@ def display_scores(sport_name, date, scores):
                         </div>
                     """
                     st.markdown(diamond_html, unsafe_allow_html=True)
-                    st.markdown(f"**Outs:** {game['outs']}")
-                    st.markdown(f"**Balls:** {game['balls']}  **Strikes:** {game['strikes']}")
-                    if game.get("pitcher"):
-                        st.markdown(f"**Pitcher:** {game['pitcher']}")
-                    if game.get("batter"):
-                        st.markdown(f"**Batter:** {game['batter']}")
+                    st.markdown(f"**Outs:** {situation.get('outs', 0)}")
+                    st.markdown(f"**Balls:** {situation.get('balls', 0)}  **Strikes:** {situation.get('strikes', 0)}")
+                    if situation.get("pitcher"):
+                        st.markdown(f"**Pitcher:** {situation['pitcher']['athlete']['displayName']}")
+                    if situation.get("batter"):
+                        st.markdown(f"**Batter:** {situation['batter']['athlete']['displayName']}")
 
                 elif sport_name in ["NFL (Football)", "NBA (Basketball)", "NHL (Hockey)"]:
                     st.markdown(f"Period: {game['period']}")
