@@ -500,7 +500,7 @@ def display_scores(sport_name, date, scores):
                     st.markdown(diamond_html, unsafe_allow_html=True)
                     st.markdown(f"**Outs:** {situation.get('outs', 0)}")
                     st.markdown(f"**Balls:** {situation.get('balls', 0)}  **Strikes:** {situation.get('strikes', 0)}")
-                     if game.get("pitcher"):
+                    if game.get("pitcher"):
                         st.markdown(f"**Pitcher:** {game['pitcher']}")
                     if game.get("batter"):
                         st.markdown(f"**Batter:** {game['batter']}")
