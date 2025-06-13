@@ -572,34 +572,28 @@ def display_scores(sport_name, date, scores):
 # --- Main UI and Sidebar ---
 
 st.sidebar.title("Controls")
-
 if "auto_refresh" not in st.session_state:
     st.session_state.auto_refresh = True
-
-if st.sidebar.button(":arrows_counterclockwise: Refresh Now"):
+if st.sidebar.button("Refresh Now"):
     st.cache_data.clear()
     st.rerun()
-
-if st.sidebar.button(":pause_button: Toggle Auto-Refresh"):
+if st.sidebar.button("Toggle Auto-Refresh"):
     st.session_state.auto_refresh = not st.session_state.auto_refresh
 
-st.title(":classical_building: Live Sports Scores Dashboard")
-st.markdown("Real-time updates with team logos, stats, and betting odds.")
-
+st.title("Live Sports Scores Dashboard")
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
 formatted_date = selected_date.strftime("%Y%m%d")
 
-for sport_name, sport_cfg in SPORTS.items():
-    scores = get_scores(sport_cfg['path'], formatted_date)
+for sport_name, cfg in SPORTS.items():
+    scores = get_scores(cfg['path'], formatted_date)
     if scores:
         col_logo, col_title = st.columns([1, 5])
         with col_logo:
-            st.image(sport_cfg['icon'], width=80, output_format="PNG")
+            st.image(cfg['icon'], width=80)
         with col_title:
             st.markdown(f"### {sport_name}")
         display_scores(sport_name, formatted_date, scores)
 
 if st.session_state.auto_refresh:
-    time.sleep(2)
-    st.cache_data.clear()
-    st.rerun()
+    import streamlit_js_eval
+    streamlit_js_eval.streamlit_js_eval(js_expressions="window.location.reload();", key="auto-refresh")
