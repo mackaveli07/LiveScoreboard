@@ -23,12 +23,12 @@ st.markdown("""
     .blinking {
         animation: blinker 1s linear infinite;
     }
-@keyframes blinkScore {
+    @keyframes blinkScore {
         0% { opacity: 1; }
         50% { opacity: 0; }
         100% { opacity: 1; }
     }
-  
+
     .diamond {
         width: 80px;
         height: 80px;
@@ -74,14 +74,7 @@ st.markdown("""
         border-left: 2px solid #999;
         background: none;
     }
-    </style>
-""", unsafe_allow_html=True)
 
- @keyframes blinkScore {
-        0% { opacity: 1; }
-        50% { opacity: 0; }
-        100% { opacity: 1; }
-    }
     .team-score-wrapper {
         padding: 0.6em;
         margin-top: 0.5em;
