@@ -92,6 +92,13 @@ st.markdown("""
         transform: translate(-50%, -50%);
         z-index: 1;
     } 
+    .player-label {
+        text-align: center;
+        margin-top: 5px;
+        font-size: 0.85em;
+        color: #333;
+        font-weight: bold;
+    }
     }
 
     .team-score-wrapper {
@@ -493,10 +500,10 @@ def display_scores(sport_name, date, scores):
                     st.markdown(diamond_html, unsafe_allow_html=True)
                     st.markdown(f"**Outs:** {situation.get('outs', 0)}")
                     st.markdown(f"**Balls:** {situation.get('balls', 0)}  **Strikes:** {situation.get('strikes', 0)}")
-                    if situation.get("pitcher"):
-                        st.markdown(f"**Pitcher:** {situation['pitcher']['athlete']['displayName']}")
-                    if situation.get("batter"):
-                        st.markdown(f"**Batter:** {situation['batter']['athlete']['displayName']}")
+                     if game.get("pitcher"):
+                        st.markdown(f"**Pitcher:** {game['pitcher']}")
+                    if game.get("batter"):
+                        st.markdown(f"**Batter:** {game['batter']}")
 
                 elif sport_name in ["NFL (Football)", "NBA (Basketball)", "NHL (Hockey)"]:
                     st.markdown(f"Period: {game['period']}")
