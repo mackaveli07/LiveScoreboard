@@ -6,6 +6,12 @@ from datetime import date
 import streamlit.components.v1 as components
 from streamlit_autorefresh import st_autorefresh
 
+if "auto_refresh" not in st.session_state:
+    st.session_state.auto_refresh = True
+
+if st.session_state.auto_refresh:
+    st_autorefresh(interval=5000, limit=None, key="auto-refresh")
+
 
 ODDS_API_KEY = "4c39fd0413dbcc55279d85ab18bcc6f0"
 if "last_odds_refresh_date" not in st.session_state:
@@ -596,5 +602,3 @@ for sport_name, cfg in SPORTS.items():
             st.markdown(f"### {sport_name}")
         display_scores(sport_name, formatted_date, scores)
 
-if st.session_state.auto_refresh:
-    st_autorefresh(interval=5000, limit=None, key="auto-refresh")
