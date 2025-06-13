@@ -92,13 +92,34 @@ st.markdown("""
         transform: translate(-50%, -50%);
         z-index: 1;
     } 
-    .player-label {
-        text-align: center;
-        margin-top: 5px;
-        font-size: 0.85em;
-        color: #333;
+     .scoreboard {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 10px;
+        font-size: 1.2em;
         font-weight: bold;
+        color: #222;
     }
+    .scoreboard .count {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .scoreboard .lights {
+        display: flex;
+        gap: 5px;
+        margin-top: 4px;
+    }
+    .scoreboard .light {
+        width: 14px;
+        height: 14px;
+        background-color: #ccc;
+        border-radius: 50%;
+        border: 1px solid #333;
+    }
+    .scoreboard .light.on {
+        background-color: limegreen;
     }
 
     .team-score-wrapper {
