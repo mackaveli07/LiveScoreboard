@@ -461,12 +461,15 @@ def display_scores(sport_name, date, scores):
 
                 if sport_name == "MLB (Baseball)":
                     st.markdown(f"Inning: {game['period']}")
+                    second_class = "occupied" if situation.get("onSecond") else ""
+                    third_class = "occupied" if situation.get("onThird") else ""
+                    first_class = "occupied" if situation.get("onFirst") else ""
                     diamond_html = f"""
                         <div class=\"diamond\">
-                            <div class=\"base second {'occupied' if situation.get('onSecond') else ''}\"></div>
-                            <div class=\"base third {'occupied' if situation.get('onThird') else ''}\"></div>
-                            <div class=\"base first {'occupied' if situation.get('onFirst') else ''}\"></div>
-                            <div class=\"base home\">
+                             <div class=\"base second {second_class}\"></div>
+                            <div class=\"base third {third_class}\"></div>
+                            <div class=\"base first {first_class}\"></div>
+                            <div class=\"base home\"></div>
                         </div>
                     """
                     st.markdown(diamond_html, unsafe_allow_html=True)
