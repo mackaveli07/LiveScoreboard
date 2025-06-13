@@ -594,6 +594,9 @@ for sport_name, cfg in SPORTS.items():
             st.markdown(f"### {sport_name}")
         display_scores(sport_name, formatted_date, scores)
 
+# Continuous auto-refresh every 5 seconds
 if st.session_state.auto_refresh:
-    import streamlit_js_eval
-    streamlit_js_eval.streamlit_js_eval(js_expressions="window.location.reload();", key="auto-refresh")
+    import time
+    time.sleep(5)
+    st.cache_data.clear()
+    st.rerun()
