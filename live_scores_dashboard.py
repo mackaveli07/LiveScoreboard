@@ -519,13 +519,36 @@ def display_scores(sport_name, date, scores):
                         </div>
                     """
                     st.markdown(diamond_html, unsafe_allow_html=True)
-                    st.markdown(f"**Outs:** {situation.get('outs', 0)}")
-                    st.markdown(f"**Balls:** {situation.get('balls', 0)}  **Strikes:** {situation.get('strikes', 0)}")
+                    balls = game.get("balls", 0)
+                    strikes = game.get("strikes", 0)
+                    outs = game.get("outs", 0)
+                    scoreboard_html = f"""
+                        <div class='scoreboard'>
+                            <div class='count'>B
+                                <div class='lights'>
+                                    {''.join([f'<div class="light {'on' if i < balls else ''}"></div>' for i in range(4)])}
+                                </div>
+                            </div>
+                            <div class='count'>S
+                                <div class='lights'>
+                                    {''.join([f'<div class="light {'on' if i < strikes else ''}"></div>' for i in range(3)])}
+                                </div>
+                            </div>
+                            <div class='count'>O
+                                <div class='lights'>
+                                    {''.join([f'<div class="light {'on' if i < outs else ''}"></div>' for i in range(3)])}
+                                </div>
+                            </div>
+                        </div>
+                    """
+                    st.markdown(scoreboard_html, unsafe_allow_html=True)
+
+                    if game.get("pitch_speed"):
+                        st.markdown(f"**Pitch Speed:** {game['pitch_speed']} mph")
                     if game.get("pitcher"):
                         st.markdown(f"**Pitcher:** {game['pitcher']}")
                     if game.get("batter"):
                         st.markdown(f"**Batter:** {game['batter']}")
-
                 elif sport_name in ["NFL (Football)", "NBA (Basketball)", "NHL (Hockey)"]:
                     st.markdown(f"Period: {game['period']}")
                     st.markdown(f"Clock: {game['clock']}")
