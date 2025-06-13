@@ -30,49 +30,46 @@ st.markdown("""
     }
 
 .diamond {
-    width: 120px;
-    height: 120px;
-    position: relative;
-    margin: 20px auto;
-    background: green;
-    border-radius: 4px;
-}
-.base {
-    width: 20px;
-    height: 20px;
-    background-color: white;
-    border: 2px solid #555;
-    position: absolute;
-    transform: rotate(45deg);
-    z-index: 2;
-}
-.base.occupied {
-    background-color: yellow;
-}
-.second {
-    top: 5%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(45deg)
-}
-
-.third {
-   top: 50%;
-   left: 5%;
-   transform: translate(50%, -50%) rotate(45deg);
-}
-.first {
-    top: 50%;
-    left: 95%;
-    transform: translate(-50%, -50%) rotate(45deg);
-    
-}
-
-.home {
-   top: 95%; 
-   transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.pitcher {
+        width: 120px;
+        height: 120px;
+        position: relative;
+        margin: 20px auto;
+        background: green;
+        border-radius: 4px;
+    }
+    .base {
+        width: 20px;
+        height: 20px;
+        background-color: white;
+        border: 2px solid #555;
+        position: absolute;
+        transform: rotate(45deg);
+        z-index: 2;
+    }
+    .base.occupied {
+        background-color: yellow;
+    }
+    .second {
+        top: 10%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(45deg);
+    }
+    .third {
+        top: 50%;
+        left: 10%;
+        transform: translate(-50%, -50%) rotate(45deg);
+    }
+    .first {
+        top: 50%;
+        left: 90%;
+        transform: translate(-50%, -50%) rotate(45deg);
+    }
+    .home {
+        top: 90%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(45deg);
+    }
+    .pitcher {
         position: absolute;
         top: 50%;
         left: 50%;
