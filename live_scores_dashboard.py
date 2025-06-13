@@ -524,9 +524,12 @@ def display_scores(sport_name, date, scores):
                     balls = game.get("balls", 0)
                     strikes = game.get("strikes", 0)
                     outs = game.get("outs", 0)
-                    def render_lights(label, count, max_lights):
-                        return f"<div class='count'>{label}<div class='lights'>{''.join([f'<div class=\"light {'on\"' if i < count else '\"'}></div>' for i in range(max_lights)])}</div></div>"
-
+                     def render_lights(label, count, max_lights):
+                        lights_html = ''.join([
+                            f"<div class='light {'on' if i < count else ''}'></div>"
+                            for i in range(max_lights)
+                        ])
+                        return f"<div class='count'>{label}<div class='lights'>{lights_html}</div></div>"
                     scoreboard_html = f"""
                         <div class='scoreboard'>
                             {render_lights('B', balls, 4)}
