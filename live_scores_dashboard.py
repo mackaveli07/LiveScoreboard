@@ -30,50 +30,56 @@ st.markdown("""
     }
 
     .diamond {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     position: relative;
     margin: 20px auto;
-    background: none;
-    transform: rotate(45deg);
+    background: green;
+    border-radius: 4px;
 }
 .base {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     background-color: white;
-    border: 2px solid #999;
+    border: 2px solid #555;
     position: absolute;
-    transform: rotate(-45deg);
+    transform: rotate(45deg);
     z-index: 2;
 }
 .base.occupied {
-    background-color: #228B22;
-    border-color: #145214;
+    background-color: yellow;
 }
 .second {
     top: 0;
     left: 50%;
-    transform: translate(-50%, -50%) rotate(-45deg);
+    transform: translate(-50%, -50%) rotate(45deg)
+}
+
+.third {
+   top: 50%;
+   left: 0;
+   transform: translate(50%, -50%) rotate(45deg);
 }
 .first {
     top: 50%;
     right: 0;
-    transform: translate(50%, -50%) rotate(-45deg);
+    
 }
-.third {
-    bottom: 10%;
-    left: 0;
+
+.home {
     transform: translate(-50%, 50%) rotate(45deg);
 }
-.home {
-        bottom: 0;
+
+.pitcher {
+        position: absolute;
+        top: 50%;
         left: 50%;
-        transform: translate(-50%, 50%) rotate(-45deg);
-        border-color: transparent;
-        border-top: 2px solid #999;
-        border-left: 2px solid #999;
-        background: none;
-}
+        width: 10px;
+        height: 10px;
+        background-color: red;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+    }
 
     .team-score-wrapper {
         padding: 0.6em;
@@ -468,6 +474,7 @@ def display_scores(sport_name, date, scores):
                             <div class=\"base third {third_class}\"></div>
                             <div class=\"base first {first_class}\"></div>
                             <div class=\"base home\"></div>
+                            <div class=\"pitcher\"></div>
                         </div>
                     """
                     st.markdown(diamond_html, unsafe_allow_html=True)
