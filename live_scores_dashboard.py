@@ -511,34 +511,27 @@ def display_scores(sport_name, date, scores):
                     first_class = "occupied" if situation.get("onFirst") else ""
                     diamond_html = f"""
                         <div class=\"diamond\">
-                             <div class=\"base second {second_class}\"></div>
-                            <div class=\"base third {third_class}\"></div>
-                            <div class=\"base first {first_class}\"></div>
-                            <div class=\"base home\"></div>
-                            <div class=\"pitcher\"></div>
+                             <div class='diamond'>
+                            <div class='base second {second_class}'></div>
+                            <div class='base third {third_class}'></div>
+                            <div class='base first {first_class}'></div>
+                            <div class='base home'></div>
+                            <div class='mound'></div>
+                            <div class='pitcher'></div>
                         </div>
                     """
                     st.markdown(diamond_html, unsafe_allow_html=True)
                     balls = game.get("balls", 0)
                     strikes = game.get("strikes", 0)
                     outs = game.get("outs", 0)
+                    def render_lights(label, count, max_lights):
+                        return f"<div class='count'>{label}<div class='lights'>{''.join([f'<div class=\"light {'on\"' if i < count else '\"'}></div>' for i in range(max_lights)])}</div></div>"
+
                     scoreboard_html = f"""
                         <div class='scoreboard'>
-                            <div class='count'>B
-                                <div class='lights'>
-                                    {''.join([f'<div class="light {'on' if i < balls else ''}"></div>' for i in range(4)])}
-                                </div>
-                            </div>
-                            <div class='count'>S
-                                <div class='lights'>
-                                    {''.join([f'<div class="light {'on' if i < strikes else ''}"></div>' for i in range(3)])}
-                                </div>
-                            </div>
-                            <div class='count'>O
-                                <div class='lights'>
-                                    {''.join([f'<div class="light {'on' if i < outs else ''}"></div>' for i in range(3)])}
-                                </div>
-                            </div>
+                            {render_lights('B', balls, 4)}
+                            {render_lights('S', strikes, 3)}
+                            {render_lights('O', outs, 3)}
                         </div>
                     """
                     st.markdown(scoreboard_html, unsafe_allow_html=True)
