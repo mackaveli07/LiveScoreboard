@@ -30,50 +30,50 @@ st.markdown("""
     }
 
     .diamond {
-        width: 80px;
-        height: 80px;
-        position: relative;
-        margin: 10px auto;
-        background: none;
-        border: none;
-    }
-    .base {
-        width: 14px;
-        height: 14px;
-        background-color: white;
-        border: 2px solid #999;
-        position: absolute;
-        transform: rotate(45deg);
-        z-index: 2;
-    }
-    .base.occupied {
-        background-color: #228B22;
-        border-color: #145214;
-    }
-    .second {
-        top: 0;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(45deg);
-    }
-    .first {
-        bottom: 10%;
-        right: 0;
-        transform: translate(50%, 50%) rotate(45deg);
-    }
-    .third {
-        bottom: 10%;
-        left: 0;
-        transform: translate(-50%, 50%) rotate(45deg);
-    }
-    .home {
-        bottom: 0;
-        left: 50%;
-        transform: translate(-50%, 50%) rotate(45deg);
-        border-color: transparent;
-        border-top: 2px solid #999;
-        border-left: 2px solid #999;
-        background: none;
-    }
+    width: 80px;
+    height: 80px;
+    position: relative;
+    margin: 10px auto;
+    background: none;
+    border: none;
+}
+.base {
+    width: 14px;
+    height: 14px;
+    background-color: white;
+    border: 2px solid #999;
+    position: absolute;
+    transform: rotate(45deg);
+    z-index: 2;
+}
+.base.occupied {
+    background-color: #228B22;
+    border-color: #145214;
+}
+.second {
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+.first {
+    bottom: 10%;
+    right: 0;
+    transform: translate(50%, 50%) rotate(45deg);
+}
+.third {
+    bottom: 10%;
+    left: 0;
+    transform: translate(-50%, 50%) rotate(45deg);
+}
+.home {
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, 50%) rotate(45deg);
+    border-color: transparent;
+    border-top: 2px solid #999;
+    border-left: 2px solid #999;
+    background: none;
+}
 
     .team-score-wrapper {
         padding: 0.6em;
