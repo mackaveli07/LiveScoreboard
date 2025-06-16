@@ -579,13 +579,9 @@ def display_scores(sport_name, date, scores):
 # --- Main UI and Sidebar ---
 
 st.sidebar.title("Controls")
-if "auto_refresh" not in st.session_state:
-    st.session_state.auto_refresh = True
-if st.sidebar.button("Refresh Now"):
-    st.cache_data.clear()
-    st.rerun()
-if st.sidebar.button("Toggle Auto-Refresh"):
-    st.session_state.auto_refresh = not st.session_state.auto_refresh
+from streamlit_autorefresh import st_autorefresh
+
+
 
 st.title("Live Sports Scores Dashboard")
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
@@ -600,4 +596,8 @@ for sport_name, cfg in SPORTS.items():
         with col_title:
             st.markdown(f"### {sport_name}")
         display_scores(sport_name, formatted_date, scores)
+
+# Continuous auto-refresh every 5 seconds
+st_autorefresh(interval=5000, limit=None, key="auto-refresh")
+
 
