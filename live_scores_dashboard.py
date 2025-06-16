@@ -559,7 +559,7 @@ for sport_name in sorted(SPORTS.keys()):
                 st.image(cfg['icon'], width=80)
             with col_title:
                 st.markdown(f"### {sport_name}")
-             st.write(scores)  # TEMP: show raw data for debug
+                st.write(scores)  # TEMP: show raw data for debug
         else:
             st.info(f"No games found for {sport_name}")
     except Exception as e:
