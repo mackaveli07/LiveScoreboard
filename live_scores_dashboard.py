@@ -6,18 +6,20 @@ from datetime import date
 import streamlit.components.v1 as components
 from streamlit_autorefresh import st_autorefresh
 
-st.set_page_config(page_title="Live Sports Scores", layout="wide")  # MUST BE FIRST
+# --- Page Setup ---
+st.set_page_config(page_title="Live Sports Scores", layout="wide")
 
-
+# --- Session State Setup ---
 if "auto_refresh" not in st.session_state:
     st.session_state.auto_refresh = True
 if "last_scores" not in st.session_state:
     st.session_state.last_scores = {}
+if "game_blocks" not in st.session_state:
+    st.session_state.game_blocks = {}
 
-
-# --- Auto Refresh Trigger ---
+# --- Auto Refresh ---
 if st.session_state.auto_refresh:
-    count = st_autorefresh(interval=5000, limit=None, key="refresh_counter")
+    st_autorefresh(interval=5000, limit=None, key="refresh")
 
 ODDS_API_KEY = "4c39fd0413dbcc55279d85ab18bcc6f0"
 if "last_odds_refresh_date" not in st.session_state:
@@ -175,25 +177,21 @@ st.markdown("""
 """, unsafe_allow_html=True)
 # --- Sport Logos and Config ---
 SPORTS = {
-    "NFL (Football)": {
-        "path": "football/nfl",
-        "icon": "https://upload.wikimedia.org/wikipedia/en/a/a2/National_Football_League_logo.svg",
-        "odds_key": "americanfootball_nfl"
-    },
     "NBA (Basketball)": {
         "path": "basketball/nba",
-        "icon": "https://upload.wikimedia.org/wikipedia/en/0/03/National_Basketball_Association_logo.svg",
-        "odds_key": "basketball_nba"
+        "icon": "https://upload.wikimedia.org/wikipedia/en/0/03/National_Basketball_Association_logo.svg"
     },
-     "MLB (Baseball)": {
+    "NFL (Football)": {
+        "path": "football/nfl",
+        "icon": "https://upload.wikimedia.org/wikipedia/en/a/a2/National_Football_League_logo.svg"
+    },
+    "MLB (Baseball)": {
         "path": "baseball/mlb",
-        "icon": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/MLB_Logo.svg/320px-MLB_Logo.svg",
-        "odds_key": "baseball_mlb"
+        "icon": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/MLB_Logo.svg/320px-MLB_Logo.svg"
     },
     "NHL (Hockey)": {
         "path": "hockey/nhl",
-        "icon": "https://upload.wikimedia.org/wikipedia/en/3/3a/05_NHL_Shield.svg",
-        "odds_key": "icehockey_nhl"
+        "icon": "https://upload.wikimedia.org/wikipedia/en/3/3a/05_NHL_Shield.svg"
     }
 }
 
@@ -591,44 +589,23 @@ def render_dashboard():
     selected_date = st.sidebar.date_input("Select date:", datetime.today())
     formatted_date = selected_date.strftime("%Y%m%d")
 
-    updated_scores = {}
-
     for sport_name, cfg in sorted(SPORTS.items()):
+        st.markdown("---")
+        col1, col2 = st.columns([1, 5])
+        with col1:
+            st.image(cfg['icon'], width=60)
+        with col2:
+            st.markdown(f"### {sport_name}")
+
         data = get_scores(cfg['path'], formatted_date)
-        if not data or "events" not in data:
-            continue
-
-        current = [(e['id'], e['competitions'][0]['competitors']) for e in data['events']]
-        previous = st.session_state.last_scores.get(sport_name, [])
-
-        changed = current != previous
-        updated_scores[sport_name] = current
-
-        with st.container():
-            col1, col2 = st.columns([1, 5])
-            with col1:
-                st.image(cfg['icon'], width=60)
-            with col2:
-                st.markdown(f"### {sport_name}")
-
-        if changed:
-            st.markdown(f"<div style='color:green;'>Updated {sport_name} scores.</div>", unsafe_allow_html=True)
-
-        for event in data['events']:
-            comp = event['competitions'][0]
-            teams = comp['competitors']
-            if len(teams) == 2:
-                t1 = teams[0]['team']['displayName']
-                s1 = teams[0]['score']
-                t2 = teams[1]['team']['displayName']
-                s2 = teams[1]['score']
-                st.markdown(f"{t1} ({s1}) vs {t2} ({s2})")
-
-    st.session_state.last_scores = updated_scores
+        if data:
+            display_scores(sport_name, formatted_date, data)
+        else:
+            st.info(f"No games found for {sport_name}")
 
 # --- Sidebar ---
 st.sidebar.title("Controls")
 st.sidebar.checkbox("Auto Refresh", value=st.session_state.auto_refresh, key="auto_refresh")
 
-# --- Main UI Render ---
+# --- Render Dashboard ---
 render_dashboard()
