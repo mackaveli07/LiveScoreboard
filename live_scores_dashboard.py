@@ -45,7 +45,7 @@ st.markdown("""
         100% { opacity: 1; }
     }
 
-.diamond {
+ .diamond {
         width: 30vw;
         max-width: 150px;
         aspect-ratio: 1 / 1;
@@ -108,6 +108,7 @@ st.markdown("""
         transform: translate(-50%, -50%);
         z-index: 1;
     } 
+    </style>
      .scoreboard {
         display: flex;
         justify-content: center;
