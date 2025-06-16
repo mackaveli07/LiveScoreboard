@@ -6,11 +6,11 @@ from datetime import date
 import streamlit.components.v1 as components
 from streamlit_autorefresh import st_autorefresh
 
-
+if "auto_refresh" not in st.session_state:
+    st.session_state.auto_refresh = True
 
 if st.session_state.auto_refresh:
     st_autorefresh(interval=5000, limit=None, key="auto-refresh")
-
 
 ODDS_API_KEY = "4c39fd0413dbcc55279d85ab18bcc6f0"
 if "last_odds_refresh_date" not in st.session_state:
@@ -376,7 +376,8 @@ def get_scores(sport_path, date):
             "strikes": situation.get("strikes"),
             "outs": situation.get("outs"),
             "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName"),
-            "batter": situation.get("batter", {}).get("athlete", {}).get("displayName")
+            "batter": situation.get("batter", {}).get("athlete", {}).get("displayName"),
+            "situation": situation
         })
 
     return results
@@ -577,7 +578,6 @@ def display_scores(sport_name, date, scores):
             st.markdown("</div>", unsafe_allow_html=True)
 
 # --- Main UI and Sidebar ---
-
 st.sidebar.title("Controls")
 st.title("Live Sports Scores Dashboard")
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
@@ -592,8 +592,3 @@ for sport_name, cfg in SPORTS.items():
         with col_title:
             st.markdown(f"### {sport_name}")
         display_scores(sport_name, formatted_date, scores)
-
-from streamlit_autorefresh import st_autorefresh
-
-# Continuous auto-refresh every 5 seconds
-st_autorefresh(interval=5000, limit=None, key="auto-refresh")
