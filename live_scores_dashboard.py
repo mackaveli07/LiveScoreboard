@@ -590,7 +590,8 @@ formatted_date = selected_date.strftime("%Y%m%d")
 
 placeholder = st.empty()
 with placeholder.container():
-    for sport_name, cfg in SPORTS.items():
+    for sport_name in sorted(SPORTS.keys()):  # Ensure consistent order across refreshes
+        cfg = SPORTS[sport_name]
         try:
             scores = get_scores(cfg['path'], formatted_date)
             if scores:
