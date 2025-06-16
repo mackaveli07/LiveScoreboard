@@ -334,7 +334,6 @@ TEAM_COLORS = {
 score_cache = {}
 
 @st.cache_data(ttl=5)
-
 def get_scores(sport_path, date):
     url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard?dates={date}"
     try:
@@ -344,48 +343,6 @@ def get_scores(sport_path, date):
     except Exception as e:
         st.warning(f"Error fetching data: {e}")
         return None
-    results = []
-    for event in data.get("events", []):
-        comp = event['competitions'][0]
-        teams = comp['competitors']
-        if len(teams) != 2:
-            continue
-
-        home = next(t for t in teams if t['homeAway'] == 'home')
-        away = next(t for t in teams if t['homeAway'] == 'away')
-        situation = comp.get("situation", {})
-
-        results.append({
-            "id": event['id'],
-            "status": comp['status']['type']['shortDetail'],
-            "teams": [
-                {
-                    "name": away['team']['displayName'],
-                    "score": away['score'],
-                    "logo": away['team']['logo'],
-                    "possession": away['team']['id'] == situation.get("possession")
-                },
-                {
-                    "name": home['team']['displayName'],
-                    "score": home['score'],
-                    "logo": home['team']['logo'],
-                    "possession": home['team']['id'] == situation.get("possession")
-                }
-            ],
-            "period": comp['status'].get("period", ""),
-            "clock": comp['status'].get("displayClock", ""),
-            "on_first": situation.get("onFirst"),
-            "on_second": situation.get("onSecond"),
-            "on_third": situation.get("onThird"),
-            "balls": situation.get("balls"),
-            "strikes": situation.get("strikes"),
-            "outs": situation.get("outs"),
-            "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName"),
-            "batter": situation.get("batter", {}).get("athlete", {}).get("displayName"),
-            "situation": situation
-        })
-
-    return results
 
 LAST_GOOD_ODDS = {}
 
@@ -452,137 +409,101 @@ def display_odds_for_game(game, sport_key):
 
 # --- FIXED display_scores with formatting fix & score pre-passing ---
 def display_scores(sport_name, date, scores):
-    sport_cfg = SPORTS[sport_name]
+    for event in scores.get("events", []):
+        try:
+            comp = event['competitions'][0]
+            teams = comp['competitors']
+            if len(teams) != 2:
+                continue
 
-    for game in scores:
-        t1, t2 = game['teams']
-        game_id = game['id']
-        prev = score_cache.get(game_id, (None, None))
-        score_cache[game_id] = (t1['score'], t2['score'])
+            game_id = event['id']
+            t1 = teams[0]['team']['displayName']
+            s1 = teams[0].get('score', '0')
+            t2 = teams[1]['team']['displayName']
+            s2 = teams[1].get('score', '0')
+            logo1 = teams[0]['team'].get('logo')
+            logo2 = teams[1]['team'].get('logo')
 
-        b1 = prev[0] != t1['score'] and prev[0] is not None
-        b2 = prev[1] != t2['score'] and prev[1] is not None
+            status = comp['status']['type']['shortDetail']
+            clock = comp['status'].get('displayClock', '')
+            period = comp['status'].get('period', '')
 
-        popup1 = popup2 = ""
+            situation = comp.get("situation", {})
+            possession1 = teams[0]['id'] == situation.get("possession")
+            possession2 = teams[1]['id'] == situation.get("possession")
 
-        if sport_name in ["NBA (Basketball)", "NFL (Football)", "MLB (Baseball)", "NHL (Hockey)"]:
-            try:
-                delta1 = int(t1['score']) - int(prev[0]) if prev[0] is not None else 0
-                delta2 = int(t2['score']) - int(prev[1]) if prev[1] is not None else 0
-                if delta1 > 0:
-                    popup1 = f"<div class='scoring-popup'>+{delta1}</div>"
-                if delta2 > 0:
-                    popup2 = f"<div class='scoring-popup'>+{delta2}</div>"
-            except:
-                pass
+            cached = st.session_state.last_scores.get(game_id)
+            current = (s1, s2)
+            if cached == current:
+                continue
+            st.session_state.last_scores[game_id] = current
 
-        color1 = TEAM_COLORS.get(t1['name'], {}).get('primary', '#ddd')
-        color1b = TEAM_COLORS.get(t1['name'], {}).get('secondary', '#aaa')
-        color2 = TEAM_COLORS.get(t2['name'], {}).get('primary', '#ccc')
-        color2b = TEAM_COLORS.get(t2['name'], {}).get('secondary', '#bbb')
+            block = st.session_state.game_blocks.get(game_id)
+            if not block:
+                block = st.empty()
+                st.session_state.game_blocks[game_id] = block
 
-        score1_class = "team-score-box" + (" score-blink" if b1 else "")
-        score2_class = "team-score-box" + (" score-blink" if b2 else "")
+            with block.container():
+                col1, col2, col3 = st.columns([1, 2, 1])
 
-        score1_html = (
-            f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color1}, {color1b})'>"
-            f"<div class='team-name'>{t1['name']}</div>{popup1}"
-            f"<div class='{score1_class}'>{t1['score']}</div>"
-            "</div>"
-        )
+                with col1:
+                    if logo1:
+                        st.image(logo1, width=60)
+                    st.markdown(f"### {t1}")
+                    st.markdown(f"**Score:** {s1}")
+                    if possession1:
+                        st.markdown("🏈 **Possession**")
 
-        score2_html = (
-            f"<div class='team-score-wrapper' style='background: linear-gradient(135deg, {color2}, {color2b})'>"
-            f"<div class='team-name'>{t2['name']}</div>{popup2}"
-            f"<div class='{score2_class}'>{t2['score']}</div>"
-            "</div>"
-        )
+                with col2:
+                    st.markdown(f"### VS")
+                    st.markdown(f"**{status}**")
+                    if period:
+                        st.markdown(f"**Period:** {period}")
+                    if clock:
+                        st.markdown(f"**Clock:** {clock}")
 
-        gradient_style = f"background: linear-gradient(to right, {color1}, {color2});"
-        box_style = f"{gradient_style} padding: 1em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1em;"
+                    # MLB baseball diamond
+                    if sport_name == "MLB (Baseball)":
+                        second_class = "background-color: yellow;" if situation.get("onSecond") else ""
+                        third_class = "background-color: yellow;" if situation.get("onThird") else ""
+                        first_class = "background-color: yellow;" if situation.get("onFirst") else ""
 
-        with st.container():
-            st.markdown(f"<div class='score-box' style='{box_style}'>", unsafe_allow_html=True)
-            col1, col2, col3 = st.columns([1, 2, 1])
-
-            with col1:
-                st.image(t1['logo'], width=60)
-                st.markdown(score1_html, unsafe_allow_html=True)
-                if t1['possession']:
-                    st.markdown("🏈 Possession")
-
-            with col2:
-                st.markdown("### VS")
-                st.markdown(f"**{game['status']}**")
-                display_odds_for_game(game, sport_cfg['odds_key'])
-
-                if sport_name == "MLB (Baseball)":
-                    st.markdown(f"Inning: {game['period']}")
-                    situation = game.get("situation", {})
-                    second_class = "occupied" if situation.get("onSecond") else ""
-                    third_class = "occupied" if situation.get("onThird") else ""
-                    first_class = "occupied" if situation.get("onFirst") else ""
-                    diamond_html = f"""
-                        <div class=\"diamond\">
-                             <div class='diamond'>
-                            <div class='base second {second_class}'></div>
-                            <div class='base third {third_class}'></div>
-                            <div class='base first {first_class}'></div>
-                            <div class='base home'></div>
-                            <div class='mound'></div>
-                            <div class='pitcher'></div>
+                        diamond_html = f"""
+                        <div style='width: 100px; height: 100px; margin: auto; position: relative;'>
+                            <div style='position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%) rotate(45deg); width: 20px; height: 20px; border: 2px solid #000; {second_class}'></div>
+                            <div style='position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%) rotate(45deg); width: 20px; height: 20px; border: 2px solid #000; {third_class}'></div>
+                            <div style='position: absolute; top: 50%; left: 100%; transform: translate(-50%, -50%) rotate(45deg); width: 20px; height: 20px; border: 2px solid #000; {first_class}'></div>
+                            <div style='position: absolute; bottom: 0; left: 50%; transform: translate(-50%, 50%) rotate(45deg); width: 20px; height: 20px; border: 2px solid #000;'></div>
                         </div>
-                    """
-                    st.markdown(diamond_html, unsafe_allow_html=True)
-                    balls = game.get("balls", 0)
-                    strikes = game.get("strikes", 0)
-                    outs = game.get("outs", 0)
-                    def render_lights(label, count, max_lights):
-                        count = count or 0  # handle None as 0
-                        lights_html = ''.join([
-                            f"<div class=\"light {'on' if i < count else ''}\"></div>"
-                            for i in range(max_lights)
-                        ])
-                        return f"<div class='count'>{label}<div class='lights'>{lights_html}</div></div>"
+                        """
+                        st.markdown(diamond_html, unsafe_allow_html=True)
 
-                    scoreboard_html = f"""
-                        <div class='scoreboard'>
-                            {render_lights('B', balls, 4)}
-                            {render_lights('S', strikes, 3)}
-                            {render_lights('O', outs, 3)}
-                        </div>
-                    """
-                    st.markdown(scoreboard_html, unsafe_allow_html=True)
+                        balls = situation.get("balls", 0)
+                        strikes = situation.get("strikes", 0)
+                        outs = situation.get("outs", 0)
+                        st.markdown(f"**Balls:** {balls}  ")
+                        st.markdown(f"**Strikes:** {strikes}  ")
+                        st.markdown(f"**Outs:** {outs}  ")
 
-                    if game.get("pitch_speed"):
-                        st.markdown(f"**Pitch Speed:** {game['pitch_speed']} mph")
-                    if game.get("pitcher"):
-                        st.markdown(f"**Pitcher:** {game['pitcher']}")
-                    if game.get("batter"):
-                        st.markdown(f"**Batter:** {game['batter']}")
-                elif sport_name in ["NFL (Football)", "NBA (Basketball)", "NHL (Hockey)"]:
-                    st.markdown(f"Period: {game['period']}")
-                    st.markdown(f"Clock: {game['clock']}")
-                    if sport_name == "NFL (Football)":
-                        for team in game['teams']:
-                            if team['possession']:
-                                yard = game.get("yard_line")
-                                if yard:
-                                    try:
-                                        yard = int(yard)
-                                        yard = max(0, min(100, yard))
-                                        st.markdown(f"**{team['name']} Offense - Ball on {yard} yard line**")
-                                        st.progress(yard / 100)
-                                    except:
-                                        st.markdown("**Field Position:** Unknown")
+                        pitcher = situation.get("pitcher", {}).get("athlete", {}).get("displayName")
+                        batter = situation.get("batter", {}).get("athlete", {}).get("displayName")
+                        if pitcher:
+                            st.markdown(f"**Pitcher:** {pitcher}")
+                        if batter:
+                            st.markdown(f"**Batter:** {batter}")
 
-            with col3:
-                st.image(t2['logo'], width=60)
-                st.markdown(score2_html, unsafe_allow_html=True)
-                if t2['possession']:
-                    st.markdown("🏈 Possession")
+                with col3:
+                    if logo2:
+                        st.image(logo2, width=60)
+                    st.markdown(f"### {t2}")
+                    st.markdown(f"**Score:** {s2}")
+                    if possession2:
+                        st.markdown("🏈 **Possession**")
 
-            st.markdown("</div>", unsafe_allow_html=True)
+        except (KeyError, TypeError, IndexError) as e:
+            st.warning(f"Skipping malformed game data: {e}")
+            continue
+
 
 # --- Main UI and Sidebar ---
 def render_dashboard():
