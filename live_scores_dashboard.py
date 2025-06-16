@@ -579,10 +579,6 @@ def display_scores(sport_name, date, scores):
 # --- Main UI and Sidebar ---
 
 st.sidebar.title("Controls")
-from streamlit_autorefresh import st_autorefresh
-
-
-
 st.title("Live Sports Scores Dashboard")
 selected_date = st.sidebar.date_input("Select date:", datetime.today())
 formatted_date = selected_date.strftime("%Y%m%d")
@@ -597,7 +593,7 @@ for sport_name, cfg in SPORTS.items():
             st.markdown(f"### {sport_name}")
         display_scores(sport_name, formatted_date, scores)
 
+from streamlit_autorefresh import st_autorefresh
+
 # Continuous auto-refresh every 5 seconds
 st_autorefresh(interval=5000, limit=None, key="auto-refresh")
-
-
