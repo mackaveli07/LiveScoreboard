@@ -11,9 +11,13 @@ st.set_page_config(page_title="Live Sports Scores", layout="wide")  # MUST BE FI
 
 if "auto_refresh" not in st.session_state:
     st.session_state.auto_refresh = True
+if "last_scores" not in st.session_state:
+    st.session_state.last_scores = {}
 
+
+# --- Auto Refresh Trigger ---
 if st.session_state.auto_refresh:
-    st_autorefresh(interval=5000, limit=None, key="auto-refresh")
+    count = st_autorefresh(interval=5000, limit=None, key="refresh_counter")
 
 ODDS_API_KEY = "4c39fd0413dbcc55279d85ab18bcc6f0"
 if "last_odds_refresh_date" not in st.session_state:
@@ -335,12 +339,11 @@ score_cache = {}
 def get_scores(sport_path, date):
     url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard?dates={date}"
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=5)
         response.raise_for_status()
-        data = response.json()
-    except Exception as e:
-        st.error(f"Error fetching scores for {sport_path}: {e}")
-        return []
+        return response.json()
+    except:
+        return None
 
     results = []
     for event in data.get("events", []):
@@ -583,25 +586,49 @@ def display_scores(sport_name, date, scores):
             st.markdown("</div>", unsafe_allow_html=True)
 
 # --- Main UI and Sidebar ---
-st.sidebar.title("Controls")
-st.title("Live Sports Scores Dashboard")
-selected_date = st.sidebar.date_input("Select date:", datetime.today())
-formatted_date = selected_date.strftime("%Y%m%d")
+def render_dashboard():
+    st.title("Live Sports Scores Dashboard")
+    selected_date = st.sidebar.date_input("Select date:", datetime.today())
+    formatted_date = selected_date.strftime("%Y%m%d")
 
-placeholder = st.empty()
-with placeholder.container():
-    for sport_name in sorted(SPORTS.keys()):  # Ensure consistent order across refreshes
-        cfg = SPORTS[sport_name]
-        try:
-            scores = get_scores(cfg['path'], formatted_date)
-            if scores:
-                col_logo, col_title = st.columns([1, 5])
-                with col_logo:
-                    st.image(cfg['icon'], width=80)
-                with col_title:
-                    st.markdown(f"### {sport_name}")
-                display_scores(sport_name, formatted_date, scores)
-            else:
-                st.info(f"No games found for {sport_name}")
-        except Exception as e:
-            st.error(f"Error displaying {sport_name}: {e}")
+    updated_scores = {}
+
+    for sport_name, cfg in sorted(SPORTS.items()):
+        data = get_scores(cfg['path'], formatted_date)
+        if not data or "events" not in data:
+            continue
+
+        current = [(e['id'], e['competitions'][0]['competitors']) for e in data['events']]
+        previous = st.session_state.last_scores.get(sport_name, [])
+
+        changed = current != previous
+        updated_scores[sport_name] = current
+
+        with st.container():
+            col1, col2 = st.columns([1, 5])
+            with col1:
+                st.image(cfg['icon'], width=60)
+            with col2:
+                st.markdown(f"### {sport_name}")
+
+        if changed:
+            st.markdown(f"<div style='color:green;'>Updated {sport_name} scores.</div>", unsafe_allow_html=True)
+
+        for event in data['events']:
+            comp = event['competitions'][0]
+            teams = comp['competitors']
+            if len(teams) == 2:
+                t1 = teams[0]['team']['displayName']
+                s1 = teams[0]['score']
+                t2 = teams[1]['team']['displayName']
+                s2 = teams[1]['score']
+                st.markdown(f"{t1} ({s1}) vs {t2} ({s2})")
+
+    st.session_state.last_scores = updated_scores
+
+# --- Sidebar ---
+st.sidebar.title("Controls")
+st.sidebar.checkbox("Auto Refresh", value=st.session_state.auto_refresh, key="auto_refresh")
+
+# --- Main UI Render ---
+render_dashboard()
