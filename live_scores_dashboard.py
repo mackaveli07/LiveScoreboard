@@ -434,7 +434,7 @@ def display_scores(sport_name, date, scores):
 
             cached = st.session_state.last_scores.get(game_id)
             current = (s1, s2)
-             if cached is not None and cached == current:
+            if cached is not None and cached == current:
                 continue
             st.session_state.last_scores[game_id] = current
 
