@@ -535,13 +535,12 @@ def display_scores(sport_name, date, scores):
                     balls = game.get("balls", 0)
                     strikes = game.get("strikes", 0)
                     outs = game.get("outs", 0)
-                    def render_lights(label, count, max_lights):
+                   def render_lights(label, count, max_lights):
                         lights_html = ''.join([
                             f"<div class=\"light {'on' if i < count else ''}\"></div>"
                             for i in range(max_lights)
                         ])
                         return f"<div class='count'>{label}<div class='lights'>{lights_html}</div></div>"
-
                     scoreboard_html = f"""
                         <div class='scoreboard'>
                             {render_lights('B', balls, 4)}
@@ -588,11 +587,17 @@ selected_date = st.sidebar.date_input("Select date:", datetime.today())
 formatted_date = selected_date.strftime("%Y%m%d")
 
 for sport_name, cfg in SPORTS.items():
-    scores = get_scores(cfg['path'], formatted_date)
-    if scores:
-        col_logo, col_title = st.columns([1, 5])
-        with col_logo:
-            st.image(cfg['icon'], width=80)
-        with col_title:
-            st.markdown(f"### {sport_name}")
-        display_scores(sport_name, formatted_date, scores)
+    try:
+        scores = get_scores(cfg['path'], formatted_date)
+        if scores:
+            col_logo, col_title = st.columns([1, 5])
+            with col_logo:
+                st.image(cfg['icon'], width=80)
+            with col_title:
+                st.markdown(f"### {sport_name}")
+            display_scores(sport_name, formatted_date, scores)
+        else:
+            st.info(f"No games found for {sport_name}")
+    except Exception as e:
+        st.error(f"Error displaying {sport_name}: {e}")
+
