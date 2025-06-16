@@ -334,15 +334,16 @@ TEAM_COLORS = {
 score_cache = {}
 
 @st.cache_data(ttl=5)
+
 def get_scores(sport_path, date):
     url = f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/scoreboard?dates={date}"
     try:
         response = requests.get(url, timeout=5)
         response.raise_for_status()
         return response.json()
-    except:
+    except Exception as e:
+        st.warning(f"Error fetching data: {e}")
         return None
-
     results = []
     for event in data.get("events", []):
         comp = event['competitions'][0]
