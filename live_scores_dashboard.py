@@ -35,7 +35,7 @@ def get_team_colors(team_name):
     return TEAM_COLORS.get(team_name, ["#333", "#555"])
 
 @st.cache_data(ttl=60)
-@st.cache_data(ttl=60)
+
 def fetch_espn_scores():
     base_url = "https://site.api.espn.com/apis/site/v2/sports"
     sports = [
