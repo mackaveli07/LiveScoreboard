@@ -151,8 +151,8 @@ st.markdown("""
             position: absolute;
             top: 0;
             left: 0;
-            width: 100px;
-            height: 100px;
+            width: 100%;
+            height: 100%;
             background: #444;
             transform: rotate(45deg);
             transform-origin: center;
@@ -169,9 +169,9 @@ st.markdown("""
         .base.active {
             background-color: limegreen;
         }
-        .first { top: 70px; left: 70px; }
-        .second { top: 0px; left: 40px; }
-        .third { top: 70px; left: 10px; }
+        .second { top: -10px; left: 40px; }
+        .third { top: 40px; left: -10px; }
+        .first { top: 40px; left: 90px; }
         .mound { top: 40px; left: 40px; background-color: #888; }
         hr {
             border: none;
@@ -182,7 +182,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
+st.experimental_memo(ttl=10)(lambda: time.time())()
 
 games = fetch_espn_scores()
 for game in games:
