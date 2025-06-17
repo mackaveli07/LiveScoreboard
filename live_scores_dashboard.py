@@ -4,6 +4,7 @@ import time
 from datetime import datetime, date
 from team_colors_all_leagues import team_colors as TEAM_COLORS
 from all_team_logos import team_logos as TEAM_LOGOS
+from pathlib import Path
 
 
 def get_team_colors(team_name):
@@ -88,7 +89,8 @@ def fetch_espn_scores():
                 "info": info
             })
     return games
-
+    
+st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
 st.set_page_config(layout="wide")
 st.title("\U0001F3DF️ Live American Sports Scoreboard")
 
