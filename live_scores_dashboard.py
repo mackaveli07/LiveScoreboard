@@ -168,7 +168,7 @@ for game in games:
                     🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}
                 </div>
             """, unsafe_allow_html=True)
-        elif game['sport'] == 'nfl':
+       elif game['sport'] == 'nfl':
             st.markdown(f"""
                 <div class='info-box'>
                     🏈 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
