@@ -1,6 +1,8 @@
 import streamlit as st
 import requests
 import time
+import datetime
+
 
 TEAM_COLORS = {
     # MLB
@@ -33,16 +35,16 @@ def get_team_colors(team_name):
     return TEAM_COLORS.get(team_name, ["#333", "#555"])
 
 @st.cache_data(ttl=60)
-def fetch_espn_scores():
+def fetch_espn_scores(selected_date):
     base_url = "https://site.api.espn.com/apis/site/v2/sports"
     sports = [
         "baseball/mlb", "football/nfl", "basketball/nba",
         "basketball/wnba", "hockey/nhl"
     ]
-    today_str = datetime.now().strftime("%Y%m%d")
+  
     games = []
     for sport_path in sports:
-        response = requests.get(f"{base_url}/{sport_path}/scoreboard?dates={today_str}")
+        response = requests.get(f"{base_url}/{sport_path}/scoreboard?dates={selected_date}")
         if response.status_code != 200:
             continue
         data = response.json()
@@ -101,7 +103,11 @@ def fetch_espn_scores():
     return games
 
 st.set_page_config(layout="wide")
-st.title("\U0001F3DF\ufe0f Live American Sports Scoreboard")
+st.title("\U0001F3DF️ Live American Sports Scoreboard")
+
+# Date picker
+selected_date = st.date_input("Select a date", datetime.date.today())
+formatted_date = selected_date.strftime("%Y%m%d")
 
 st.markdown("""
     <style>
@@ -136,7 +142,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-games = fetch_espn_scores()
+games = fetch_espn_scores(formatted_date)
 for game in games:
     col1, col2, col3 = st.columns([3, 2, 3])
 
