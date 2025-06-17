@@ -105,14 +105,24 @@ def fetch_espn_scores():
     return games
 
 st.set_page_config(layout="wide")
-st.title("\U0001F3DF\ufe0f Live American Sports Scoreboard")
+st.title("\U0001F3DF️ Live American Sports Scoreboard")
 
 st.markdown("""
     <style>
         @media only screen and (max-width: 768px) {
-            .element-container:nth-child(2n+1) .block-container { flex-direction: column !important; }
-            .scoreboard-column, .info-box { font-size: 18px !important; padding: 10px !important; }
-            h3 { font-size: 20px !important; }
+            .block-container {
+                padding: 1rem !important;
+            }
+            .scoreboard-column, .info-box {
+                font-size: 16px !important;
+                padding: 8px !important;
+            }
+            h3 {
+                font-size: 18px !important;
+            }
+            .diamond {
+                transform: scale(0.8);
+            }
         }
         .scoreboard-column {
             border-radius: 16px;
@@ -159,9 +169,9 @@ st.markdown("""
         .base.active {
             background-color: limegreen;
         }
-        .first { bottom: 10px; left: 70px; }
-        .second { top: 10px; left: 40px; }
-        .third { bottom: 10px; left: 10px; }
+        .first { top: 70px; left: 70px; }
+        .second { top: 0px; left: 40px; }
+        .third { top: 70px; left: 10px; }
         .mound { top: 40px; left: 40px; background-color: #888; }
         hr {
             border: none;
@@ -172,7 +182,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
+st.experimental_memo(ttl=10)(lambda: time.time())()
 
 games = fetch_espn_scores()
 for game in games:
