@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import time
 from datetime import datetime, date
+from team_colors_all_leagues import team_colors as TEAM_COLORS
 
 
 TEAM_LOGOS = {
