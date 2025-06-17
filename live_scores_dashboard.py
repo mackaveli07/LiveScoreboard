@@ -24,7 +24,7 @@ TEAM_LOGOS = {
 
 
 def get_team_colors(team_name):
-    colors = team_colors.get(team_name)
+    colors = TEAM_COLORS.get(team_name)
     if colors:
         return [colors["primary"], colors["secondary"]]
     return ["#333", "#555"]
@@ -105,7 +105,6 @@ def fetch_espn_scores():
                 "info": info
             })
     return games
-
 
 st.set_page_config(layout="wide")
 st.title("\U0001F3DF️ Live American Sports Scoreboard")
