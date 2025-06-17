@@ -227,27 +227,27 @@ for game in games:
         </div>
         
             """, unsafe_allow_html=True)
-        elif game['sport'] == 'nfl':
-            st.markdown(f"""
-                <div class='info-box'>
-                    🏈 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                    🟢 <strong>Possession:</strong> {info.get('possession', '')}
-                </div>
-            """, unsafe_allow_html=True)
-        elif game['sport'] in ['nba', 'wnba']:
-            st.markdown(f"""
-                <div class='info-box'>
-                    🏀 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                    ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                </div>
-            """, unsafe_allow_html=True)
-        elif game['sport'] == 'nhl':
-            st.markdown(f"""
-                <div class='info-box'>
-                    🏒 <strong>{info.get('period', '')}</strong><br/>
-                    ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                </div>
-            """, unsafe_allow_html=True)
+            elif game['sport'] == 'nfl':
+                st.markdown(f"""
+                    <div class='info-box'>
+                        🏈 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
+                        🟢 <strong>Possession:</strong> {info.get('possession', '')}
+                    </div>
+                """, unsafe_allow_html=True)
+            elif game['sport'] in ['nba', 'wnba']:
+                st.markdown(f"""
+                    <div class='info-box'>
+                        🏀 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
+                        ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                    </div>
+                """, unsafe_allow_html=True)
+            elif game['sport'] == 'nhl':
+                st.markdown(f"""
+                    <div class='info-box'>
+                        🏒 <strong>{info.get('period', '')}</strong><br/>
+                        ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                    </div>
+                """, unsafe_allow_html=True)
 
     with col3:
         st.markdown(f"""
