@@ -35,7 +35,6 @@ def get_team_colors(team_name):
     return TEAM_COLORS.get(team_name, ["#333", "#555"])
 
 @st.cache_data(ttl=60)
-
 def fetch_espn_scores():
     base_url = "https://site.api.espn.com/apis/site/v2/sports"
     sports = [
@@ -132,26 +131,38 @@ st.markdown("""
             font-size: 18px;
         }
         .diamond {
-            margin-top: 10px;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-template-rows: 1fr 1fr 1fr;
-            width: 80px;
-            height: 80px;
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 10px auto;
+        }
+        .diamond:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100px;
+            height: 100px;
+            background: #444;
             transform: rotate(45deg);
-            margin-left: auto;
-            margin-right: auto;
+            transform-origin: center;
+            z-index: 0;
         }
         .base {
+            position: absolute;
             width: 20px;
             height: 20px;
-            border-radius: 50%;
             background-color: #ccc;
-            margin: auto;
+            border-radius: 50%;
+            z-index: 1;
         }
         .base.active {
             background-color: limegreen;
         }
+        .first { bottom: 10px; left: 70px; }
+        .second { top: 10px; left: 40px; }
+        .third { bottom: 10px; left: 10px; }
+        .mound { top: 40px; left: 40px; background-color: #888; }
         hr {
             border: none;
             height: 2px;
@@ -161,7 +172,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
+st.experimental_memo(ttl=10)(lambda: time.time())()
 
 games = fetch_espn_scores()
 for game in games:
@@ -190,9 +201,10 @@ for game in games:
                     🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}<br/>
                     🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}
                     <div class='diamond'>
-                        <div></div><div class='base {second}'></div><div></div>
-                        <div class='base {third}'></div><div></div><div class='base {first}'></div>
-                        <div></div><div class='base'></div><div></div>
+                        <div class='base second {second}'></div>
+                        <div class='base third {third}'></div>
+                        <div class='base first {first}'></div>
+                        <div class='base mound'></div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
