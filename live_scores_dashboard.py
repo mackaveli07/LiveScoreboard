@@ -152,7 +152,7 @@ for game in games:
         """, unsafe_allow_html=True)
 
     with col2:
-        if game['sport'] == 'mlb':
+       if game['sport'] == 'mlb':
             st.markdown(f"""
                 <div class='info-box'>
                     ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
