@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 import time
-import datetime
+from datetime import datetime, date
 
 
 TEAM_COLORS = {
@@ -44,12 +44,15 @@ def fetch_espn_scores(selected_date):
   
     games = []
     for sport_path in sports:
-        response = requests.get(f"{base_url}/{sport_path}/scoreboard?dates={selected_date}")
+         response = requests.get(f"{base_url}/{sport_path}/scoreboard")
         if response.status_code != 200:
             continue
         data = response.json()
         league_slug = sport_path.split("/")[1]
         for event in data.get("events", []):
+            event_date = datetime.fromisoformat(event["date"].replace("Z", "+00:00")).date()
+            if event_date != selected_date:
+                continue
             competition = event.get("competitions", [{}])[0]
             competitors = competition.get("competitors", [])
             if len(competitors) < 2:
@@ -103,11 +106,9 @@ def fetch_espn_scores(selected_date):
     return games
 
 st.set_page_config(layout="wide")
-st.title("\U0001F3DF️ Live American Sports Scoreboard")
+st.title("\U0001F3DF\ufe0f Live American Sports Scoreboard")
 
-# Date picker
-selected_date = st.date_input("Select a date", datetime.date.today())
-formatted_date = selected_date.strftime("%Y%m%d")
+selected_day = st.date_input("Select Date", value=date.today())
 
 st.markdown("""
     <style>
@@ -142,7 +143,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-games = fetch_espn_scores(formatted_date)
+games = fetch_espn_scores(selected_day)
 for game in games:
     col1, col2, col3 = st.columns([3, 2, 3])
 
