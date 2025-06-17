@@ -4,33 +4,6 @@ import time
 from datetime import datetime, date
 
 
-TEAM_COLORS = {
-    # MLB
-    "New York Yankees": ["#132448", "#C4CED4"],
-    "Boston Red Sox": ["#BD3039", "#0C2340"],
-    "Los Angeles Dodgers": ["#005A9C", "#EF3E42"],
-
-    # NFL
-    "Dallas Cowboys": ["#041E42", "#869397"],
-    "Kansas City Chiefs": ["#E31837", "#FFB81C"],
-    "Green Bay Packers": ["#203731", "#FFB612"],
-
-    # NBA
-    "Los Angeles Lakers": ["#552583", "#FDB927"],
-    "Boston Celtics": ["#007A33", "#BA9653"],
-    "Golden State Warriors": ["#1D428A", "#FFC72C"],
-
-    # WNBA
-    "Las Vegas Aces": ["#000000", "#C8102E"],
-    "New York Liberty": ["#17B3A6", "#000000"],
-    "Seattle Storm": ["#2E8B57", "#FFC72C"],
-
-    # NHL
-    "Toronto Maple Leafs": ["#00205B", "#FFFFFF"],
-    "Chicago Blackhawks": ["#CF0A2C", "#000000"],
-    "Boston Bruins": ["#FFB81C", "#000000"],
-}
-
 TEAM_LOGOS = {
     "New York Yankees": "https://a.espncdn.com/i/teamlogos/mlb/500/nyy.png",
     "Boston Red Sox": "https://a.espncdn.com/i/teamlogos/mlb/500/bos.png",
@@ -51,10 +24,14 @@ TEAM_LOGOS = {
 
 
 def get_team_colors(team_name):
-    return TEAM_COLORS.get(team_name, ["#333", "#555"])
+    colors = team_colors.get(team_name)
+    if colors:
+        return [colors["primary"], colors["secondary"]]
+    return ["#333", "#555"]
 
 def get_team_logo(team_name):
     return TEAM_LOGOS.get(team_name, "")
+
 
 @st.cache_data(ttl=60)
 def fetch_espn_scores():
