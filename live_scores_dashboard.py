@@ -3,24 +3,7 @@ import requests
 import time
 from datetime import datetime, date
 from team_colors_all_leagues import team_colors as TEAM_COLORS
-
-TEAM_LOGOS = {
-    "New York Yankees": "https://a.espncdn.com/i/teamlogos/mlb/500/nyy.png",
-    "Boston Red Sox": "https://a.espncdn.com/i/teamlogos/mlb/500/bos.png",
-    "Los Angeles Dodgers": "https://a.espncdn.com/i/teamlogos/mlb/500/lad.png",
-    "Dallas Cowboys": "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png",
-    "Kansas City Chiefs": "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png",
-    "Green Bay Packers": "https://a.espncdn.com/i/teamlogos/nfl/500/gb.png",
-    "Los Angeles Lakers": "https://a.espncdn.com/i/teamlogos/nba/500/lal.png",
-    "Boston Celtics": "https://a.espncdn.com/i/teamlogos/nba/500/bos.png",
-    "Golden State Warriors": "https://a.espncdn.com/i/teamlogos/nba/500/gs.png",
-    "Las Vegas Aces": "https://a.espncdn.com/i/teamlogos/wnba/500/lv.png",
-    "New York Liberty": "https://a.espncdn.com/i/teamlogos/wnba/500/ny.png",
-    "Seattle Storm": "https://a.espncdn.com/i/teamlogos/wnba/500/sea.png",
-    "Toronto Maple Leafs": "https://a.espncdn.com/i/teamlogos/nhl/500/tor.png",
-    "Chicago Blackhawks": "https://a.espncdn.com/i/teamlogos/nhl/500/chi.png",
-    "Boston Bruins": "https://a.espncdn.com/i/teamlogos/nhl/500/bos.png",
-}
+from all_team_logos import team_logos as TEAM_LOGOS
 
 
 def get_team_colors(team_name):
