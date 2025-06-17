@@ -29,8 +29,18 @@ def get_team_colors(team_name):
         return [colors["primary"], colors["secondary"]]
     return ["#333", "#555"]
 
+
 def get_team_logo(team_name):
     return TEAM_LOGOS.get(team_name, "")
+
+
+def format_game_team_data(team):
+    return {
+        "name": team["team"]["displayName"],
+        "score": team.get("score", "0"),
+        "colors": get_team_colors(team["team"]["displayName"]),
+        "logo": get_team_logo(team["team"]["displayName"])
+    }
 
 
 @st.cache_data(ttl=60)
@@ -56,12 +66,13 @@ def fetch_espn_scores():
             away = next((team for team in competitors if team["homeAway"] == "away"), None)
             home = next((team for team in competitors if team["homeAway"] == "home"), None)
 
-            away_name = away["team"]["displayName"]
-            home_name = home["team"]["displayName"]
+            if not away or not home:
+                continue
 
             info = {}
             status = competition.get("status", {})
             situation = competition.get("situation", {})
+
             if league_slug == "mlb":
                 info = {
                     "inning": status.get("type", {}).get("shortDetail", ""),
@@ -89,21 +100,12 @@ def fetch_espn_scores():
 
             games.append({
                 "sport": league_slug,
-                "away_team": {
-                    "name": away_name,
-                    "score": away.get("score", "0"),
-                    "colors": get_team_colors(away_name)
-                    "logo": get_team_logo(away_name)
-                },
-                "home_team": {
-                    "name": home_name,
-                    "score": home.get("score", "0"),
-                    "colors": get_team_colors(home_name)
-                    "logo": get_team_logo(home_name) 
-                },
+                "away_team": format_game_team_data(away),
+                "home_team": format_game_team_data(home),
                 "info": info
             })
     return games
+
 
 st.set_page_config(layout="wide")
 st.title("\U0001F3DF️ Live American Sports Scoreboard")
