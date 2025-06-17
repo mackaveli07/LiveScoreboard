@@ -35,13 +35,13 @@ def get_team_colors(team_name):
     return TEAM_COLORS.get(team_name, ["#333", "#555"])
 
 @st.cache_data(ttl=60)
+@st.cache_data(ttl=60)
 def fetch_espn_scores():
     base_url = "https://site.api.espn.com/apis/site/v2/sports"
     sports = [
         "baseball/mlb", "football/nfl", "basketball/nba",
         "basketball/wnba", "hockey/nhl"
     ]
-  
     games = []
     for sport_path in sports:
         response = requests.get(f"{base_url}/{sport_path}/scoreboard")
@@ -50,7 +50,6 @@ def fetch_espn_scores():
         data = response.json()
         league_slug = sport_path.split("/")[1]
         for event in data.get("events", []):
-            
             competition = event.get("competitions", [{}])[0]
             competitors = competition.get("competitors", [])
             if len(competitors) < 2:
@@ -69,7 +68,10 @@ def fetch_espn_scores():
                 info = {
                     "inning": status.get("type", {}).get("shortDetail", ""),
                     "at_bat": situation.get("lastPlay", {}).get("athlete", {}).get("displayName", "N/A"),
-                    "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName", "N/A")
+                    "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName", "N/A"),
+                    "onFirst": situation.get("onFirst", False),
+                    "onSecond": situation.get("onSecond", False),
+                    "onThird": situation.get("onThird", False),
                 }
             elif league_slug == "nfl":
                 info = {
@@ -99,15 +101,12 @@ def fetch_espn_scores():
                     "score": home.get("score", "0"),
                     "colors": get_team_colors(home_name)
                 },
-               "info": info,
-               "situation": situation
+                "info": info
             })
     return games
 
 st.set_page_config(layout="wide")
 st.title("\U0001F3DF\ufe0f Live American Sports Scoreboard")
-
-
 
 st.markdown("""
     <style>
@@ -132,49 +131,37 @@ st.markdown("""
             color: #eee;
             font-size: 18px;
         }
+        .diamond {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            width: 80px;
+            height: 80px;
+            transform: rotate(45deg);
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .base {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #ccc;
+            margin: auto;
+        }
+        .base.active {
+            background-color: limegreen;
+        }
         hr {
             border: none;
             height: 2px;
             background-color: #888;
             margin: 30px 0;
-
-
-
-       
-       .diamond-container {
-            position: relative;
-            width: 30vw;
-            height: 30vw;
-            max-width: 120px;
-            max-height: 120px;
-            margin: 20px auto;
-        }
-        .base {
-            position: absolute;
-            width: 7vw;
-            height: 7vw;
-            max-width: 30px;
-            max-height: 30px;
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-        }
-        .second { top: 0; left: 50%; transform: translateX(-50%); }
-        .third { top: 50%; left: 0; transform: translateY(-50%); }
-        .first { top: 50%; right: 0; transform: translateY(-50%); }
-        .mound {
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 5vw;
-            height: 5vw;
-            max-width: 20px;
-            max-height: 20px;
-            background-color: #aaa;
-            border-radius: 50%;
         }
     </style>
 """, unsafe_allow_html=True)
 
+st.experimental_memo(ttl=10)(lambda: time.time())()
 
 games = fetch_espn_scores()
 for game in games:
@@ -183,7 +170,6 @@ for game in games:
     away_team = game["away_team"]
     home_team = game["home_team"]
     info = game["info"]
-    situation = game.get("situation", {})
 
     with col1:
         st.markdown(f"""
@@ -195,21 +181,19 @@ for game in games:
 
     with col2:
         if game['sport'] == 'mlb':
-            on_first = situation.get("onFirst")
-            on_second = situation.get("onSecond")
-            on_third = situation.get("onThird")
-
+            first = 'active' if info.get('onFirst') else ''
+            second = 'active' if info.get('onSecond') else ''
+            third = 'active' if info.get('onThird') else ''
             st.markdown(f"""
                 <div class='info-box'>
                     ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
                     🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}<br/>
                     🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}
-                </div>
-                <div class="diamond-container">
-                    <div class="base second" style="background-color: {'#FFD700' if on_second else '#444'};"></div>
-                    <div class="base third" style="background-color: {'#FFD700' if on_third else '#444'};"></div>
-                    <div class="base first" style="background-color: {'#FFD700' if on_first else '#444'};"></div>
-                    <div class="mound"></div>
+                    <div class='diamond'>
+                        <div></div><div class='base {second}'></div><div></div>
+                        <div class='base {third}'></div><div></div><div class='base {first}'></div>
+                        <div></div><div class='base'></div><div></div>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
         elif game['sport'] == 'nfl':
