@@ -31,8 +31,30 @@ TEAM_COLORS = {
     "Boston Bruins": ["#FFB81C", "#000000"],
 }
 
+TEAM_LOGOS = {
+    "New York Yankees": "https://a.espncdn.com/i/teamlogos/mlb/500/nyy.png",
+    "Boston Red Sox": "https://a.espncdn.com/i/teamlogos/mlb/500/bos.png",
+    "Los Angeles Dodgers": "https://a.espncdn.com/i/teamlogos/mlb/500/lad.png",
+    "Dallas Cowboys": "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png",
+    "Kansas City Chiefs": "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png",
+    "Green Bay Packers": "https://a.espncdn.com/i/teamlogos/nfl/500/gb.png",
+    "Los Angeles Lakers": "https://a.espncdn.com/i/teamlogos/nba/500/lal.png",
+    "Boston Celtics": "https://a.espncdn.com/i/teamlogos/nba/500/bos.png",
+    "Golden State Warriors": "https://a.espncdn.com/i/teamlogos/nba/500/gs.png",
+    "Las Vegas Aces": "https://a.espncdn.com/i/teamlogos/wnba/500/lv.png",
+    "New York Liberty": "https://a.espncdn.com/i/teamlogos/wnba/500/ny.png",
+    "Seattle Storm": "https://a.espncdn.com/i/teamlogos/wnba/500/sea.png",
+    "Toronto Maple Leafs": "https://a.espncdn.com/i/teamlogos/nhl/500/tor.png",
+    "Chicago Blackhawks": "https://a.espncdn.com/i/teamlogos/nhl/500/chi.png",
+    "Boston Bruins": "https://a.espncdn.com/i/teamlogos/nhl/500/bos.png",
+}
+
+
 def get_team_colors(team_name):
     return TEAM_COLORS.get(team_name, ["#333", "#555"])
+
+def get_team_logo(team_name):
+    return TEAM_LOGOS.get(team_name, "")
 
 @st.cache_data(ttl=60)
 def fetch_espn_scores():
@@ -94,11 +116,13 @@ def fetch_espn_scores():
                     "name": away_name,
                     "score": away.get("score", "0"),
                     "colors": get_team_colors(away_name)
+                    "logo": get_team_logo(away_name)
                 },
                 "home_team": {
                     "name": home_name,
                     "score": home.get("score", "0"),
                     "colors": get_team_colors(home_name)
+                    "logo": get_team_logo(home_name) 
                 },
                 "info": info
             })
@@ -179,6 +203,14 @@ st.markdown("""
             background-color: #888;
             margin: 30px 0;
         }
+
+        .team-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            opacity: 0.85;
+            margin-top: 10px;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -196,6 +228,7 @@ for game in games:
         st.markdown(f"""
             <div class='scoreboard-column' style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]});'>
                 <h3>{away_team['name']}</h3>
+                <img src="{away_team['logo']}" class="team-logo"/>
                 <p style='font-size: 36px; margin: 10px 0;'>{away_team['score']}</p>
             </div>
         """, unsafe_allow_html=True)
@@ -244,6 +277,7 @@ for game in games:
         st.markdown(f"""
             <div class='scoreboard-column' style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]});'>
                 <h3>{home_team['name']}</h3>
+                <img src="{home_team['logo']}" class="team-logo"/>
                 <p style='font-size: 36px; margin: 10px 0;'>{home_team['score']}</p>
             </div>
         """, unsafe_allow_html=True)
