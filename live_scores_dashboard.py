@@ -44,7 +44,7 @@ def fetch_espn_scores(selected_date):
   
     games = []
     for sport_path in sports:
-         response = requests.get(f"{base_url}/{sport_path}/scoreboard")
+        response = requests.get(f"{base_url}/{sport_path}/scoreboard")
         if response.status_code != 200:
             continue
         data = response.json()
