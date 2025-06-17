@@ -35,7 +35,7 @@ def get_team_colors(team_name):
     return TEAM_COLORS.get(team_name, ["#333", "#555"])
 
 @st.cache_data(ttl=60)
-def fetch_espn_scores(selected_date):
+def fetch_espn_scores():
     base_url = "https://site.api.espn.com/apis/site/v2/sports"
     sports = [
         "baseball/mlb", "football/nfl", "basketball/nba",
@@ -50,9 +50,7 @@ def fetch_espn_scores(selected_date):
         data = response.json()
         league_slug = sport_path.split("/")[1]
         for event in data.get("events", []):
-            event_date = datetime.fromisoformat(event["date"].replace("Z", "+00:00")).date()
-            if event_date != selected_date:
-                continue
+            
             competition = event.get("competitions", [{}])[0]
             competitors = competition.get("competitors", [])
             if len(competitors) < 2:
@@ -101,14 +99,15 @@ def fetch_espn_scores(selected_date):
                     "score": home.get("score", "0"),
                     "colors": get_team_colors(home_name)
                 },
-                "info": info
+               "info": info,
+               "situation": situation
             })
     return games
 
 st.set_page_config(layout="wide")
 st.title("\U0001F3DF\ufe0f Live American Sports Scoreboard")
 
-selected_day = st.date_input("Select Date", value=date.today())
+
 
 st.markdown("""
     <style>
@@ -142,62 +141,49 @@ st.markdown("""
 
 
        
-        .diamond-container {{
-                position: relative;
-                width: 30vw;
-                height: 30vw;
-                max-width: 120px;
-                max-height: 120px;
-                margin: 20px auto;
-            }}
-        .base {{
-                position: absolute;
-                width: 7vw;
-                height: 7vw;
-                max-width: 30px;
-                max-height: 30px;
-                clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-            }}
-        .second {{
-                top: 0;
-                left: 50%;
-                transform: translateX(-50%);
-            }}
-         .third {{
-                top: 50%;
-                left: 0;
-                transform: translateY(-50%);
-            }}
-         .first {{
-                top: 50%;
-                right: 0;
-                transform: translateY(-50%);
-            }}
-         .mound {{
-                position: absolute;
-                bottom: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 5vw;
-                height: 5vw;
-                max-width: 20px;
-                max-height: 20px;
-                background-color: #aaa;
-                border-radius: 50%;
-            }}
-      
+       .diamond-container {
+            position: relative;
+            width: 30vw;
+            height: 30vw;
+            max-width: 120px;
+            max-height: 120px;
+            margin: 20px auto;
+        }
+        .base {
+            position: absolute;
+            width: 7vw;
+            height: 7vw;
+            max-width: 30px;
+            max-height: 30px;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        }
+        .second { top: 0; left: 50%; transform: translateX(-50%); }
+        .third { top: 50%; left: 0; transform: translateY(-50%); }
+        .first { top: 50%; right: 0; transform: translateY(-50%); }
+        .mound {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5vw;
+            height: 5vw;
+            max-width: 20px;
+            max-height: 20px;
+            background-color: #aaa;
+            border-radius: 50%;
         }
     </style>
 """, unsafe_allow_html=True)
 
 
-games = fetch_espn_scores(selected_day)
+games = fetch_espn_scores()
 for game in games:
     col1, col2, col3 = st.columns([3, 2, 3])
 
     away_team = game["away_team"]
     home_team = game["home_team"]
     info = game["info"]
+    situation = game.get("situation", {})
 
     with col1:
         st.markdown(f"""
@@ -210,44 +196,43 @@ for game in games:
     with col2:
         if game['sport'] == 'mlb':
             on_first = situation.get("onFirst")
-    on_second = situation.get("onSecond")
-    on_third = situation.get("onThird")
+            on_second = situation.get("onSecond")
+            on_third = situation.get("onThird")
 
-    st.markdown(f"""
-        <div class='info-box'>
-            ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
-            🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}<br/>
-            🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}
-        </div>
-        <div class="diamond-container">
-            <div class="base second" style="background-color: {'#FFD700' if on_second else '#444'};"></div>
-            <div class="base third" style="background-color: {'#FFD700' if on_third else '#444'};"></div>
-            <div class="base first" style="background-color: {'#FFD700' if on_first else '#444'};"></div>
-            <div class="mound"></div>
-        </div>
-        
+            st.markdown(f"""
+                <div class='info-box'>
+                    ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
+                    🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}<br/>
+                    🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}
+                </div>
+                <div class="diamond-container">
+                    <div class="base second" style="background-color: {'#FFD700' if on_second else '#444'};"></div>
+                    <div class="base third" style="background-color: {'#FFD700' if on_third else '#444'};"></div>
+                    <div class="base first" style="background-color: {'#FFD700' if on_first else '#444'};"></div>
+                    <div class="mound"></div>
+                </div>
             """, unsafe_allow_html=True)
-            elif game['sport'] == 'nfl':
-                st.markdown(f"""
-                    <div class='info-box'>
-                        🏈 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                        🟢 <strong>Possession:</strong> {info.get('possession', '')}
-                    </div>
-                """, unsafe_allow_html=True)
-            elif game['sport'] in ['nba', 'wnba']:
-                st.markdown(f"""
-                    <div class='info-box'>
-                        🏀 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                        ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                    </div>
-                """, unsafe_allow_html=True)
-            elif game['sport'] == 'nhl':
-                st.markdown(f"""
-                    <div class='info-box'>
-                        🏒 <strong>{info.get('period', '')}</strong><br/>
-                        ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                    </div>
-                """, unsafe_allow_html=True)
+        elif game['sport'] == 'nfl':
+            st.markdown(f"""
+                <div class='info-box'>
+                    🏈 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
+                    🟢 <strong>Possession:</strong> {info.get('possession', '')}
+                </div>
+            """, unsafe_allow_html=True)
+        elif game['sport'] in ['nba', 'wnba']:
+            st.markdown(f"""
+                <div class='info-box'>
+                    🏀 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
+                    ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                </div>
+            """, unsafe_allow_html=True)
+        elif game['sport'] == 'nhl':
+            st.markdown(f"""
+                <div class='info-box'>
+                    🏒 <strong>{info.get('period', '')}</strong><br/>
+                    ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                </div>
+            """, unsafe_allow_html=True)
 
     with col3:
         st.markdown(f"""
