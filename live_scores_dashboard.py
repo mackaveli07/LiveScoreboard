@@ -134,7 +134,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.experimental_memo(ttl=10)(lambda: time.time())()
 
 games = fetch_espn_scores()
 for game in games:
