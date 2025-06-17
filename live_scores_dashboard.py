@@ -2,7 +2,17 @@ import streamlit as st
 import requests
 import time
 from datetime import datetime, date
-from team_colors_all_leagues import team_colors as TEAM_COLORS
+import sys
+import os
+
+# Ensure team_colors_all_leagues.py is discoverable
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    from team_colors_all_leagues import team_colors as TEAM_COLORS
+except ImportError:
+    TEAM_COLORS = {}
+    print("⚠️ Warning: Could not import team_colors_all_leagues.")
 
 
 TEAM_LOGOS = {
