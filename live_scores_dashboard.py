@@ -138,6 +138,54 @@ st.markdown("""
             height: 2px;
             background-color: #888;
             margin: 30px 0;
+
+
+
+       
+        .diamond-container {{
+                position: relative;
+                width: 30vw;
+                height: 30vw;
+                max-width: 120px;
+                max-height: 120px;
+                margin: 20px auto;
+            }}
+        .base {{
+                position: absolute;
+                width: 7vw;
+                height: 7vw;
+                max-width: 30px;
+                max-height: 30px;
+                clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            }}
+        .second {{
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+            }}
+         .third {{
+                top: 50%;
+                left: 0;
+                transform: translateY(-50%);
+            }}
+         .first {{
+                top: 50%;
+                right: 0;
+                transform: translateY(-50%);
+            }}
+         .mound {{
+                position: absolute;
+                bottom: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 5vw;
+                height: 5vw;
+                max-width: 20px;
+                max-height: 20px;
+                background-color: #aaa;
+                border-radius: 50%;
+            }}
+      
         }
     </style>
 """, unsafe_allow_html=True)
@@ -177,51 +225,7 @@ for game in games:
             <div class="base first" style="background-color: {'#FFD700' if on_first else '#444'};"></div>
             <div class="mound"></div>
         </div>
-        <style>
-            .diamond-container {{
-                position: relative;
-                width: 30vw;
-                height: 30vw;
-                max-width: 120px;
-                max-height: 120px;
-                margin: 20px auto;
-            }}
-            .base {{
-                position: absolute;
-                width: 7vw;
-                height: 7vw;
-                max-width: 30px;
-                max-height: 30px;
-                clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-            }}
-            .second {{
-                top: 0;
-                left: 50%;
-                transform: translateX(-50%);
-            }}
-            .third {{
-                top: 50%;
-                left: 0;
-                transform: translateY(-50%);
-            }}
-            .first {{
-                top: 50%;
-                right: 0;
-                transform: translateY(-50%);
-            }}
-            .mound {{
-                position: absolute;
-                bottom: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 5vw;
-                height: 5vw;
-                max-width: 20px;
-                max-height: 20px;
-                background-color: #aaa;
-                border-radius: 50%;
-            }}
-        </style>
+        
             """, unsafe_allow_html=True)
         elif game['sport'] == 'nfl':
             st.markdown(f"""
