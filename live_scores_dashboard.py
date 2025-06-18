@@ -212,7 +212,7 @@ for game in games:
         else:
             if st.button("Show More", key=f"expand_{game_id}"):
                 st.session_state.expanded_game = game_id
-            else:
+        else:
                 # default compact info box here
                 if game['sport'] == 'mlb':
                     first = 'active' if info.get('onFirst') else ''
