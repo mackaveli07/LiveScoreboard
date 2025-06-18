@@ -5,6 +5,7 @@ from datetime import datetime, date
 from team_colors_all_leagues import team_colors as TEAM_COLORS
 from all_team_logos import team_logos as TEAM_LOGOS
 from pathlib import Path
+from expandable_game_view import display_game_details
 
 st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
 
@@ -252,3 +253,5 @@ for game in games:
         """, unsafe_allow_html=True)
 
     st.markdown("<hr/>", unsafe_allow_html=True)
+    display_game_details(game)
+    
