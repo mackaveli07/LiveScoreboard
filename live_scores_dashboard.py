@@ -198,11 +198,13 @@ st.markdown("""
 
 
 games = fetch_espn_scores()
+
 for idx, game in enumerate(games):
     away_team = game["away_team"]
     home_team = game["home_team"]
     info = game["info"]
 
+    # Create a unique game_id with index appended to ensure uniqueness
     game_id = f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_{home_team.get('abbreviation', '')}_{idx}".replace(" ", "_")
 
     col1, col2, col3 = st.columns([3, 2, 3])
@@ -217,7 +219,7 @@ for idx, game in enumerate(games):
         """, unsafe_allow_html=True)
 
     with col2:
-        if st.session_state.expanded_game == game_id:
+        if st.session_state.get("expanded_game") == game_id:
             display_game_details(game)
             if st.button("Collapse View", key=f"collapse_{game_id}"):
                 st.session_state.expanded_game = None
