@@ -198,14 +198,13 @@ st.markdown("""
 
 
 games = fetch_espn_scores()
-
-for idx, game in enumerate(games):
+for game in games:
     away_team = game["away_team"]
     home_team = game["home_team"]
     info = game["info"]
 
-    # Create a unique game_id with index appended to ensure uniqueness
-    game_id = f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_{home_team.get('abbreviation', '')}_{idx}".replace(" ", "_")
+    # Create a unique game_id
+    game_id = f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_{home_team.get('abbreviation', '')}".replace(" ", "_")
 
     col1, col2, col3 = st.columns([3, 2, 3])
 
@@ -219,55 +218,56 @@ for idx, game in enumerate(games):
         """, unsafe_allow_html=True)
 
     with col2:
-        if st.session_state.get("expanded_game") == game_id:
-            display_game_details(game)
-            if st.button("Collapse View", key=f"collapse_{game_id}"):
+        clicked = st.button(" ", key=f"expand_button_{game_id}")  # invisible button to detect click
+        if clicked:
+            if st.session_state.expanded_game == game_id:
                 st.session_state.expanded_game = None
-                st.experimental_rerun()
-        else:
-            if st.button("Show More", key=f"expand_{game_id}"):
-                st.session_state.expanded_game = game_id
-                st.experimental_rerun()
             else:
-                sport = game.get("sport", "").lower()
-                if sport == 'mlb':
-                    first = 'active' if info.get('onFirst') else ''
-                    second = 'active' if info.get('onSecond') else ''
-                    third = 'active' if info.get('onThird') else ''
-                    st.markdown(f"""
-                        <div class='info-box'>
-                            ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
-                            🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}<br/>
-                            🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}
-                            <div class='diamond'>
-                                <div class='base second {second}'></div>
-                                <div class='base third {third}'></div>
-                                <div class='base first {first}'></div>
-                                <div class='base mound'></div>
-                            </div>
+                st.session_state.expanded_game = game_id
+            st.experimental_rerun()
+
+        if st.session_state.expanded_game == game_id:
+            display_game_details(game)
+        else:
+            sport = game.get("sport", "").lower()
+            if sport == 'mlb':
+                first = 'active' if info.get('onFirst') else ''
+                second = 'active' if info.get('onSecond') else ''
+                third = 'active' if info.get('onThird') else ''
+                st.markdown(f"""
+                    <div class='info-box'>
+                        ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
+                        🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}<br/>
+                        🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}
+                        <div class='diamond'>
+                            <div class='base second {second}'></div>
+                            <div class='base third {third}'></div>
+                            <div class='base first {first}'></div>
+                            <div class='base mound'></div>
                         </div>
-                    """, unsafe_allow_html=True)
-                elif sport == 'nfl':
-                    st.markdown(f"""
-                        <div class='info-box'>
-                            🏈 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                            🟢 <strong>Possession:</strong> {info.get('possession', '')}
-                        </div>
-                    """, unsafe_allow_html=True)
-                elif sport in ['nba', 'wnba']:
-                    st.markdown(f"""
-                        <div class='info-box'>
-                            🏀 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                            ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                        </div>
-                    """, unsafe_allow_html=True)
-                elif sport == 'nhl':
-                    st.markdown(f"""
-                        <div class='info-box'>
-                            🏒 <strong>{info.get('period', '')}</strong><br/>
-                            ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                        </div>
-                    """, unsafe_allow_html=True)
+                    </div>
+                """, unsafe_allow_html=True)
+            elif sport == 'nfl':
+                st.markdown(f"""
+                    <div class='info-box'>
+                        🏈 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
+                        🟢 <strong>Possession:</strong> {info.get('possession', '')}
+                    </div>
+                """, unsafe_allow_html=True)
+            elif sport in ['nba', 'wnba']:
+                st.markdown(f"""
+                    <div class='info-box'>
+                        🏀 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
+                        ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                    </div>
+                """, unsafe_allow_html=True)
+            elif sport == 'nhl':
+                st.markdown(f"""
+                    <div class='info-box'>
+                        🏒 <strong>{info.get('period', '')}</strong><br/>
+                        ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                    </div>
+                """, unsafe_allow_html=True)
 
     with col3:
         st.markdown(f"""
