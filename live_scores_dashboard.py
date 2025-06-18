@@ -273,6 +273,4 @@ for game in games:
 
 
     st.markdown("<hr/>", unsafe_allow_html=True)
-    st.experimental_rerun_interval = 60
-
-    st.experimental_rerun()
+    
