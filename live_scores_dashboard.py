@@ -15,7 +15,7 @@ st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
 if "expanded_game" not in st.session_state:
     st.session_state.expanded_game = None
 
-if st.session_state.expanded_game is None::
+if st.session_state.expanded_game is None:
         st.session_state.last_refresh = now
         st.experimental_rerun()
 
