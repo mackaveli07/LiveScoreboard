@@ -283,68 +283,64 @@ for i, tab_key in enumerate(tabs_keys):
                     f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_"
                     f"{home_team.get('abbreviation', '')}".replace(" ", "_")
                 )
-            
 
                 col1, col2, col3 = st.columns([3, 2, 3])
 
                 with col1:
-                        st.markdown(
-                            f"""
-                        <div style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]});
+                    st.markdown(
+                        f"""
+                        <div style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]}); 
                                     border-radius: 10px; padding: 10px;'>
                             <h3>{away_team['name']}</h3>
                             <img src="{away_team['logo']}" width="100" />
                             <p style='font-size: 36px; margin: 10px 0;'>{away_team['score']}</p>
                         </div>
-                    """,
-                            unsafe_allow_html=True,
-                        )
+                        """,
+                        unsafe_allow_html=True,
+                    )
 
                 with col2:
-                        sport_lower = sport.lower()
-                        if sport_lower == "mlb":
-                            st.markdown(
-                                f"**Inning:** {info.get('inning', 'N/A')}<br>🧢 At Bat: {info.get('at_bat', 'N/A')}<br>🥎 Pitcher: {info.get('pitcher', 'N/A')}",
-                                if sport == 'mlb':
-                                        first = 'active' if info.get('onFirst') else ''
-                                        second = 'active' if info.get('onSecond') else ''
-                                        third = 'active' if info.get('onThird') else ''
-                                        at_bat = info.get('at_bat', 'N/A')
-                                        pitcher = info.get('pitcher', 'N/A')
+                    sport_lower = sport.lower()
+                    if sport_lower == "mlb":
+                        first = 'active' if info.get('onFirst') else ''
+                        second = 'active' if info.get('onSecond') else ''
+                        third = 'active' if info.get('onThird') else ''
+                        at_bat = info.get('at_bat', 'N/A')
+                        pitcher = info.get('pitcher', 'N/A')
 
-                    st.markdown(f"""
-                        <div class='info-box'>
-                            ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
-                            🧢 <strong>At Bat:</strong> {at_bat}<br/>
-                            🥎 <strong>Pitcher:</strong> {pitcher}
-                            <div class='diamond'>
-                                <div class='base second {second}'></div>
-                                <div class='base third {third}'></div>
-                                <div class='base first {first}'></div>
-                                <div class='base mound'></div>
+                        st.markdown(f"""
+                            <div class='info-box'>
+                                ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
+                                🧢 <strong>At Bat:</strong> {at_bat}<br/>
+                                🥎 <strong>Pitcher:</strong> {pitcher}
+                                <div class='diamond'>
+                                    <div class='base second {second}'></div>
+                                    <div class='base third {third}'></div>
+                                    <div class='base first {first}'></div>
+                                    <div class='base mound'></div>
+                                </div>
                             </div>
-                        </div>
-                                unsafe_allow_html=True,
-                            )
-                        elif sport_lower in ["nba", "wnba"]:
-                            st.markdown(
-                                f"**Quarter:** {info.get('quarter', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
-                                unsafe_allow_html=True,
-                            )
-                        elif sport_lower == "nfl":
-                            st.markdown(
-                                f"**Quarter:** {info.get('quarter', 'N/A')}<br>🟢 Possession: {info.get('possession', '')}",
-                                unsafe_allow_html=True,
-                            )
-                        elif sport_lower == "nhl":
-                            st.markdown(
-                                f"**Period:** {info.get('period', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
-                                unsafe_allow_html=True,
-                            )
-                        else:
-                            st.markdown("")
+                        """, unsafe_allow_html=True)
 
-               with col3:
+                    elif sport_lower in ["nba", "wnba"]:
+                        st.markdown(
+                            f"**Quarter:** {info.get('quarter', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
+                            unsafe_allow_html=True,
+                        )
+                    elif sport_lower == "nfl":
+                        st.markdown(
+                            f"**Quarter:** {info.get('quarter', 'N/A')}<br>🟢 Possession: {info.get('possession', '')}",
+                            unsafe_allow_html=True,
+                        )
+                    elif sport_lower == "nhl":
+                        st.markdown(
+                            f"**Period:** {info.get('period', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        st.markdown("")
+
+                with col3:
                     st.markdown(
                         f"""
                         <div style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]}); 
@@ -354,5 +350,5 @@ for i, tab_key in enumerate(tabs_keys):
                             <p style='font-size: 36px; margin: 10px 0;'>{home_team['score']}</p>
                         </div>
                         """,
-                        unsafe_allow_html=True
+                        unsafe_allow_html=True,
                     )
