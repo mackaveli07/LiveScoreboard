@@ -348,7 +348,7 @@ for i, tab_key in enumerate(tabs_keys):
                         st.markdown(
                             f"""
                         <div style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]});
-                                    border-radius: 10px; padding: 10px;'>
+                                    border-radius: 10px; padding: 10px;></style
                             <h3>{home_team['name']}</h3>
                             <img src="{home_team['logo']}" width="100" />
                             <p style='font-size: 36px; margin: 10px 0;'>{home_team['score']}</p>
