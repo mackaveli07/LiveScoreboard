@@ -9,18 +9,14 @@ from expandable_game_view import display_game_details
 
 st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
 
-
-
 def get_team_colors(team_name):
     colors = TEAM_COLORS.get(team_name)
     if colors:
         return [colors["primary"], colors["secondary"]]
     return ["#333", "#555"]
 
-
 def get_team_logo(team_name):
     return TEAM_LOGOS.get(team_name, "")
-
 
 def format_game_team_data(team):
     return {
@@ -29,7 +25,6 @@ def format_game_team_data(team):
         "colors": get_team_colors(team["team"]["displayName"]),
         "logo": get_team_logo(team["team"]["displayName"])
     }
-
 
 @st.cache_data(ttl=60)
 def fetch_espn_scores():
@@ -96,8 +91,6 @@ def fetch_espn_scores():
                 "info": info
             })
     return games
-    
-st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
 
 st.title("\U0001F3DF️ Live American Sports Scoreboard")
 
@@ -173,7 +166,6 @@ st.markdown("""
             background-color: #888;
             margin: 30px 0;
         }
-
         .team-logo {
             width: 60px;
             height: 60px;
@@ -184,7 +176,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
+if "expanded_game" not in st.session_state:
+    st.session_state.expanded_game = None
 
 games = fetch_espn_scores()
 for game in games:
@@ -205,15 +198,15 @@ for game in games:
 
     game_id = f"{away_team['name']}_vs_{home_team['name']}".replace(" ", "_")
 
-    if st.session_state.expanded_game == game_id:
+    with col2:
+        if st.session_state.expanded_game == game_id:
             display_game_details(game)
             if st.button("Collapse View", key=f"collapse_{game_id}"):
                 st.session_state.expanded_game = None
         else:
-                if st.button("Show More", key=f"expand_{game_id}"):
-                    st.session_state.expanded_game = game_id
+            if st.button("Show More", key=f"expand_{game_id}"):
+                st.session_state.expanded_game = game_id
             else:
-                # default compact info box here
                 if game['sport'] == 'mlb':
                     first = 'active' if info.get('onFirst') else ''
                     second = 'active' if info.get('onSecond') else ''
@@ -252,8 +245,14 @@ for game in games:
                             ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
                         </div>
                     """, unsafe_allow_html=True)
-    
+
+    with col3:
+        st.markdown(f"""
+            <div class='scoreboard-column' style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]});'>
+                <h3>{home_team['name']}</h3>
+                <img src="{home_team['logo']}" class="team-logo"/>
+                <p style='font-size: 36px; margin: 10px 0;'>{home_team['score']}</p>
+            </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("<hr/>", unsafe_allow_html=True)
-    display_game_details(game)
-    
