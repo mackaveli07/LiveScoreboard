@@ -15,12 +15,12 @@ st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
 if "expanded_game" not in st.session_state:
     st.session_state.expanded_game = None
 
-
+# Define 'now' before using it
+now = datetime.now()
 
 if st.session_state.expanded_game is None:
-    st.session_state.last_refresh = datetime.datetime.now()
+    st.session_state.last_refresh = now
     st.experimental_rerun()
-
 REFRESH_INTERVAL = 60  # seconds
 
 if time.time() - st.session_state.last_refresh > REFRESH_INTERVAL:
