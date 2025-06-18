@@ -275,12 +275,12 @@ for i, tab_key in enumerate(tabs_keys):
 
             filtered_games = [game for game in games if game.get("sport", "").upper() == sport]
 
+            games = fetch_espn_scores()
             for game in games:
                 away_team = game["away_team"]
                 home_team = game["home_team"]
                 info = game["info"]
             
-                # Create a unique game_id
                 game_id = f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_{home_team.get('abbreviation', '')}".replace(" ", "_")
             
                 col1, col2, col3 = st.columns([3, 2, 3])
@@ -289,68 +289,47 @@ for i, tab_key in enumerate(tabs_keys):
                     st.markdown(f"""
                         <div class='scoreboard-column' style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]});'>
                             <h3>{away_team['name']}</h3>
-                            <img src="{away_team['logo']}" class="team-logo"/>
+                            <img src="{away_team['logo']}" class="team-logo" width="100"/>
                             <p style='font-size: 36px; margin: 10px 0;'>{away_team['score']}</p>
                         </div>
                     """, unsafe_allow_html=True)
             
                 with col2:
-                    clicked = st.button(" ", key=f"expand_button_{game_id}")  # invisible button to detect click
-                    if clicked:
-                        if st.session_state.expanded_game == game_id:
-                            st.session_state.expanded_game = None
-                        else:
-                            st.session_state.expanded_game = game_id
-                        st.experimental_rerun()
-            
                     if st.session_state.expanded_game == game_id:
+                        st.markdown("**[Debug] Expanded view triggered**")
                         display_game_details(game)
+                        if st.button("Collapse View", key=f"collapse_{game_id}"):
+                            st.session_state.expanded_game = None
+                            st.experimental_rerun()
                     else:
-                        sport = game.get("sport", "").lower()
-                        if sport == 'mlb':
-                            first = 'active' if info.get('onFirst') else ''
-                            second = 'active' if info.get('onSecond') else ''
-                            third = 'active' if info.get('onThird') else ''
-                            st.markdown(f"""
-                                <div class='info-box'>
-                                    ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
-                                    🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}<br/>
-                                    🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}
-                                    <div class='diamond'>
-                                        <div class='base second {second}'></div>
-                                        <div class='base third {third}'></div>
-                                        <div class='base first {first}'></div>
-                                        <div class='base mound'></div>
+                        if st.button("Show More", key=f"expand_{game_id}"):
+                            st.session_state.expanded_game = game_id
+                            st.experimental_rerun()
+                        else:
+                            sport = game.get("sport", "").lower()
+                            if sport == 'mlb':
+                                first = 'active' if info.get('onFirst') else ''
+                                second = 'active' if info.get('onSecond') else ''
+                                third = 'active' if info.get('onThird') else ''
+                                st.markdown(f"""
+                                    <div class='info-box'>
+                                        ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
+                                        🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}<br/>
+                                        🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}
+                                        <div class='diamond'>
+                                            <div class='base second {second}'></div>
+                                            <div class='base third {third}'></div>
+                                            <div class='base first {first}'></div>
+                                            <div class='base mound'></div>
+                                        </div>
                                     </div>
-                                </div>
-                            """, unsafe_allow_html=True)
-                        elif sport == 'nfl':
-                            st.markdown(f"""
-                                <div class='info-box'>
-                                    🏈 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                                    🟢 <strong>Possession:</strong> {info.get('possession', '')}
-                                </div>
-                            """, unsafe_allow_html=True)
-                        elif sport in ['nba', 'wnba']:
-                            st.markdown(f"""
-                                <div class='info-box'>
-                                    🏀 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                                    ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                                </div>
-                            """, unsafe_allow_html=True)
-                        elif sport == 'nhl':
-                            st.markdown(f"""
-                                <div class='info-box'>
-                                    🏒 <strong>{info.get('period', '')}</strong><br/>
-                                    ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                                </div>
-                            """, unsafe_allow_html=True)
+                                """, unsafe_allow_html=True)
             
                 with col3:
                     st.markdown(f"""
                         <div class='scoreboard-column' style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]});'>
                             <h3>{home_team['name']}</h3>
-                            <img src="{home_team['logo']}" class="team-logo"/>
+                            <img src="{home_team['logo']}" class="team-logo" width="100"/>
                             <p style='font-size: 36px; margin: 10px 0;'>{home_team['score']}</p>
                         </div>
                     """, unsafe_allow_html=True)
