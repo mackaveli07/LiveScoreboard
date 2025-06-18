@@ -190,6 +190,50 @@ st.markdown("""
             opacity: 0.85;
             margin-top: 10px;
         }
+
+        <style>
+    /* Tab container */
+    [role="tablist"] {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+    /* Tab buttons */
+    [role="tablist"] > button {
+        background-color: #222222;
+        color: #eee;
+        border-radius: 12px;
+        padding: 8px 18px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.25s ease, color 0.25s ease;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        box-shadow: 0 0 8px rgba(255,255,255,0.1);
+    }
+    /* Active tab */
+    [role="tablist"] > button[aria-selected="true"] {
+        background-color: #0a84ff;
+        color: white;
+        box-shadow: 0 0 15px #0a84ff;
+    }
+    /* Hover on inactive tabs */
+    [role="tablist"] > button:hover:not([aria-selected="true"]) {
+        background-color: #444444;
+        color: #ddd;
+    }
+    /* Icon inside tab */
+    [role="tablist"] > button img {
+        height: 28px;
+        width: 28px;
+        border-radius: 4px;
+        object-fit: contain;
+    }
     </style>
 """, unsafe_allow_html=True)
 
