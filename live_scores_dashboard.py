@@ -246,7 +246,7 @@ available_sports = sorted(set(game.get("sport", "").upper() for game in games))
 tabs_keys = available_sports + ["Betting Info"]
 
 for i, tab_key in enumerate(tabs_keys):
-    with tabs[i]:
+    with tabs_keys[i]:
         if tab_key == "Betting Info":
             # TODO: Replace with your betting info display logic
             st.write("Display your betting odds, lines, or other betting info here.")
