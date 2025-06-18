@@ -276,7 +276,7 @@ for i, tab_key in enumerate(tabs_keys):
 
                 col1, col2, col3 = st.columns([3, 2, 3])
 
-                    with col1:
+                with col1:
                         st.markdown(
                             f"""
                         <div style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]});
@@ -289,7 +289,7 @@ for i, tab_key in enumerate(tabs_keys):
                             unsafe_allow_html=True,
                         )
 
-                    with col2:
+                with col2:
                         sport_lower = sport.lower()
                         if sport_lower == "mlb":
                             st.markdown(
@@ -314,7 +314,7 @@ for i, tab_key in enumerate(tabs_keys):
                         else:
                             st.markdown("")
 
-                    with col3:
+                with col3:
                         st.markdown(
                             f"""
                         <div style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]});
