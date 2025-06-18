@@ -7,6 +7,7 @@ from all_team_logos import team_logos as TEAM_LOGOS
 from pathlib import Path
 from expandable_game_view import display_game_details
 
+st.set_page_config(page_title="Live Sports Scoreboard", layout="wide")
 st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
 
 def get_team_colors(team_name):
@@ -178,6 +179,10 @@ st.markdown("""
 
 if "expanded_game" not in st.session_state:
     st.session_state.expanded_game = None
+
+st.experimental_rerun_interval = 60
+
+st.experimental_rerun()
 
 games = fetch_espn_scores()
 for game in games:
