@@ -176,7 +176,7 @@ st.markdown("""
         .second { top: -10px; left: 40px; }
         .third { top: 40px; left: -10px; }
         .first { top: 40px; left: 90px; }
-        .mound { top: 40px; left: 40px; background-color: #888; }
+        .mound { top: 40px; left: 40px; background-color: #964B00; }
         hr {
             border: none;
             height: 2px;
