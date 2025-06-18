@@ -217,18 +217,16 @@ for game in games:
     game_id = str(game['id'])
 
     with col2:
-       if st.session_state.expanded_game == game_id:
+        if st.session_state.expanded_game == game_id:
             display_game_details(game)
             if st.button("Collapse View", key=f"collapse_{game_id}"):
                 st.session_state.expanded_game = None
                 st.rerun()
+        else:
+            if st.button("Show More", key=f"expand_{game_id}"):
+                st.session_state.expanded_game = game_id
+                st.rerun()
             else:
-                if st.button("Show More", key=f"expand_{game_id}"):
-                    st.session_state.expanded_game = game_id
-                    st.rerun()
-            else:
-       
-
                 if game['sport'] == 'mlb':
                     first = 'active' if info.get('onFirst') else ''
                     second = 'active' if info.get('onSecond') else ''
@@ -246,6 +244,7 @@ for game in games:
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
+
                 elif game['sport'] == 'nfl':
                     st.markdown(f"""
                         <div class='info-box'>
@@ -253,6 +252,7 @@ for game in games:
                             🟢 <strong>Possession:</strong> {info.get('possession', '')}
                         </div>
                     """, unsafe_allow_html=True)
+
                 elif game['sport'] in ['nba', 'wnba']:
                     st.markdown(f"""
                         <div class='info-box'>
@@ -260,6 +260,7 @@ for game in games:
                             ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
                         </div>
                     """, unsafe_allow_html=True)
+
                 elif game['sport'] == 'nhl':
                     st.markdown(f"""
                         <div class='info-box'>
@@ -267,7 +268,6 @@ for game in games:
                             ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
                         </div>
                     """, unsafe_allow_html=True)
-
 
     with col3:
         st.markdown(f"""
@@ -277,7 +277,6 @@ for game in games:
                 <p style='font-size: 36px; margin: 10px 0;'>{home_team['score']}</p>
             </div>
         """, unsafe_allow_html=True)
-
 
 
 
