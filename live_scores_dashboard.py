@@ -286,11 +286,23 @@ for i, tab_key in enumerate(tabs_keys):
             
                 # Away team column with basic stats below score
                 with col1:
-                    st.markdown(f"""
-                        <div class='scoreboard-column' style='background: linear-gradient(135deg, {away_team.get('colors', ['#000000', '#111111'])[0]}, {away_team.get('colors', ['#000000', '#111111'])[1]});'>
+                   st.markdown(f"""
+                        <div class='scoreboard-column' style='background: linear-gradient(135deg, {away_team.get('colors', ['#000000', '#111111'])[0]}, {away_team.get('colors', ['#000000', '#111111'])[1]}); padding: 10px; border-radius: 10px;'>
                             <h3>{away_team.get('name', 'Away')}</h3>
                             <img src="{away_team.get('logo', '')}" class="team-logo"/>
                             <p style='font-size: 36px; margin: 10px 0;'>{away_team.get('score', '')}</p>
+                            <div style="display: flex; gap: 15px; font-size: 16px; margin-top: 8px;">
+                                {"".join([
+                                    f"<div>🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}</div>" if sport == 'mlb' else '',
+                                    f"<div>🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}</div>" if sport == 'mlb' else '',
+                                    f"<div>🏈 <strong>Quarter:</strong> {info.get('quarter', '')}</div>" if sport == 'nfl' else '',
+                                    f"<div>🟢 <strong>Possession:</strong> {info.get('possession', '')}</div>" if sport == 'nfl' else '',
+                                    f"<div>🏀 <strong>Quarter:</strong> {info.get('quarter', '')}</div>" if sport in ['nba', 'wnba'] else '',
+                                    f"<div>⏱️ <strong>Clock:</strong> {info.get('clock', '')}</div>" if sport in ['nba', 'wnba'] else '',
+                                    f"<div>🏒 <strong>{info.get('period', '')}</strong></div>" if sport == 'nhl' else '',
+                                    f"<div>⏱️ <strong>Clock:</strong> {info.get('clock', '')}</div>" if sport == 'nhl' else '',
+                                ])}
+                            </div>
                         </div>
                     """, unsafe_allow_html=True)
             
