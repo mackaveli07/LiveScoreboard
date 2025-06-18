@@ -14,6 +14,12 @@ st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
 # Basic auto-refresh logic without external packages
 if "last_refresh" not in st.session_state:
     st.session_state.last_refresh = time.time()
+else:
+    now = time.time()
+    if now - st.session_state.last_refresh > 60:
+        st.session_state.last_refresh = now
+        st.experimental_rerun()
+
 
 REFRESH_INTERVAL = 60  # seconds
 
