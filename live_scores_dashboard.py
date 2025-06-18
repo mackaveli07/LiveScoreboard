@@ -15,18 +15,17 @@ st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
 if "expanded_game" not in st.session_state:
     st.session_state.expanded_game = None
 
-# Define 'now' before using it
-now = datetime.now()
+if "last_refresh" not in st.session_state:
+    st.session_state.last_refresh = datetime.now()
 
 if st.session_state.expanded_game is None:
-    st.session_state.last_refresh = now
-    st.experimental_rerun()
-REFRESH_INTERVAL = 60  # seconds
+    st.session_state.last_refresh = datetime.now()
 
-if time.time() - st.session_state.last_refresh > REFRESH_INTERVAL:
-    st.session_state.last_refresh = time.time()
-    st.experimental_rerun()
-
+    if "just_reran" not in st.session_state or not st.session_state.just_reran:
+        st.session_state.just_reran = True
+        st.rerun()  # 👈 use this instead of st.experimental_rerun()
+    else:
+        st.session_state.just_reran = False
 def get_team_colors(team_name):
     colors = TEAM_COLORS.get(team_name)
     if colors:
