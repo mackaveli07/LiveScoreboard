@@ -241,7 +241,7 @@ st.markdown("""
 
 
 
- games = fetch_espn_scores()
+    games = fetch_espn_scores()
 
     available_sports = sorted(set(game.get("sport", "").upper() for game in games))
     tabs_keys = available_sports + ["Betting Info"]
