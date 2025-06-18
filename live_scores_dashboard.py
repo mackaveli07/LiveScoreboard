@@ -262,7 +262,6 @@ for i, tab_key in enumerate(tabs_keys):
     with tabs[i]:
         if tab_key == "Betting Odds":
             st.markdown("<h2>💰 Betting Info</h2>", unsafe_allow_html=True)
-            # Put your betting info display code here
             st.write("Display your betting odds, lines, or other info here.")
         else:
             sport = tab_key
@@ -275,16 +274,15 @@ for i, tab_key in enumerate(tabs_keys):
 
             filtered_games = [game for game in games if game.get("sport", "").upper() == sport]
 
-            games = fetch_espn_scores()
-            for game in games:
+            for game in filtered_games:  # <-- only loop filtered games!
                 away_team = game["away_team"]
                 home_team = game["home_team"]
                 info = game["info"]
-            
+
                 game_id = f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_{home_team.get('abbreviation', '')}".replace(" ", "_")
-            
+
                 col1, col2, col3 = st.columns([3, 2, 3])
-            
+
                 with col1:
                     st.markdown(f"""
                         <div class='scoreboard-column' style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]});'>
@@ -293,10 +291,12 @@ for i, tab_key in enumerate(tabs_keys):
                             <p style='font-size: 36px; margin: 10px 0;'>{away_team['score']}</p>
                         </div>
                     """, unsafe_allow_html=True)
-            
+
                 with col2:
+                    if "expanded_game" not in st.session_state:
+                        st.session_state.expanded_game = None
+
                     if st.session_state.expanded_game == game_id:
-                        st.markdown("**[Debug] Expanded view triggered**")
                         display_game_details(game)
                         if st.button("Collapse View", key=f"collapse_{game_id}"):
                             st.session_state.expanded_game = None
@@ -306,8 +306,8 @@ for i, tab_key in enumerate(tabs_keys):
                             st.session_state.expanded_game = game_id
                             st.experimental_rerun()
                         else:
-                            sport = game.get("sport", "").lower()
-                            if sport == 'mlb':
+                            sport_lower = game.get("sport", "").lower()
+                            if sport_lower == 'mlb':
                                 first = 'active' if info.get('onFirst') else ''
                                 second = 'active' if info.get('onSecond') else ''
                                 third = 'active' if info.get('onThird') else ''
@@ -324,7 +324,7 @@ for i, tab_key in enumerate(tabs_keys):
                                         </div>
                                     </div>
                                 """, unsafe_allow_html=True)
-            
+
                 with col3:
                     st.markdown(f"""
                         <div class='scoreboard-column' style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]});'>
@@ -334,4 +334,4 @@ for i, tab_key in enumerate(tabs_keys):
                         </div>
                     """, unsafe_allow_html=True)
 
-    st.markdown("<hr/>", unsafe_allow_html=True)
+            st.markdown("<hr/>", unsafe_allow_html=True)
