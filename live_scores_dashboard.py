@@ -222,10 +222,10 @@ for game in games:
             if st.button("Collapse View", key=f"collapse_{game_id}"):
                 st.session_state.expanded_game = None
                 st.rerun()
-        else:
-             if st.button("Show More", key=f"expand_{game_id}"):
-                 st.session_state.expanded_game = game_id
-                 st.rerun()
+           else:
+                 if st.button("Show More", key=f"expand_{game_id}"):
+                     st.session_state.expanded_game = game_id
+                     st.rerun()
             else:
                 if game['sport'] == 'mlb':
                     first = 'active' if info.get('onFirst') else ''
