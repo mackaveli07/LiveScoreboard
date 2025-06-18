@@ -198,7 +198,7 @@ st.markdown("""
 
 
 games = fetch_espn_scores()
-for game in games:
+for idx, game in enumerate(games):
     away_team = game["away_team"]
     home_team = game["home_team"]
     info = game["info"]
@@ -218,8 +218,7 @@ for game in games:
         """, unsafe_allow_html=True)
 
     with col2:
-        clicked = st.button(" ", key=f"expand_button_{game_id}")  # invisible button to detect click
-        if clicked:
+        if st.button(" ", key=f"expand_button_{idx}"):
             if st.session_state.expanded_game == game_id:
                 st.session_state.expanded_game = None
             else:
