@@ -214,18 +214,18 @@ for game in games:
             </div>
         """, unsafe_allow_html=True)
 
-    game_id = f"{away_team['name']}_vs_{home_team['name']}".replace(" ", "_")
+    game_id = str(game['id'])
 
     with col2:
-        if st.session_state.expanded_game == game_id:
+       if st.session_state.expanded_game == game_id:
             display_game_details(game)
-        if st.button("Collapse View", key=f"collapse_{game_id}"):
-            st.session_state.expanded_game = None
-            st.rerun()  # 👈 Rerun to collapse immediately
+            if st.button("Collapse View", key=f"collapse_{game_id}"):
+                st.session_state.expanded_game = None
+                st.rerun()
         else:
-            if st.button("Show More", key=f"expand_{game_id}"):
-                st.session_state.expanded_game = game_id
-                st.rerun()  # 👈 Rerun to expand immediately
+             if st.button("Show More", key=f"expand_{game_id}"):
+                 st.session_state.expanded_game = game_id
+                 st.rerun()
             else:
                 if game['sport'] == 'mlb':
                     first = 'active' if info.get('onFirst') else ''
