@@ -111,251 +111,161 @@ def fetch_espn_scores():
 
 st.title("\U0001F3DF️ Live American Sports Scoreboard")
 
-st.markdown("""
-    <style>
-        @media only screen and (max-width: 768px) {
-            .block-container {
-                padding: 1rem !important;
-            }
-            .scoreboard-column, .info-box {
-                font-size: 16px !important;
-                padding: 8px !important;
-            }
-            h3 {
-                font-size: 18px !important;
-            }
-            .diamond {
-                transform: scale(0.8);
-            }
-        }
-        .scoreboard-column {
-            border-radius: 16px;
-            padding: 20px;
-            color: white;
-            text-align: center;
-            font-size: 24px;
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
-        }
-        .info-box {
-            background-color: #222;
-            border: 2px solid #888;
-            border-radius: 12px;
-            padding: 15px;
-            color: #eee;
-            font-size: 18px;
-        }
-        .diamond {
-            position: relative;
-            width: 100px;
-            height: 100px;
-            margin: 10px auto;
-        }
-        .diamond:before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #444;
-            transform: rotate(45deg);
-            transform-origin: center;
-            z-index: 0;
-        }
-        .base {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background-color: #ccc;
-            border-radius: 50%;
-            z-index: 1;
-        }
-        .base.active {
-            background-color: limegreen;
-        }
-        .second { top: -10px; left: 40px; }
-        .third { top: 40px; left: -10px; }
-        .first { top: 40px; left: 90px; }
-        .mound { top: 40px; left: 40px; background-color: #888; }
-        hr {
-            border: none;
-            height: 2px;
-            background-color: #888;
-            margin: 30px 0;
-        }
-        .team-logo {
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-            opacity: 0.85;
-            margin-top: 10px;
-        }
+for game in filtered_games:
+    away_team = game["away_team"]
+    home_team = game["home_team"]
+    info = game.get("info", {})
+    sport_lower = game.get("sport", "").lower()
 
-        <style>
-    /* Tab container */
-    [role="tablist"] {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        margin-bottom: 1.5rem;
-    }
-    /* Tab buttons */
-    [role="tablist"] > button {
-        background-color: #222222;
-        color: #eee;
-        border-radius: 12px;
-        padding: 8px 18px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: background-color 0.25s ease, color 0.25s ease;
-        border: none;
-        outline: none;
-        cursor: pointer;
-        box-shadow: 0 0 8px rgba(255,255,255,0.1);
-    }
-    /* Active tab */
-    [role="tablist"] > button[aria-selected="true"] {
-        background-color: #0a84ff;
-        color: white;
-        box-shadow: 0 0 15px #0a84ff;
-    }
-    /* Hover on inactive tabs */
-    [role="tablist"] > button:hover:not([aria-selected="true"]) {
-        background-color: #444444;
-        color: #ddd;
-    }
-    /* Icon inside tab */
-    [role="tablist"] > button img {
-        height: 28px;
-        width: 28px;
-        border-radius: 4px;
-        object-fit: contain;
-    }
-    </style>
-""", unsafe_allow_html=True)
+    with st.container():
+        st.markdown(
+            f"""
+            <style>
+                .score-box {{
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    border: 1px solid #ccc;
+                    border-radius: 12px;
+                    padding: 12px;
+                    background: #f9f9f9;
+                    margin-bottom: 16px;
+                }}
+                .team-box {{
+                    display: flex;
+                    justify-content: space-between;
+                    flex-wrap: wrap;
+                    gap: 16px;
+                }}
+                .team {{
+                    flex: 1;
+                    min-width: 140px;
+                    border-radius: 10px;
+                    padding: 10px;
+                    text-align: center;
+                    color: #fff;
+                }}
+                .info-panel {{
+                    font-size: 14px;
+                    margin-top: 6px;
+                }}
+                .diamond {{
+                    position: relative;
+                    width: 100px;
+                    height: 100px;
+                    margin: 10px auto;
+                    transform: rotate(45deg);
+                }}
+                .base {{
+                    width: 20px;
+                    height: 20px;
+                    background-color: #ccc;
+                    position: absolute;
+                    border-radius: 3px;
+                }}
+                .base.active {{
+                    background-color: #27ae60;
+                }}
+                .first {{
+                    top: 70px;
+                    left: 70px;
+                }}
+                .second {{
+                    top: 0;
+                    left: 70px;
+                }}
+                .third {{
+                    top: 0;
+                    left: 0;
+                }}
+                .mound {{
+                    top: 35px;
+                    left: 35px;
+                    width: 30px;
+                    height: 30px;
+                    background-color: #34495e;
+                    border-radius: 50%;
+                }}
+                @media (max-width: 480px) {{
+                    .team {{
+                        min-width: 100%;
+                    }}
+                    .diamond {{
+                        transform: scale(0.8) rotate(45deg);
+                    }}
+                }}
+            </style>
 
+            <div class="score-box">
+                <div class="team-box">
+                    <div class="team" style="background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]});">
+                        <h4>{away_team['name']}</h4>
+                        <img src="{away_team['logo']}" style="width: 60px; max-width: 100%;" />
+                        <p style="font-size: 28px; margin: 8px 0;">{away_team['score']}</p>
+                    </div>
 
+                    <div class="team" style="background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]});">
+                        <h4>{home_team['name']}</h4>
+                        <img src="{home_team['logo']}" style="width: 60px; max-width: 100%;" />
+                        <p style="font-size: 28px; margin: 8px 0;">{home_team['score']}</p>
+                    </div>
+                </div>
+        """,
+            unsafe_allow_html=True,
+        )
 
-sport_icons = {
-    "NBA": "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
-    "WNBA": "https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png",
-    "NFL": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
-    "NHL": "https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png",
-    "MLB": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
-}
+        # MLB Info with diamond
+        if sport_lower == "mlb":
+            first = 'active' if info.get('onFirst') else ''
+            second = 'active' if info.get('onSecond') else ''
+            third = 'active' if info.get('onThird') else ''
+            at_bat = info.get('at_bat', 'N/A')
+            pitcher = info.get('pitcher', 'N/A')
 
-games = fetch_espn_scores()
+            st.markdown(f"""
+                <div class="info-panel">
+                    ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
+                    🧢 <strong>At Bat:</strong> {at_bat}<br/>
+                    🥎 <strong>Pitcher:</strong> {pitcher}
+                    <div class="diamond">
+                        <div class="base first {first}"></div>
+                        <div class="base second {second}"></div>
+                        <div class="base third {third}"></div>
+                        <div class="base mound"></div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-available_sports = {game.get("sport", "").upper() for game in games}
+        # NBA / WNBA
+        elif sport_lower in ["nba", "wnba"]:
+            st.markdown(f"""
+                <div class="info-panel">
+                    ⛹️‍♂️ <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
+                    ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-# Step 2: Force include NFL and NBA in tabs
-forced_tabs = {"NFL", "NBA"}
-all_tabs = list(forced_tabs.union(available_sports))  # avoids duplicates
+        # NFL
+        elif sport_lower == "nfl":
+            st.markdown(f"""
+                <div class="info-panel">
+                    🏈 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
+                    🟢 <strong>Possession:</strong> {info.get('possession', '')}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-# Optional: Sort tabs or reorder manually
-tabs_keys = sorted(all_tabs)  # or: ["NFL", "NBA", "MLB", "NHL", "WNBA"]
+        # NHL
+        elif sport_lower == "nhl":
+            st.markdown(f"""
+                <div class="info-panel">
+                    🏒 <strong>Period:</strong> {info.get('period', 'N/A')}<br/>
+                    ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-# Step 3: Create Streamlit tabs
-tabs = st.tabs(tabs_keys)
-
-# Step 4: Main tab rendering loop
-for i, tab_key in enumerate(tabs_keys):
-    with tabs[i]:
-        if tab_key == "Betting Info":
-            st.write("Display your betting odds, lines, or other betting info here.")
         else:
-            sport = tab_key
-            sport_upper = sport.upper()
-            icon_url = sport_icons.get(sport_upper, "")
-            st.markdown(
-                f"<h2 style='display:flex; align-items:center; gap:8px;'>"
-                f"<img src='{icon_url}' height='32'/> {sport} Games</h2>",
-                unsafe_allow_html=True,
-            )
-
-            filtered_games = [
-                game for game in games if game.get("sport", "").upper() == sport_upper
-            ]
-
-            if not filtered_games:
-                st.info(f"No {sport} games to display.")
-                continue
-
-            for game in filtered_games:
-                away_team = game["away_team"]
-                home_team = game["home_team"]
-                info = game.get("info", {})
-
-                col1, col2, col3 = st.columns([3, 2, 3])
-
-                with col1:
-                    st.markdown(
-                        f"""
-                        <div style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]}); 
-                                    border-radius: 10px; padding: 10px;'>
-                            <h3>{away_team['name']}</h3>
-                            <img src="{away_team['logo']}" width="100" />
-                            <p style='font-size: 36px; margin: 10px 0;'>{away_team['score']}</p>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-
-                with col2:
-                    sport_lower = sport.lower()
-                    if sport_lower == "mlb":
-                        first = 'active' if info.get('onFirst') else ''
-                        second = 'active' if info.get('onSecond') else ''
-                        third = 'active' if info.get('onThird') else ''
-                        at_bat = info.get('at_bat', 'N/A')
-                        pitcher = info.get('pitcher', 'N/A')
-
-                        st.markdown(f"""
-                            <div class='info-box'>
-                                ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
-                                🧢 <strong>At Bat:</strong> {at_bat}<br/>
-                                🥎 <strong>Pitcher:</strong> {pitcher}
-                                <div class='diamond'>
-                                    <div class='base second {second}'></div>
-                                    <div class='base third {third}'></div>
-                                    <div class='base first {first}'></div>
-                                    <div class='base mound'></div>
-                                </div>
-                            </div>
-                        """, unsafe_allow_html=True)
-
-                    elif sport_lower in ["nba", "wnba"]:
-                        st.markdown(
-                            f"**Quarter:** {info.get('quarter', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
-                            unsafe_allow_html=True,
-                        )
-
-                    elif sport_lower == "nfl":
-                        st.markdown(
-                            f"**Quarter:** {info.get('quarter', 'N/A')}<br>🟢 Possession: {info.get('possession', '')}",
-                            unsafe_allow_html=True,
-                        )
-
-                    elif sport_lower == "nhl":
-                        st.markdown(
-                            f"**Period:** {info.get('period', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
-                            unsafe_allow_html=True,
-                        )
-                    else:
-                        st.markdown("")
-
-                with col3:
-                    st.markdown(
-                        f"""
-                        <div style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]}); 
-                                    border-radius: 10px; padding: 10px;'>
-                            <h3>{home_team['name']}</h3>
-                            <img src="{home_team['logo']}" width="100" />
-                            <p style='font-size: 36px; margin: 10px 0;'>{home_team['score']}</p>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+            st.markdown("</div>")
