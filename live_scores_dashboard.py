@@ -305,6 +305,25 @@ for i, tab_key in enumerate(tabs_keys):
                         if sport_lower == "mlb":
                             st.markdown(
                                 f"**Inning:** {info.get('inning', 'N/A')}<br>🧢 At Bat: {info.get('at_bat', 'N/A')}<br>🥎 Pitcher: {info.get('pitcher', 'N/A')}",
+                                if sport == 'mlb':
+                                        first = 'active' if info.get('onFirst') else ''
+                                        second = 'active' if info.get('onSecond') else ''
+                                        third = 'active' if info.get('onThird') else ''
+                                        at_bat = info.get('at_bat', 'N/A')
+                                        pitcher = info.get('pitcher', 'N/A')
+
+                    st.markdown(f"""
+                        <div class='info-box'>
+                            ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
+                            🧢 <strong>At Bat:</strong> {at_bat}<br/>
+                            🥎 <strong>Pitcher:</strong> {pitcher}
+                            <div class='diamond'>
+                                <div class='base second {second}'></div>
+                                <div class='base third {third}'></div>
+                                <div class='base first {first}'></div>
+                                <div class='base mound'></div>
+                            </div>
+                        </div>
                                 unsafe_allow_html=True,
                             )
                         elif sport_lower in ["nba", "wnba"]:
