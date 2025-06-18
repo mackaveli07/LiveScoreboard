@@ -198,18 +198,16 @@ st.markdown("""
 
 
 games = fetch_espn_scores()
-for game in games:
+for idx, game in enumerate(games):
     away_team = game["away_team"]
     home_team = game["home_team"]
     info = game["info"]
 
-    # Create a unique game_id (adjust based on your data)
-    game_id = f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_{home_team.get('abbreviation', '')}".replace(" ", "_")
+    game_id = f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_{home_team.get('abbreviation', '')}_{idx}".replace(" ", "_")
 
     col1, col2, col3 = st.columns([3, 2, 3])
 
     with col1:
-        # Your away team display (colors, logo, score, etc.)
         st.markdown(f"""
             <div class='scoreboard-column' style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]});'>
                 <h3>{away_team['name']}</h3>
@@ -219,7 +217,6 @@ for game in games:
         """, unsafe_allow_html=True)
 
     with col2:
-        # Show expanded or brief view based on session state
         if st.session_state.expanded_game == game_id:
             display_game_details(game)
             if st.button("Collapse View", key=f"collapse_{game_id}"):
@@ -230,8 +227,6 @@ for game in games:
                 st.session_state.expanded_game = game_id
                 st.experimental_rerun()
             else:
-                # Show brief sport-specific info here
-                # (your existing brief info code for MLB/NFL/NBA/NHL)
                 sport = game.get("sport", "").lower()
                 if sport == 'mlb':
                     first = 'active' if info.get('onFirst') else ''
@@ -273,7 +268,6 @@ for game in games:
                     """, unsafe_allow_html=True)
 
     with col3:
-        # Your home team display
         st.markdown(f"""
             <div class='scoreboard-column' style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]});'>
                 <h3>{home_team['name']}</h3>
@@ -283,4 +277,3 @@ for game in games:
         """, unsafe_allow_html=True)
 
     st.markdown("<hr/>", unsafe_allow_html=True)
-    
