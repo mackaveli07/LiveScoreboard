@@ -111,22 +111,147 @@ def fetch_espn_scores():
 
 st.title("\U0001F3DF️ Live American Sports Scoreboard")
 
-import streamlit as st
+st.markdown("""
+    <style>
+        @media only screen and (max-width: 768px) {
+            .block-container {
+                padding: 1rem !important;
+            }
+            .scoreboard-column, .info-box {
+                font-size: 16px !important;
+                padding: 8px !important;
+            }
+            h3 {
+                font-size: 18px !important;
+            }
+            .diamond {
+                transform: scale(0.8);
+            }
+        }
+        .scoreboard-column {
+            border-radius: 16px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            font-size: 24px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+        }
+        .info-box {
+            background-color: #222;
+            border: 2px solid #888;
+            border-radius: 12px;
+            padding: 15px;
+            color: #eee;
+            font-size: 18px;
+        }
+        .diamond {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 10px auto;
+        }
+        .diamond:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #444;
+            transform: rotate(45deg);
+            transform-origin: center;
+            z-index: 0;
+        }
+        .base {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ccc;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        .base.active {
+            background-color: limegreen;
+        }
+        .second { top: -10px; left: 40px; }
+        .third { top: 40px; left: -10px; }
+        .first { top: 40px; left: 90px; }
+        .mound { top: 40px; left: 40px; background-color: #888; }
+        hr {
+            border: none;
+            height: 2px;
+            background-color: #888;
+            margin: 30px 0;
+        }
+        .team-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            opacity: 0.85;
+            margin-top: 10px;
+        }
 
-# Step 1: Collect sports from available games
-available_sports = {game.get("sport", "").upper() for game in games}
+        <style>
+    /* Tab container */
+    [role="tablist"] {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+    /* Tab buttons */
+    [role="tablist"] > button {
+        background-color: #222222;
+        color: #eee;
+        border-radius: 12px;
+        padding: 8px 18px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.25s ease, color 0.25s ease;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        box-shadow: 0 0 8px rgba(255,255,255,0.1);
+    }
+    /* Active tab */
+    [role="tablist"] > button[aria-selected="true"] {
+        background-color: #0a84ff;
+        color: white;
+        box-shadow: 0 0 15px #0a84ff;
+    }
+    /* Hover on inactive tabs */
+    [role="tablist"] > button:hover:not([aria-selected="true"]) {
+        background-color: #444444;
+        color: #ddd;
+    }
+    /* Icon inside tab */
+    [role="tablist"] > button img {
+        height: 28px;
+        width: 28px;
+        border-radius: 4px;
+        object-fit: contain;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# Step 2: Force include NFL and NBA in tabs
-forced_tabs = {"NFL", "NBA"}
-all_tabs = list(forced_tabs.union(available_sports))  # avoids duplicates
 
-# Optional: Sort tabs or reorder manually
-tabs_keys = sorted(all_tabs)  # or: ["NFL", "NBA", "MLB", "NHL", "WNBA"]
 
-# Step 3: Create Streamlit tabs
+sport_icons = {
+    "NBA": "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
+    "WNBA": "https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png",
+    "NFL": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
+    "NHL": "https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png",
+    "MLB": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
+}
+
+games = fetch_espn_scores()
+
+tabs_keys = [sport for sport in tabs_keys if sport.upper() in ["NFL", "NBA", "MLB", "NHL", "WNBA"]]  # adjust as needed
 tabs = st.tabs(tabs_keys)
 
-# Step 4: Main tab rendering loop
 for i, tab_key in enumerate(tabs_keys):
     with tabs[i]:
         if tab_key == "Betting Info":
@@ -134,7 +259,7 @@ for i, tab_key in enumerate(tabs_keys):
         else:
             sport = tab_key
             sport_upper = sport.upper()
-            icon_url = sport_icons.get(sport_upper, "")
+            icon_url = sport_icons.get(sport, "")
             st.markdown(
                 f"<h2 style='display:flex; align-items:center; gap:8px;'>"
                 f"<img src='{icon_url}' height='32'/> {sport} Games</h2>",
@@ -145,14 +270,15 @@ for i, tab_key in enumerate(tabs_keys):
                 game for game in games if game.get("sport", "").upper() == sport_upper
             ]
 
-            if not filtered_games:
-                st.info(f"No {sport} games to display.")
-                continue
-
             for game in filtered_games:
                 away_team = game["away_team"]
                 home_team = game["home_team"]
                 info = game.get("info", {})
+
+                game_id = (
+                    f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_"
+                    f"{home_team.get('abbreviation', '')}".replace(" ", "_")
+                )
 
                 col1, col2, col3 = st.columns([3, 2, 3])
 
