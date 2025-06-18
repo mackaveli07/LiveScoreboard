@@ -214,7 +214,7 @@ for game in games:
             </div>
         """, unsafe_allow_html=True)
 
-    game_id = f"{game['start_time']}_{away_team['name']}_vs_{home_team['name']}".replace(" ", "_")
+    game_id = f"{away_team['name']}_vs_{home_team['name']}".replace(" ", "_")
 
     with col2:
         if st.session_state.expanded_game == game_id:
