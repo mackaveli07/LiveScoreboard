@@ -205,7 +205,7 @@ for game in games:
 
     game_id = f"{away_team['name']}_vs_{home_team['name']}".replace(" ", "_")
 
-       if st.session_state.expanded_game == game_id:
+    if st.session_state.expanded_game == game_id:
             display_game_details(game)
             if st.button("Collapse View", key=f"collapse_{game_id}"):
                 st.session_state.expanded_game = None
