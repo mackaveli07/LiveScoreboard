@@ -253,131 +253,89 @@ sport_icons = {
     "MLB": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png"
 }
 
-# Add the betting tab as a special tab key "BET"
+# Add the betting tab as a special tab key "Betting Odds"
 tabs_keys = available_sports + ["Betting Odds"]
 
 tabs = st.tabs(tabs_keys)
 
 for i, tab_key in enumerate(tabs_keys):
     with tabs[i]:
-        if tab_key == "BET":
+        if tab_key == "Betting Odds":
             st.markdown("<h2>💰 Betting Info</h2>", unsafe_allow_html=True)
             # Put your betting info display code here
             st.write("Display your betting odds, lines, or other info here.")
         else:
             sport = tab_key
             icon_url = sport_icons.get(sport, "")
-            st.markdown(f"<h2 style='display:flex; align-items:center; gap:8px;'>"
-                        f"<img src='{icon_url}' height='32'/> {sport} Games</h2>", unsafe_allow_html=True)
+            st.markdown(
+                f"<h2 style='display:flex; align-items:center; gap:8px;'>"
+                f"<img src='{icon_url}' height='32'/> {sport} Games</h2>",
+                unsafe_allow_html=True,
+            )
 
             filtered_games = [game for game in games if game.get("sport", "").upper() == sport]
-
-            if "expanded_game" not in st.session_state:
-                st.session_state.expanded_game = None
 
             for idx, game in enumerate(filtered_games):
                 away_team = game.get("away_team", {})
                 home_team = game.get("home_team", {})
                 info = game.get("info", {})
-            
-                sport = game.get("sport", "").lower()
-            
+
+                sport_lower = game.get("sport", "").lower()
+
                 col1, col2, col3 = st.columns([3, 2, 3])
-            
+
                 # Away team column with basic stats below score
                 with col1:
-                   st.markdown(f"""
+                    st.markdown(
+                        f"""
                         <div class='scoreboard-column' style='background: linear-gradient(135deg, {away_team.get('colors', ['#000000', '#111111'])[0]}, {away_team.get('colors', ['#000000', '#111111'])[1]}); padding: 10px; border-radius: 10px;'>
                             <h3>{away_team.get('name', 'Away')}</h3>
                             <img src="{away_team.get('logo', '')}" class="team-logo"/>
                             <p style='font-size: 36px; margin: 10px 0;'>{away_team.get('score', '')}</p>
                             <div style="display: flex; gap: 15px; font-size: 16px; margin-top: 8px;">
                                 {"".join([
-                                    f"<div>🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}</div>" if sport == 'mlb' else '',
-                                    f"<div>🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}</div>" if sport == 'mlb' else '',
-                                    f"<div>🏈 <strong>Quarter:</strong> {info.get('quarter', '')}</div>" if sport == 'nfl' else '',
-                                    f"<div>🟢 <strong>Possession:</strong> {info.get('possession', '')}</div>" if sport == 'nfl' else '',
-                                    f"<div>🏀 <strong>Quarter:</strong> {info.get('quarter', '')}</div>" if sport in ['nba', 'wnba'] else '',
-                                    f"<div>⏱️ <strong>Clock:</strong> {info.get('clock', '')}</div>" if sport in ['nba', 'wnba'] else '',
-                                    f"<div>🏒 <strong>{info.get('period', '')}</strong></div>" if sport == 'nhl' else '',
-                                    f"<div>⏱️ <strong>Clock:</strong> {info.get('clock', '')}</div>" if sport == 'nhl' else '',
+                                    f"<div>🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}</div>" if sport_lower == 'mlb' else '',
+                                    f"<div>🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}</div>" if sport_lower == 'mlb' else '',
+                                    f"<div>🏈 <strong>Quarter:</strong> {info.get('quarter', '')}</div>" if sport_lower == 'nfl' else '',
+                                    f"<div>🟢 <strong>Possession:</strong> {info.get('possession', '')}</div>" if sport_lower == 'nfl' else '',
+                                    f"<div>🏀 <strong>Quarter:</strong> {info.get('quarter', '')}</div>" if sport_lower in ['nba', 'wnba'] else '',
+                                    f"<div>⏱️ <strong>Clock:</strong> {info.get('clock', '')}</div>" if sport_lower in ['nba', 'wnba'] else '',
+                                    f"<div>🏒 <strong>{info.get('period', '')}</strong></div>" if sport_lower == 'nhl' else '',
+                                    f"<div>⏱️ <strong>Clock:</strong> {info.get('clock', '')}</div>" if sport_lower == 'nhl' else '',
                                 ])}
                             </div>
                         </div>
-                    """, unsafe_allow_html=True)
-            
-                    # Show basic away team stats (customize per sport)
-                        if sport == 'mlb':
-                            st.markdown(f"""
-                                <div class='info-box'>
-                                    🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}<br/>
-                                    🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}
-                                </div>
-                            """, unsafe_allow_html=True)
-                        elif sport == 'nfl':
-                            st.markdown(f"""
-                                <div class='info-box'>
-                                    🏈 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                                    🟢 <strong>Possession:</strong> {info.get('possession', '')}
-                                </div>
-                            """, unsafe_allow_html=True)
-                        elif sport in ['nba', 'wnba']:
-                            st.markdown(f"""
-                                <div class='info-box'>
-                                    🏀 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                                    ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                                </div>
-                            """, unsafe_allow_html=True)
-                        elif sport == 'nhl':
-                            st.markdown(f"""
-                                <div class='info-box'>
-                                    🏒 <strong>{info.get('period', '')}</strong><br/>
-                                    ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                                </div>
-                            """, unsafe_allow_html=True)
-                
-                    # Empty middle column or you can add something if you want
-                    with col2:
-                        st.markdown(" ")  # keep layout consistent
-                
-                    # Home team column with basic stats below score
-                    with col3:
-                        st.markdown(f"""
-                            <div class='scoreboard-column' style='background: linear-gradient(135deg, {home_team.get('colors', ['#000000', '#111111'])[0]}, {home_team.get('colors', ['#000000', '#111111'])[1]});'>
-                                <h3>{home_team.get('name', 'Home')}</h3>
-                                <img src="{home_team.get('logo', '')}" class="team-logo"/>
-                                <p style='font-size: 36px; margin: 10px 0;'>{home_team.get('score', '')}</p>
-                            </div>
-                        """, unsafe_allow_html=True)
-                
-                        # Show basic home team stats (customize per sport)
-                        if sport == 'mlb':
-                            st.markdown(f"""
-                                <div class='info-box'>
-                                    🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}<br/>
-                                    🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}
-                                </div>
-                            """, unsafe_allow_html=True)
-                        elif sport == 'nfl':
-                            st.markdown(f"""
-                                <div class='info-box'>
-                                    🏈 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                                    🟢 <strong>Possession:</strong> {info.get('possession', '')}
-                                </div>
-                            """, unsafe_allow_html=True)
-                        elif sport in ['nba', 'wnba']:
-                            st.markdown(f"""
-                                <div class='info-box'>
-                                    🏀 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                                    ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                                </div>
-                            """, unsafe_allow_html=True)
-                        elif sport == 'nhl':
-                            st.markdown(f"""
-                                <div class='info-box'>
-                                    🏒 <strong>{info.get('period', '')}</strong><br/>
-                                    ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                                </div>
-                            """, unsafe_allow_html=True)
+                        """,
+                        unsafe_allow_html=True,
+                    )
 
-    st.markdown("<hr/>", unsafe_allow_html=True)
+                # Empty middle column to keep layout consistent
+                with col2:
+                    st.markdown(" ")
+
+                # Home team column with basic stats below score
+                with col3:
+                    st.markdown(
+                        f"""
+                        <div class='scoreboard-column' style='background: linear-gradient(135deg, {home_team.get('colors', ['#000000', '#111111'])[0]}, {home_team.get('colors', ['#000000', '#111111'])[1]}); padding: 10px; border-radius: 10px;'>
+                            <h3>{home_team.get('name', 'Home')}</h3>
+                            <img src="{home_team.get('logo', '')}" class="team-logo"/>
+                            <p style='font-size: 36px; margin: 10px 0;'>{home_team.get('score', '')}</p>
+                            <div style="display: flex; gap: 15px; font-size: 16px; margin-top: 8px;">
+                                {"".join([
+                                    f"<div>🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}</div>" if sport_lower == 'mlb' else '',
+                                    f"<div>🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}</div>" if sport_lower == 'mlb' else '',
+                                    f"<div>🏈 <strong>Quarter:</strong> {info.get('quarter', '')}</div>" if sport_lower == 'nfl' else '',
+                                    f"<div>🟢 <strong>Possession:</strong> {info.get('possession', '')}</div>" if sport_lower == 'nfl' else '',
+                                    f"<div>🏀 <strong>Quarter:</strong> {info.get('quarter', '')}</div>" if sport_lower in ['nba', 'wnba'] else '',
+                                    f"<div>⏱️ <strong>Clock:</strong> {info.get('clock', '')}</div>" if sport_lower in ['nba', 'wnba'] else '',
+                                    f"<div>🏒 <strong>{info.get('period', '')}</strong></div>" if sport_lower == 'nhl' else '',
+                                    f"<div>⏱️ <strong>Clock:</strong> {info.get('clock', '')}</div>" if sport_lower == 'nhl' else '',
+                                ])}
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+                st.markdown("<hr/>", unsafe_allow_html=True)
