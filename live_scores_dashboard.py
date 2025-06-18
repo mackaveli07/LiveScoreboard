@@ -249,20 +249,16 @@ sport_icons = {
 
 games = fetch_espn_scores()
 
-available_sports = sorted(set(game.get("sport", "").upper() for game in games))
-
-tabs_keys = available_sports + ["Betting Info"]
+tabs_keys = [sport for sport in tabs_keys if sport.upper() in ["NFL", "NBA", "MLB", "NHL", "WNBA"]]  # adjust as needed
 tabs = st.tabs(tabs_keys)
-
-
 
 for i, tab_key in enumerate(tabs_keys):
     with tabs[i]:
         if tab_key == "Betting Info":
-            # TODO: Replace with your betting info display logic
             st.write("Display your betting odds, lines, or other betting info here.")
         else:
             sport = tab_key
+            sport_upper = sport.upper()
             icon_url = sport_icons.get(sport, "")
             st.markdown(
                 f"<h2 style='display:flex; align-items:center; gap:8px;'>"
@@ -271,7 +267,7 @@ for i, tab_key in enumerate(tabs_keys):
             )
 
             filtered_games = [
-                game for game in games if game.get("sport", "").upper() == sport
+                game for game in games if game.get("sport", "").upper() == sport_upper
             ]
 
             for game in filtered_games:
@@ -327,11 +323,13 @@ for i, tab_key in enumerate(tabs_keys):
                             f"**Quarter:** {info.get('quarter', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
                             unsafe_allow_html=True,
                         )
+
                     elif sport_lower == "nfl":
                         st.markdown(
                             f"**Quarter:** {info.get('quarter', 'N/A')}<br>🟢 Possession: {info.get('possession', '')}",
                             unsafe_allow_html=True,
                         )
+
                     elif sport_lower == "nhl":
                         st.markdown(
                             f"**Period:** {info.get('period', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
