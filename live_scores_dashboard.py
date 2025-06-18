@@ -6,9 +6,13 @@ from team_colors_all_leagues import team_colors as TEAM_COLORS
 from all_team_logos import team_logos as TEAM_LOGOS
 from pathlib import Path
 from expandable_game_view import display_game_details
+from streamlit_extras.st_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Live Sports Scoreboard", layout="wide")
 st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
+
+# Auto-refresh every 60 seconds (60000 milliseconds)
+st_autorefresh(interval=60000, key="auto_refresh")
 
 def get_team_colors(team_name):
     colors = TEAM_COLORS.get(team_name)
