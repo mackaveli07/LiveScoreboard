@@ -241,93 +241,102 @@ st.markdown("""
 
 
 
-games = fetch_espn_scores()
+ games = fetch_espn_scores()
 
+    available_sports = sorted(set(game.get("sport", "").upper() for game in games))
+    tabs_keys = available_sports + ["Betting Info"]
 
+    sport_icons = {
+        "NBA": "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
+        "WNBA": "https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png",
+        "NFL": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
+        "NHL": "https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png",
+        "MLB": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
+    }
 
-if "expanded_game" not in st.session_state:
-    st.session_state.expanded_game = None
+    if "expanded_game" not in st.session_state:
+        st.session_state.expanded_game = None
 
-for idx, game in enumerate(games):
-    away_team = game["away_team"]
-    home_team = game["home_team"]
-    info = game["info"]
+    tabs = st.tabs(tabs_keys)
 
-    # Create a unique game_id
-    game_id = f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_{home_team.get('abbreviation', '')}".replace(" ", "_")
-
-    col1, col2, col3 = st.columns([3, 2, 3])
-
-    with col1:
-        st.markdown(f"""
-            <div class='scoreboard-column' style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]});'>
-                <h3>{away_team['name']}</h3>
-                <img src="{away_team['logo']}" class="team-logo"/>
-                <p style='font-size: 36px; margin: 10px 0;'>{away_team['score']}</p>
-            </div>
-        """, unsafe_allow_html=True)
-
-    with col2:
-        container = st.container()
-        if container.button(" ", key=f"expand_button_{idx}"):
-            if st.session_state.expanded_game == game_id:
-                st.session_state.expanded_game = None
+    for i, tab_key in enumerate(tabs_keys):
+        with tabs[i]:
+            if tab_key == "Betting Info":
+                st.header("💰 Betting Info")
+                # TODO: Replace with your betting info display logic
+                st.write("Display your betting odds, lines, or other betting info here.")
             else:
-                st.session_state.expanded_game = game_id
-            st.experimental_rerun()
+                sport = tab_key
+                icon_url = sport_icons.get(sport, "")
+                st.markdown(
+                    f"<h2 style='display:flex; align-items:center; gap:8px;'>"
+                    f"<img src='{icon_url}' height='32'/> {sport} Games</h2>",
+                    unsafe_allow_html=True,
+                )
 
-        if st.session_state.expanded_game == game_id:
-            with container:
-                display_game_details(game)
-        else:
-            with container:
-                sport = game.get("sport", "").lower()
-                if sport == 'mlb':
-                    first = 'active' if info.get('onFirst') else ''
-                    second = 'active' if info.get('onSecond') else ''
-                    third = 'active' if info.get('onThird') else ''
-                    st.markdown(f"""
-                        <div class='info-box'>
-                            ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
-                            🧢 <strong>At Bat:</strong> {info.get('at_bat', '')}<br/>
-                            🥎 <strong>Pitcher:</strong> {info.get('pitcher', '')}
-                            <div class='diamond'>
-                                <div class='base second {second}'></div>
-                                <div class='base third {third}'></div>
-                                <div class='base first {first}'></div>
-                                <div class='base mound'></div>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                elif sport == 'nfl':
-                    st.markdown(f"""
-                        <div class='info-box'>
-                            🏈 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                            🟢 <strong>Possession:</strong> {info.get('possession', '')}
-                        </div>
-                    """, unsafe_allow_html=True)
-                elif sport in ['nba', 'wnba']:
-                    st.markdown(f"""
-                        <div class='info-box'>
-                            🏀 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
-                            ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                        </div>
-                    """, unsafe_allow_html=True)
-                elif sport == 'nhl':
-                    st.markdown(f"""
-                        <div class='info-box'>
-                            🏒 <strong>{info.get('period', '')}</strong><br/>
-                            ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                        </div>
-                    """, unsafe_allow_html=True)
+                filtered_games = [
+                    game for game in games if game.get("sport", "").upper() == sport
+                ]
 
-    with col3:
-        st.markdown(f"""
-            <div class='scoreboard-column' style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]});'>
-                <h3>{home_team['name']}</h3>
-                <img src="{home_team['logo']}" class="team-logo"/>
-                <p style='font-size: 36px; margin: 10px 0;'>{home_team['score']}</p>
-            </div>
-        """, unsafe_allow_html=True)
+                for game in filtered_games:
+                    away_team = game["away_team"]
+                    home_team = game["home_team"]
+                    info = game.get("info", {})
 
-    st.markdown("<hr/>", unsafe_allow_html=True)
+                    game_id = (
+                        f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_"
+                        f"{home_team.get('abbreviation', '')}".replace(" ", "_")
+                    )
+
+                    col1, col2, col3 = st.columns([3, 2, 3])
+
+                    with col1:
+                        st.markdown(
+                            f"""
+                        <div style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]});
+                                    border-radius: 10px; padding: 10px;'>
+                            <h3>{away_team['name']}</h3>
+                            <img src="{away_team['logo']}" width="100" />
+                            <p style='font-size: 36px; margin: 10px 0;'>{away_team['score']}</p>
+                        </div>
+                    """,
+                            unsafe_allow_html=True,
+                        )
+
+                    with col2:
+                        sport_lower = sport.lower()
+                        if sport_lower == "mlb":
+                            st.markdown(
+                                f"**Inning:** {info.get('inning', 'N/A')}<br>🧢 At Bat: {info.get('at_bat', 'N/A')}<br>🥎 Pitcher: {info.get('pitcher', 'N/A')}",
+                                unsafe_allow_html=True,
+                            )
+                        elif sport_lower in ["nba", "wnba"]:
+                            st.markdown(
+                                f"**Quarter:** {info.get('quarter', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
+                                unsafe_allow_html=True,
+                            )
+                        elif sport_lower == "nfl":
+                            st.markdown(
+                                f"**Quarter:** {info.get('quarter', 'N/A')}<br>🟢 Possession: {info.get('possession', '')}",
+                                unsafe_allow_html=True,
+                            )
+                        elif sport_lower == "nhl":
+                            st.markdown(
+                                f"**Period:** {info.get('period', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
+                                unsafe_allow_html=True,
+                            )
+                        else:
+                            st.markdown("")
+
+                    with col3:
+                        st.markdown(
+                            f"""
+                        <div style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]});
+                                    border-radius: 10px; padding: 10px;'>
+                            <h3>{home_team['name']}</h3>
+                            <img src="{home_team['logo']}" width="100" />
+                            <p style='font-size: 36px; margin: 10px 0;'>{home_team['score']}</p>
+                        </div>
+                    """,
+                            unsafe_allow_html=True,
+                        )
