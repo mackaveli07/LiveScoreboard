@@ -240,29 +240,28 @@ st.markdown("""
 
 
 
+games = fetch_espn_scores()
 
-    games = fetch_espn_scores()
+available_sports = sorted(set(game.get("sport", "").upper() for game in games))
+tabs_keys = available_sports + ["Betting Info"]
 
-    available_sports = sorted(set(game.get("sport", "").upper() for game in games))
-    tabs_keys = available_sports + ["Betting Info"]
+sport_icons = {
+    "NBA": "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
+    "WNBA": "https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png",
+    "NFL": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
+    "NHL": "https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png",
+    "MLB": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
+}
 
-    sport_icons = {
-        "NBA": "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
-        "WNBA": "https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png",
-        "NFL": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
-        "NHL": "https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png",
-        "MLB": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
-    }
+if "expanded_game" not in st.session_state:
+    st.session_state.expanded_game = None
 
-    if "expanded_game" not in st.session_state:
-        st.session_state.expanded_game = None
+tabs = st.tabs(tabs_keys)
 
-    tabs = st.tabs(tabs_keys)
-
-    for i, tab_key in enumerate(tabs_keys):
-        with tabs[i]:
-            if tab_key == "Betting Info":
-                st.header("💰 Betting Info")
+for i, tab_key in enumerate(tabs_keys):
+    with tabs[i]:
+        if tab_key == "Betting Info":
+            # ...
                 # TODO: Replace with your betting info display logic
                 st.write("Display your betting odds, lines, or other betting info here.")
             else:
