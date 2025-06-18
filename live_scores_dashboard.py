@@ -180,9 +180,7 @@ st.markdown("""
 if "expanded_game" not in st.session_state:
     st.session_state.expanded_game = None
 
-st.experimental_rerun_interval = 60
 
-st.experimental_rerun()
 
 games = fetch_espn_scores()
 for game in games:
@@ -260,4 +258,10 @@ for game in games:
             </div>
         """, unsafe_allow_html=True)
 
+
+
+
     st.markdown("<hr/>", unsafe_allow_html=True)
+    st.experimental_rerun_interval = 60
+
+    st.experimental_rerun()
