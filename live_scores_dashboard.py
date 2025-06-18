@@ -199,13 +199,17 @@ st.markdown("""
 
 games = fetch_espn_scores()
 for game in games:
-    col1, col2, col3 = st.columns([3, 2, 3])
-
     away_team = game["away_team"]
     home_team = game["home_team"]
     info = game["info"]
 
+    # Create a unique game_id (adjust based on your data)
+    game_id = f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_{home_team.get('abbreviation', '')}".replace(" ", "_")
+
+    col1, col2, col3 = st.columns([3, 2, 3])
+
     with col1:
+        # Your away team display (colors, logo, score, etc.)
         st.markdown(f"""
             <div class='scoreboard-column' style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]});'>
                 <h3>{away_team['name']}</h3>
@@ -214,20 +218,22 @@ for game in games:
             </div>
         """, unsafe_allow_html=True)
 
-    game_id = f"{away_team['name']}_vs_{home_team['name']}".replace(" ", "_")
-
     with col2:
+        # Show expanded or brief view based on session state
         if st.session_state.expanded_game == game_id:
             display_game_details(game)
             if st.button("Collapse View", key=f"collapse_{game_id}"):
                 st.session_state.expanded_game = None
-                st.rerun()
+                st.experimental_rerun()
         else:
             if st.button("Show More", key=f"expand_{game_id}"):
                 st.session_state.expanded_game = game_id
-                st.rerun()
+                st.experimental_rerun()
             else:
-                if game['sport'] == 'mlb':
+                # Show brief sport-specific info here
+                # (your existing brief info code for MLB/NFL/NBA/NHL)
+                sport = game.get("sport", "").lower()
+                if sport == 'mlb':
                     first = 'active' if info.get('onFirst') else ''
                     second = 'active' if info.get('onSecond') else ''
                     third = 'active' if info.get('onThird') else ''
@@ -244,24 +250,21 @@ for game in games:
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
-
-                elif game['sport'] == 'nfl':
+                elif sport == 'nfl':
                     st.markdown(f"""
                         <div class='info-box'>
                             🏈 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
                             🟢 <strong>Possession:</strong> {info.get('possession', '')}
                         </div>
                     """, unsafe_allow_html=True)
-
-                elif game['sport'] in ['nba', 'wnba']:
+                elif sport in ['nba', 'wnba']:
                     st.markdown(f"""
                         <div class='info-box'>
                             🏀 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
                             ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
                         </div>
                     """, unsafe_allow_html=True)
-
-                elif game['sport'] == 'nhl':
+                elif sport == 'nhl':
                     st.markdown(f"""
                         <div class='info-box'>
                             🏒 <strong>{info.get('period', '')}</strong><br/>
@@ -270,6 +273,7 @@ for game in games:
                     """, unsafe_allow_html=True)
 
     with col3:
+        # Your home team display
         st.markdown(f"""
             <div class='scoreboard-column' style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]});'>
                 <h3>{home_team['name']}</h3>
