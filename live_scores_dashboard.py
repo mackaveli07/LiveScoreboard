@@ -166,7 +166,7 @@ st.markdown("""
             position: absolute;
             width: 20px;
             height: 20px;
-            background-color: #ccc;
+            background-color: #FFFFFF;
             border-radius: 50%;
             z-index: 1;
         }
