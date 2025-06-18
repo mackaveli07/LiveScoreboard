@@ -209,9 +209,9 @@ for game in games:
             display_game_details(game)
             if st.button("Collapse View", key=f"collapse_{game_id}"):
                 st.session_state.expanded_game = None
-        else:
-            if st.button("Show More", key=f"expand_{game_id}"):
-                st.session_state.expanded_game = game_id
+            else:
+                if st.button("Show More", key=f"expand_{game_id}"):
+                    st.session_state.expanded_game = game_id
             else:
                 # default compact info box here
                 if game['sport'] == 'mlb':
