@@ -272,9 +272,9 @@ for i, tab_key in enumerate(tabs_keys):
                     f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_"
                     f"{home_team.get('abbreviation', '')}".replace(" ", "_")
                 )
-                # rest of your code
+            
 
-                    col1, col2, col3 = st.columns([3, 2, 3])
+                col1, col2, col3 = st.columns([3, 2, 3])
 
                     with col1:
                         st.markdown(
