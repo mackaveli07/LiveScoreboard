@@ -206,15 +206,16 @@ for game in games:
     game_id = f"{away_team['name']}_vs_{home_team['name']}".replace(" ", "_")
 
     if st.session_state.expanded_game == game_id:
-            display_game_details(game)
-            if st.button("Collapse View", key=f"collapse_{game_id}"):
-                st.session_state.expanded_game = None
+        display_game_details(game)
+        if st.button("Collapse View", key=f"collapse_{game_id}"):
+            st.session_state.expanded_game = None
+    else:
+        if st.button("Show More", key=f"expand_{game_id}"):
+            st.session_state.expanded_game = game_id
         else:
-            if st.button("Show More", key=f"expand_{game_id}"):
-                st.session_state.expanded_game = game_id
-        else:
-                # default compact info box here
-                if game['sport'] == 'mlb':
+            # default compact info box here
+            if game['sport'] == 'mlb':
+              
                     first = 'active' if info.get('onFirst') else ''
                     second = 'active' if info.get('onSecond') else ''
                     third = 'active' if info.get('onThird') else ''
