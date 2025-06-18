@@ -218,7 +218,7 @@ for game in games:
 
     with col2:
         if st.session_state.expanded_game == game_id:
-        display_game_details(game)
+            display_game_details(game)
         if st.button("Collapse View", key=f"collapse_{game_id}"):
             st.session_state.expanded_game = None
             st.rerun()  # 👈 Rerun to collapse immediately
