@@ -157,7 +157,7 @@ st.markdown("""
             left: 0;
             width: 100%;
             height: 100%;
-            background: #444;
+            background: #3F9B0B;
             transform: rotate(45deg);
             transform-origin: center;
             z-index: 0;
@@ -187,7 +187,7 @@ st.markdown("""
             width: 60px;
             height: 60px;
             object-fit: contain;
-            opacity: 0.85;
+            opacity: 0.50;
             margin-top: 10px;
         }
 
