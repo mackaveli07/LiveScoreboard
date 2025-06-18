@@ -245,47 +245,34 @@ games = fetch_espn_scores()
 available_sports = sorted(set(game.get("sport", "").upper() for game in games))
 tabs_keys = available_sports + ["Betting Info"]
 
-sport_icons = {
-    "NBA": "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
-    "WNBA": "https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png",
-    "NFL": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
-    "NHL": "https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png",
-    "MLB": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
-}
-
-if "expanded_game" not in st.session_state:
-    st.session_state.expanded_game = None
-
-tabs = st.tabs(tabs_keys)
-
 for i, tab_key in enumerate(tabs_keys):
     with tabs[i]:
         if tab_key == "Betting Info":
-            # ...
-                # TODO: Replace with your betting info display logic
-                st.write("Display your betting odds, lines, or other betting info here.")
-            else:
-                sport = tab_key
-                icon_url = sport_icons.get(sport, "")
-                st.markdown(
-                    f"<h2 style='display:flex; align-items:center; gap:8px;'>"
-                    f"<img src='{icon_url}' height='32'/> {sport} Games</h2>",
-                    unsafe_allow_html=True,
+            # TODO: Replace with your betting info display logic
+            st.write("Display your betting odds, lines, or other betting info here.")
+        else:
+            sport = tab_key
+            icon_url = sport_icons.get(sport, "")
+            st.markdown(
+                f"<h2 style='display:flex; align-items:center; gap:8px;'>"
+                f"<img src='{icon_url}' height='32'/> {sport} Games</h2>",
+                unsafe_allow_html=True,
+            )
+
+            filtered_games = [
+                game for game in games if game.get("sport", "").upper() == sport
+            ]
+
+            for game in filtered_games:
+                away_team = game["away_team"]
+                home_team = game["home_team"]
+                info = game.get("info", {})
+
+                game_id = (
+                    f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_"
+                    f"{home_team.get('abbreviation', '')}".replace(" ", "_")
                 )
-
-                filtered_games = [
-                    game for game in games if game.get("sport", "").upper() == sport
-                ]
-
-                for game in filtered_games:
-                    away_team = game["away_team"]
-                    home_team = game["home_team"]
-                    info = game.get("info", {})
-
-                    game_id = (
-                        f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_"
-                        f"{home_team.get('abbreviation', '')}".replace(" ", "_")
-                    )
+                # rest of your code
 
                     col1, col2, col3 = st.columns([3, 2, 3])
 
