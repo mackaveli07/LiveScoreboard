@@ -249,9 +249,19 @@ sport_icons = {
 
 games = fetch_espn_scores()
 
-tabs_keys = [sport for sport in tabs_keys if sport.upper() in ["NFL", "NBA", "MLB", "NHL", "WNBA"]]  # adjust as needed
+available_sports = {game.get("sport", "").upper() for game in games}
+
+# Step 2: Force include NFL and NBA in tabs
+forced_tabs = {"NFL", "NBA"}
+all_tabs = list(forced_tabs.union(available_sports))  # avoids duplicates
+
+# Optional: Sort tabs or reorder manually
+tabs_keys = sorted(all_tabs)  # or: ["NFL", "NBA", "MLB", "NHL", "WNBA"]
+
+# Step 3: Create Streamlit tabs
 tabs = st.tabs(tabs_keys)
 
+# Step 4: Main tab rendering loop
 for i, tab_key in enumerate(tabs_keys):
     with tabs[i]:
         if tab_key == "Betting Info":
@@ -259,7 +269,7 @@ for i, tab_key in enumerate(tabs_keys):
         else:
             sport = tab_key
             sport_upper = sport.upper()
-            icon_url = sport_icons.get(sport, "")
+            icon_url = sport_icons.get(sport_upper, "")
             st.markdown(
                 f"<h2 style='display:flex; align-items:center; gap:8px;'>"
                 f"<img src='{icon_url}' height='32'/> {sport} Games</h2>",
@@ -270,15 +280,14 @@ for i, tab_key in enumerate(tabs_keys):
                 game for game in games if game.get("sport", "").upper() == sport_upper
             ]
 
+            if not filtered_games:
+                st.info(f"No {sport} games to display.")
+                continue
+
             for game in filtered_games:
                 away_team = game["away_team"]
                 home_team = game["home_team"]
                 info = game.get("info", {})
-
-                game_id = (
-                    f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_"
-                    f"{home_team.get('abbreviation', '')}".replace(" ", "_")
-                )
 
                 col1, col2, col3 = st.columns([3, 2, 3])
 
