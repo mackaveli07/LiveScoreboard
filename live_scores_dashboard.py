@@ -251,20 +251,29 @@ sport_icons = {
 
 selected_date = st.date_input("Select date to view games", datetime.now().date(), key="game_date_filter")
 
-# Functions for filtering and displaying games
+# Dummy fallback if fetch_espn_scores() is undefined
+try:
+    games = fetch_espn_scores()
+except NameError:
+    games = []
+
+# Ensure session state
+if "expanded_game" not in st.session_state:
+    st.session_state.expanded_game = None
+
 def filter_games_by_date(games, sport, date):
     filtered = []
     for g in games:
-        if g['sport'].lower() != sport:
+        if g.get('sport', '').lower() != sport:
             continue
-        start_time_str = g.get('start_time')
-        if not start_time_str:
+        start_time = g.get('start_time')
+        if not start_time:
             continue
         try:
-            start_date = datetime.fromisoformat(start_time_str).date()
-            if start_date == date:
+            game_date = datetime.fromisoformat(start_time).date()
+            if game_date == date:
                 filtered.append(g)
-        except ValueError:
+        except Exception:
             continue
     return filtered
 
@@ -272,22 +281,22 @@ def get_next_games(games, sport):
     now = datetime.now()
     upcoming = []
     for g in games:
-        if g['sport'].lower() != sport:
+        if g.get('sport', '').lower() != sport:
             continue
-        start_time_str = g.get('start_time')
-        if not start_time_str:
+        start_time = g.get('start_time')
+        if not start_time:
             continue
         try:
-            dt = datetime.fromisoformat(start_time_str)
+            dt = datetime.fromisoformat(start_time)
             if dt > now:
                 upcoming.append(g)
-        except ValueError:
+        except Exception:
             continue
-    upcoming.sort(key=lambda g: datetime.fromisoformat(g['start_time']))
+    upcoming.sort(key=lambda g: g.get('start_time', ''))
     return upcoming[:3]
 
 def display_game_details(game):
-    st.write("Expanded game details for:", game['away_team']['name'], "vs", game['home_team']['name'])
+    st.write("Expanded game details for:", game.get('away_team', {}).get('name'), "vs", game.get('home_team', {}).get('name'))
 
 def display_games(games):
     for idx, game in enumerate(games):
@@ -309,7 +318,7 @@ def display_games(games):
             """, unsafe_allow_html=True)
 
         with col2:
-            if st.session_state.get("expanded_game") == game_id:
+            if st.session_state.expanded_game == game_id:
                 display_game_details(game)
                 if st.button("Collapse View", key=f"collapse_{game_id}"):
                     st.session_state.expanded_game = None
@@ -372,11 +381,6 @@ def display_games(games):
             """, unsafe_allow_html=True)
 
         st.markdown("<hr/>", unsafe_allow_html=True)
-
-if "expanded_game" not in st.session_state:
-    st.session_state.expanded_game = None
-
-games = fetch_espn_scores()
 
 tabs = st.tabs([sport.upper() for sport in sports])
 
