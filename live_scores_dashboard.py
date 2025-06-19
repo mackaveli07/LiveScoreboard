@@ -69,21 +69,21 @@ def fetch_espn_scores():
         status = competition.get("status", {})
         situation = competition.get("situation", {})
 
-            if league_slug == "mlb":
+        if league_slug == "mlb":
                     # Try to get current batter info from 'atBat' or fallback to 'lastPlay'
                     at_bat = situation.get("atBat", {}).get("athlete", {}).get("displayName")
-                    if not at_bat:
-                        at_bat = situation.get("lastPlay", {}).get("athlete", {}).get("displayName", "N/A")
+        if not at_bat:
+            at_bat = situation.get("lastPlay", {}).get("athlete", {}).get("displayName", "N/A")
         
-                    info = {
-                        "inning": status.get("type", {}).get("shortDetail", ""),
-                        "at_bat": at_bat or "N/A",
-                        "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName", "N/A"),
-                        "onFirst": situation.get("onFirst", False),
-                        "onSecond": situation.get("onSecond", False),
-                        "onThird": situation.get("onThird", False),
-                        "balls": situation.get("balls", 0),
-                        "strikes": situation.get("strikes", 0),
+            info = {
+                "inning": status.get("type", {}).get("shortDetail", ""),
+                 "at_bat": at_bat or "N/A",
+                 "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName", "N/A"),
+                 "onFirst": situation.get("onFirst", False),
+                 "onSecond": situation.get("onSecond", False),
+                 "onThird": situation.get("onThird", False),
+                 "balls": situation.get("balls", 0),
+                 "strikes": situation.get("strikes", 0),
                     }
 
             elif league_slug == "nfl":
