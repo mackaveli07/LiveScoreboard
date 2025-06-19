@@ -86,84 +86,10 @@ def fetch_espn_scores():
                     "onThird": situation.get("onThird", False),
                 }
             elif league_slug == "nfl":
-               elif sport_lower == "nfl":
-                        yard_line = info.get("yardLine", 50)
-                        yard_side = info.get("yardLineSide", "")
-                        possession_team = info.get("possession", "")
-                        down = info.get("down", None)
-                        distance = info.get("distance", None)
-                        field_width_px = 600
-                    
-                        yard_position = int(yard_line)
-                if possession_team == home_team["name"] and yard_side == away_team["name"]:
-                    yard_position = 100 - yard_position
-                elif possession_team == away_team["name"] and yard_side == home_team["name"]:
-                    yard_position = 100 - yard_position
-
-                    yard_pct = yard_position / 100
-                    possession_color = home_team["colors"][0] if possession_team == home_team["name"] else away_team["colors"][0]
-                    away_logo = away_team.get("logo", "")
-                    home_logo = home_team.get("logo", "")
-
-    # Determine direction
-    if yard_side == home_team["name"]:
-        arrow = "→"
-    elif yard_side == away_team["name"]:
-        arrow = "←"
-    else:
-        arrow = "→"
-
-    # Format down & distance
-    if down and distance:
-        down_map = {1: "1st", 2: "2nd", 3: "3rd", 4: "4th"}
-        down_str = f"{down_map.get(down, str(down))} & {distance} at {yard_side} {yard_line}"
-    else:
-        down_str = "Down & distance info unavailable"
-
-    st.markdown(
-                        f"""
-                        <div class='info-box'>
-                            🏈 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
-                            🟢 <strong>Possession:</strong> {possession_team}
-                            <div style="position: relative; width: {field_width_px}px; height: 60px; background: linear-gradient(to right, green 0%, green 100%);
-                                        border: 2px solid #fff; border-radius: 10px; margin: 20px auto 10px auto;">
-                                
-                                <!-- Away team endzone -->
-                                <div style="position: absolute; left: 0; width: 10%; height: 100%; background-color: #003300;
-                                            display: flex; align-items: center; justify-content: center;">
-                                    <img src="{away_logo}" alt="Away Team" style="height: 40px; opacity: 0.8;" />
-                                </div>
-                
-                                <!-- Home team endzone -->
-                                <div style="position: absolute; right: 0; width: 10%; height: 100%; background-color: #003300;
-                                            display: flex; align-items: center; justify-content: center;">
-                                    <img src="{home_logo}" alt="Home Team" style="height: 40px; opacity: 0.8;" />
-                                </div>
-                
-                                <!-- 50-yard line -->
-                                <div style="position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background-color: white;"></div>
-                
-                                <!-- Possession marker -->
-                                <div style="position: absolute; left: calc({yard_pct * 100}%); top: 0; bottom: 0; width: 4px; 
-                                            background-color: {possession_color}; box-shadow: 0 0 10px {possession_color};"></div>
-                
-                                <!-- Directional arrow -->
-                                <div style="position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
-                                            font-size: 24px; font-weight: bold; color: {possession_color};">
-                                    {arrow}
-                                </div>
-                            </div>
-                
-                            <div style="text-align:center; font-size: 14px; color: #ccc;">
-                                Field Position: <strong>{yard_side} {yard_line}</strong><br/>
-                                Down & Distance: <strong>{down_str}</strong>
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                )
-
-             }
+                info = {
+                    "quarter": f"Q{status.get('period', 'N/A')}",
+                    "possession": situation.get("possession", {}).get("displayName", "N/A")
+                }
             elif league_slug in ["nba", "wnba"]:
                 info = {
                     "quarter": f"Q{status.get('period', 'N/A')}",
@@ -403,9 +329,84 @@ for i, tab_key in enumerate(tabs_keys):
                         )
                     elif sport_lower == "nfl":
                         st.markdown(
-                            f"**Quarter:** {info.get('quarter', 'N/A')}<br>🟢 Possession: {info.get('possession', '')}",
-                            unsafe_allow_html=True,
-                        )
+                            elif sport_lower == "nfl":
+                                yard_line = info.get("yardLine", 50)
+                                yard_side = info.get("yardLineSide", "")
+                                possession_team = info.get("possession", "")
+                                down = info.get("down", None)
+                                distance = info.get("distance", None)
+                                field_width_px = 600
+                        
+                                yard_position = int(yard_line)
+                            if possession_team == home_team["name"] and yard_side == away_team["name"]:
+                                yard_position = 100 - yard_position
+                            elif possession_team == away_team["name"] and yard_side == home_team["name"]:
+                                yard_position = 100 - yard_position
+                        
+                            yard_pct = yard_position / 100
+                            possession_color = home_team["colors"][0] if possession_team == home_team["name"] else away_team["colors"][0]
+                            away_logo = away_team.get("logo", "")
+                            home_logo = home_team.get("logo", "")
+                        
+                            # Determine direction
+                            if yard_side == home_team["name"]:
+                                arrow = "→"
+                            elif yard_side == away_team["name"]:
+                                arrow = "←"
+                            else:
+                                arrow = "→"
+                        
+                            # Format down & distance
+                            if down and distance:
+                                down_map = {1: "1st", 2: "2nd", 3: "3rd", 4: "4th"}
+                                down_str = f"{down_map.get(down, str(down))} & {distance} at {yard_side} {yard_line}"
+                            else:
+                                down_str = "Down & distance info unavailable"
+
+                            st.markdown(
+                                f"""
+                                <div class='info-box'>
+                                    🏈 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
+                                    🟢 <strong>Possession:</strong> {possession_team}
+                                    <div style="position: relative; width: {field_width_px}px; height: 60px; background: linear-gradient(to right, green 0%, green 100%);
+                                                border: 2px solid #fff; border-radius: 10px; margin: 20px auto 10px auto;">
+                                        
+                                        <!-- Away team endzone -->
+                                        <div style="position: absolute; left: 0; width: 10%; height: 100%; background-color: #003300;
+                                                    display: flex; align-items: center; justify-content: center;">
+                                            <img src="{away_logo}" alt="Away Team" style="height: 40px; opacity: 0.8;" />
+                                        </div>
+                        
+                                        <!-- Home team endzone -->
+                                        <div style="position: absolute; right: 0; width: 10%; height: 100%; background-color: #003300;
+                                                    display: flex; align-items: center; justify-content: center;">
+                                            <img src="{home_logo}" alt="Home Team" style="height: 40px; opacity: 0.8;" />
+                                        </div>
+                        
+                                        <!-- 50-yard line -->
+                                        <div style="position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background-color: white;"></div>
+                        
+                                        <!-- Possession marker -->
+                                        <div style="position: absolute; left: calc({yard_pct * 100}%); top: 0; bottom: 0; width: 4px; 
+                                                    background-color: {possession_color}; box-shadow: 0 0 10px {possession_color};"></div>
+                        
+                                        <!-- Directional arrow -->
+                                        <div style="position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+                                                    font-size: 24px; font-weight: bold; color: {possession_color};">
+                                            {arrow}
+                                        </div>
+                                    </div>
+                        
+                                    <div style="text-align:center; font-size: 14px; color: #ccc;">
+                                        Field Position: <strong>{yard_side} {yard_line}</strong><br/>
+                                        Down & Distance: <strong>{down_str}</strong>
+                                    </div>
+                                </div>
+                                """,
+                                unsafe_allow_html=True
+                            )
+                        
+                                                )
                     elif sport_lower == "nhl":
                         st.markdown(
                             f"**Period:** {info.get('period', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
