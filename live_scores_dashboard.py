@@ -69,7 +69,7 @@ def fetch_espn_scores():
         info = {}
         status = competition.get("status", {})
         situation = competition.get("situation", {})
-       at_bat = "N/A"  # default value
+        at_bat = "N/A"  # default value
 
     if league_slug == "mlb":
         # Try to get current batter info from 'atBat' or fallback to 'lastPlay'
