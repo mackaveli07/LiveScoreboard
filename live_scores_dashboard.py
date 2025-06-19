@@ -86,17 +86,17 @@ def fetch_espn_scores():
                  "strikes": situation.get("strikes", 0),
                     }
 
-            elif league_slug == "nfl":
+        elif league_slug == "nfl":
                 info = {
                     "quarter": f"Q{status.get('period', 'N/A')}",
                     "possession": situation.get("possession", {}).get("displayName", "N/A")
                 }
-            elif league_slug in ["nba", "wnba"]:
+        elif league_slug in ["nba", "wnba"]:
                 info = {
                     "quarter": f"Q{status.get('period', 'N/A')}",
                     "clock": status.get("displayClock", "")
                 }
-            elif league_slug == "nhl":
+        elif league_slug == "nhl":
                 info = {
                     "period": f"Period {status.get('period', 'N/A')}",
                     "clock": status.get("displayClock", "")
