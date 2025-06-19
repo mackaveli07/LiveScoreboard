@@ -57,6 +57,7 @@ def fetch_espn_scores():
         if response.status_code != 200:
             continue
         data = response.json()
+        events = data.get("events", [])
         league_slug = sport_path.split("/")[1]
     for event in events:
         league_slug = event.get("league", {}).get("slug", "").lower()
