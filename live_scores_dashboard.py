@@ -8,7 +8,7 @@ from pathlib import Path
 from expandable_game_view import display_game_details
 
 sports = ['mlb', 'nfl', 'nba', 'wnba', 'nhl']
-selected_date = st.date_input("Select date to view games", datetime.now().date(), key="game_date_filter")
+
 
 st.set_page_config(page_title="Live Sports Scoreboard", layout="wide")
 st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
