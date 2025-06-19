@@ -57,54 +57,51 @@ def fetch_espn_scores():
         if response.status_code != 200:
             continue
         data = response.json()
-        events = data.get("events", [])
         league_slug = sport_path.split("/")[1]
-    for event in events:
-        league_slug = event.get("league", {}).get("slug", "").lower()
-        competition = event.get("competitions", [{}])[0]
-        status = competition.get("status", {})
-        situation = competition.get("situation", {})
+        for event in data.get("events", []):
+            if event.get("date", "").split("T")[0] != today:
+                continue
+            competition = event.get("competitions", [{}])[0]
+            competitors = competition.get("competitors", [])
+            if len(competitors) < 2:
+                continue
 
-       
-        info = {}
-        status = competition.get("status", {})
-        situation = competition.get("situation", {})
-        at_bat = "N/A"  # default value
+            away = next((team for team in competitors if team["homeAway"] == "away"), None)
+            home = next((team for team in competitors if team["homeAway"] == "home"), None)
 
-    if league_slug == "mlb":
-        # Try to get current batter info from 'atBat' or fallback to 'lastPlay'
-        at_bat = situation.get("atBat", {}).get("athlete", {}).get("displayName")
-        if not at_bat:
-            at_bat = situation.get("lastPlay", {}).get("athlete", {}).get("displayName", "N/A")
-        
-        info = {
-            "inning": status.get("type", {}).get("shortDetail", ""),
-            "at_bat": at_bat or "N/A",
-            "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName", "N/A"),
-            "onFirst": situation.get("onFirst", False),
-            "onSecond": situation.get("onSecond", False),
-            "onThird": situation.get("onThird", False),
-            "balls": situation.get("balls", 0),
-            "strikes": situation.get("strikes", 0),
-        }
+            if not away or not home:
+                continue
 
-     elif league_slug == "nfl":
+            info = {}
+            status = competition.get("status", {})
+            situation = competition.get("situation", {})
+
+            if league_slug == "mlb":
+                info = {
+                    "inning": status.get("type", {}).get("shortDetail", ""),
+                    "at_bat": situation.get("lastPlay", {}).get("athlete", {}).get("displayName", "N/A"),
+                    "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName", "N/A"),
+                    "onFirst": situation.get("onFirst", False),
+                    "onSecond": situation.get("onSecond", False),
+                    "onThird": situation.get("onThird", False),
+                }
+            elif league_slug == "nfl":
                 info = {
                     "quarter": f"Q{status.get('period', 'N/A')}",
                     "possession": situation.get("possession", {}).get("displayName", "N/A")
                 }
-    elif league_slug in ["nba", "wnba"]:
+            elif league_slug in ["nba", "wnba"]:
                 info = {
                     "quarter": f"Q{status.get('period', 'N/A')}",
                     "clock": status.get("displayClock", "")
                 }
-    elif league_slug == "nhl":
+            elif league_slug == "nhl":
                 info = {
                     "period": f"Period {status.get('period', 'N/A')}",
                     "clock": status.get("displayClock", "")
                 }
 
-        games.append({
+            games.append({
                 "sport": league_slug,
                 "away_team": format_game_team_data(away),
                 "home_team": format_game_team_data(home),
@@ -313,10 +310,9 @@ for i, tab_key in enumerate(tabs_keys):
 
                         st.markdown(f"""
                             <div class='info-box'>
-                               ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
-                               🧢 <strong>At Bat:</strong> {at_bat}<br/>
-                               🥎 <strong>Pitcher:</strong> {pitcher}<br/>
-                               🎯 <strong>Count:</strong> {info.get('balls', 0)} Balls, {info.get('strikes', 0)} Strikes
+                                ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
+                                🧢 <strong>At Bat:</strong> {at_bat}<br/>
+                                🥎 <strong>Pitcher:</strong> {pitcher}
                                 <div class='diamond'>
                                     <div class='base second {second}'></div>
                                     <div class='base third {third}'></div>
