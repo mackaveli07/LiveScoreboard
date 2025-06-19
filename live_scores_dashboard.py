@@ -58,7 +58,7 @@ def fetch_espn_scores():
             continue
         data = response.json()
         league_slug = sport_path.split("/")[1]
-       for event in events:
+    for event in events:
         league_slug = event.get("league", {}).get("slug", "").lower()
         competition = event.get("competitions", [{}])[0]
         status = competition.get("status", {})
