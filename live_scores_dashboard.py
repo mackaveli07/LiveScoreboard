@@ -102,7 +102,7 @@ def fetch_espn_scores():
                     "clock": status.get("displayClock", "")
                 }
 
-            games.append({
+        games.append({
                 "sport": league_slug,
                 "away_team": format_game_team_data(away),
                 "home_team": format_game_team_data(home),
