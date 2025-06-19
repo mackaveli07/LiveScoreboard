@@ -253,20 +253,39 @@ selected_date = st.date_input("Select date to view games", datetime.now().date()
 
 # Functions for filtering and displaying games
 def filter_games_by_date(games, sport, date):
-    return [
-        g for g in games
-        if g['sport'].lower() == sport and
-           datetime.fromisoformat(g['start_time']).date() == date
-    ]
+    filtered = []
+    for g in games:
+        if g['sport'].lower() != sport:
+            continue
+        start_time_str = g.get('start_time')
+        if not start_time_str:
+            continue
+        try:
+            start_date = datetime.fromisoformat(start_time_str).date()
+            if start_date == date:
+                filtered.append(g)
+        except ValueError:
+            continue  # skip games with malformed dates
+    return filtered
 
 def get_next_games(games, sport):
     now = datetime.now()
-    upcoming = [
-        g for g in games
-        if g['sport'].lower() == sport and datetime.fromisoformat(g['start_time']) > now
-    ]
+    upcoming = []
+    for g in games:
+        if g['sport'].lower() != sport:
+            continue
+        start_time_str = g.get('start_time')
+        if not start_time_str:
+            continue
+        try:
+            dt = datetime.fromisoformat(start_time_str)
+            if dt > now:
+                upcoming.append(g)
+        except ValueError:
+            continue
     upcoming.sort(key=lambda g: datetime.fromisoformat(g['start_time']))
     return upcoming[:3]
+
 
 def display_games(games):
     for idx, game in enumerate(games):
