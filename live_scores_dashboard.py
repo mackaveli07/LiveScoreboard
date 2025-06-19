@@ -87,23 +87,23 @@ def fetch_espn_scores():
                 }
             elif league_slug == "nfl":
                elif sport_lower == "nfl":
-    yard_line = info.get("yardLine", 50)
-    yard_side = info.get("yardLineSide", "")
-    possession_team = info.get("possession", "")
-    down = info.get("down", None)
-    distance = info.get("distance", None)
-    field_width_px = 600
+                        yard_line = info.get("yardLine", 50)
+                        yard_side = info.get("yardLineSide", "")
+                        possession_team = info.get("possession", "")
+                        down = info.get("down", None)
+                        distance = info.get("distance", None)
+                        field_width_px = 600
+                    
+                        yard_position = int(yard_line)
+                if possession_team == home_team["name"] and yard_side == away_team["name"]:
+                    yard_position = 100 - yard_position
+                elif possession_team == away_team["name"] and yard_side == home_team["name"]:
+                    yard_position = 100 - yard_position
 
-    yard_position = int(yard_line)
-    if possession_team == home_team["name"] and yard_side == away_team["name"]:
-        yard_position = 100 - yard_position
-    elif possession_team == away_team["name"] and yard_side == home_team["name"]:
-        yard_position = 100 - yard_position
-
-    yard_pct = yard_position / 100
-    possession_color = home_team["colors"][0] if possession_team == home_team["name"] else away_team["colors"][0]
-    away_logo = away_team.get("logo", "")
-    home_logo = home_team.get("logo", "")
+                    yard_pct = yard_position / 100
+                    possession_color = home_team["colors"][0] if possession_team == home_team["name"] else away_team["colors"][0]
+                    away_logo = away_team.get("logo", "")
+                    home_logo = home_team.get("logo", "")
 
     # Determine direction
     if yard_side == home_team["name"]:
