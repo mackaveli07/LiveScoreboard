@@ -44,8 +44,6 @@ def format_game_team_data(team):
     }
 
 @st.cache_data(ttl=60)
-import requests
-from datetime import date
 
 def fetch_espn_scores():
     base_url = "https://site.api.espn.com/apis/site/v2/sports"
