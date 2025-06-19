@@ -65,9 +65,9 @@ def fetch_espn_scores():
         situation = competition.get("situation", {})
 
        
-         info = {}
-         status = competition.get("status", {})
-         situation = competition.get("situation", {})
+        info = {}
+        status = competition.get("status", {})
+        situation = competition.get("situation", {})
 
             if league_slug == "mlb":
                     # Try to get current batter info from 'atBat' or fallback to 'lastPlay'
