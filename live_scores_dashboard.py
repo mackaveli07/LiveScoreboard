@@ -247,61 +247,57 @@ sport_icons = {
     "MLB": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
 }
 
-games = fetch_espn_scores()
+selected_date = st.date_input("Select date to view games", datetime.now().date())
 
-available_sports = sorted(set(game.get("sport", "").upper() for game in games))
+# Functions for filtering and displaying games
+def filter_games_by_date(games, sport, date):
+    return [
+        g for g in games
+        if g['sport'].lower() == sport and
+           datetime.fromisoformat(g['start_time']).date() == date
+    ]
 
-tabs_keys = available_sports + ["Betting Info"]
-tabs = st.tabs(tabs_keys)
+def get_next_games(games, sport):
+    now = datetime.now()
+    upcoming = [
+        g for g in games
+        if g['sport'].lower() == sport and datetime.fromisoformat(g['start_time']) > now
+    ]
+    upcoming.sort(key=lambda g: datetime.fromisoformat(g['start_time']))
+    return upcoming[:3]
 
+def display_games(games):
+    for idx, game in enumerate(games):
+        away_team = game["away_team"]
+        home_team = game["home_team"]
+        info = game["info"]
 
+        game_id = f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_{home_team.get('abbreviation', '')}_{idx}".replace(" ", "_")
 
-for i, tab_key in enumerate(tabs_keys):
-    with tabs[i]:
-        if tab_key == "Betting Info":
-            # TODO: Replace with your betting info display logic
-            st.write("Display your betting odds, lines, or other betting info here.")
-        else:
-            sport = tab_key
-            icon_url = sport_icons.get(sport, "")
-            st.markdown(
-                f"<h2 style='display:flex; align-items:center; gap:8px;'>"
-                f"<img src='{icon_url}' height='32'/> {sport} Games</h2>",
-                unsafe_allow_html=True,
-            )
+        col1, col2, col3 = st.columns([3, 2, 3])
 
-            filtered_games = [
-                game for game in games if game.get("sport", "").upper() == sport
-            ]
+        with col1:
+            st.markdown(f"""
+                <div class='scoreboard-column' style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]});'>
+                    <h3>{away_team['name']}</h3>
+                    <img src="{away_team['logo']}" class="team-logo"/>
+                    <p style='font-size: 36px; margin: 10px 0;'>{away_team['score']}</p>
+                </div>
+            """, unsafe_allow_html=True)
 
-            for game in filtered_games:
-                away_team = game["away_team"]
-                home_team = game["home_team"]
-                info = game.get("info", {})
-
-                game_id = (
-                    f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_"
-                    f"{home_team.get('abbreviation', '')}".replace(" ", "_")
-                )
-
-                col1, col2, col3 = st.columns([3, 2, 3])
-
-                with col1:
-                    st.markdown(
-                        f"""
-                        <div style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]}); 
-                                    border-radius: 10px; padding: 10px;'>
-                            <h3>{away_team['name']}</h3>
-                            <img src="{away_team['logo']}" width="100" />
-                            <p style='font-size: 36px; margin: 10px 0;'>{away_team['score']}</p>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-
-                with col2:
-                    sport_lower = sport.lower()
-                    if sport_lower == "mlb":
+        with col2:
+            if st.session_state.get("expanded_game") == game_id:
+                display_game_details(game)
+                if st.button("Collapse View", key=f"collapse_{game_id}"):
+                    st.session_state.expanded_game = None
+                    st.experimental_rerun()
+            else:
+                if st.button("Show More", key=f"expand_{game_id}"):
+                    st.session_state.expanded_game = game_id
+                    st.experimental_rerun()
+                else:
+                    sport = game.get("sport", "").lower()
+                    if sport == 'mlb':
                         first = 'active' if info.get('onFirst') else ''
                         second = 'active' if info.get('onSecond') else ''
                         third = 'active' if info.get('onThird') else ''
@@ -321,34 +317,61 @@ for i, tab_key in enumerate(tabs_keys):
                                 </div>
                             </div>
                         """, unsafe_allow_html=True)
+                    elif sport == 'nfl':
+                        st.markdown(f"""
+                            <div class='info-box'>
+                                🏈 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
+                                🟢 <strong>Possession:</strong> {info.get('possession', '')}
+                            </div>
+                        """, unsafe_allow_html=True)
+                    elif sport in ['nba', 'wnba']:
+                        st.markdown(f"""
+                            <div class='info-box'>
+                                🏀 <strong>Quarter:</strong> {info.get('quarter', '')}<br/>
+                                ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                            </div>
+                        """, unsafe_allow_html=True)
+                    elif sport == 'nhl':
+                        st.markdown(f"""
+                            <div class='info-box'>
+                                🏒 <strong>{info.get('period', '')}</strong><br/>
+                                ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                            </div>
+                        """, unsafe_allow_html=True)
 
-                    elif sport_lower in ["nba", "wnba"]:
-                        st.markdown(
-                            f"**Quarter:** {info.get('quarter', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
-                            unsafe_allow_html=True,
-                        )
-                    elif sport_lower == "nfl":
-                        st.markdown(
-                            f"**Quarter:** {info.get('quarter', 'N/A')}<br>🟢 Possession: {info.get('possession', '')}",
-                            unsafe_allow_html=True,
-                        )
-                    elif sport_lower == "nhl":
-                        st.markdown(
-                            f"**Period:** {info.get('period', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
-                            unsafe_allow_html=True,
-                        )
-                    else:
-                        st.markdown("")
+        with col3:
+            st.markdown(f"""
+                <div class='scoreboard-column' style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]}); border-radius: 10px; padding: 10px;'>
+                    <h3>{home_team['name']}</h3>
+                    <img src="{home_team['logo']}" width="100" />
+                    <p style='font-size: 36px; margin: 10px 0;'>{home_team['score']}</p>
+                </div>
+            """, unsafe_allow_html=True)
 
-                with col3:
-                    st.markdown(
-                        f"""
-                        <div style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]}); 
-                                    border-radius: 10px; padding: 10px;'>
-                            <h3>{home_team['name']}</h3>
-                            <img src="{home_team['logo']}" width="100" />
-                            <p style='font-size: 36px; margin: 10px 0;'>{home_team['score']}</p>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+        st.markdown("<hr/>", unsafe_allow_html=True)
+
+
+
+if "expanded_game" not in st.session_state:
+    st.session_state.expanded_game = None
+
+games = fetch_espn_scores()  # your function
+
+tabs = st.tabs([sport.upper() for sport in sports])
+
+for tab, sport in zip(tabs, sports):
+    with tab:
+        filtered_games = filter_games_by_date(games, sport, selected_date)
+        if filtered_games:
+            st.write(f"Games on {selected_date.strftime('%Y-%m-%d')} for {sport.upper()}")
+            display_games(filtered_games)
+        else:
+            if selected_date <= datetime.now().date():
+                next_games = get_next_games(games, sport)
+                if next_games:
+                    st.write(f"No games on {selected_date.strftime('%Y-%m-%d')}. Showing next upcoming {sport.upper()} games instead.")
+                    display_games(next_games)
+                else:
+                    st.write(f"No {sport.upper()} games on {selected_date.strftime('%Y-%m-%d')} or upcoming soon.")
+            else:
+                st.write(f"No {sport.upper()} games on {selected_date.strftime('%Y-%m-%d')}.")
