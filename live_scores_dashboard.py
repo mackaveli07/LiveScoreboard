@@ -76,7 +76,7 @@ def fetch_espn_scores():
             status = competition.get("status", {})
             situation = competition.get("situation", {})
 
-           if league_slug == "mlb":
+            if league_slug == "mlb":
                     info = {
                         "inning": status.get("type", {}).get("shortDetail", ""),
                         "at_bat": situation.get("lastPlay", {}).get("athlete", {}).get("displayName", "N/A"),
