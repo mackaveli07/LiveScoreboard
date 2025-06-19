@@ -251,18 +251,11 @@ sport_icons = {
 
 selected_date = st.date_input("Select date to view games", datetime.now().date(), key="game_date_filter")
 
-# Dummy fallback if fetch_espn_scores() is undefined
 try:
     games = fetch_espn_scores()
 except Exception as e:
     st.error("Failed to fetch scores.")
     games = []
-
-# Debugging: display game dates and sports
-if games:
-    st.sidebar.write("Fetched games:")
-    for g in games:
-        st.sidebar.write(f"{g.get('sport')} - {g.get('start_time')}")
 
 # Ensure session state
 if "expanded_game" not in st.session_state:
@@ -277,7 +270,7 @@ def filter_games_by_date(games, sport, date):
         if not start_time:
             continue
         try:
-            game_date = datetime.fromisoformat(start_time).date()
+            game_date = parser.parse(start_time).date()
             if game_date == date:
                 filtered.append(g)
         except Exception:
@@ -294,7 +287,7 @@ def get_next_games(games, sport):
         if not start_time:
             continue
         try:
-            dt = datetime.fromisoformat(start_time)
+            dt = parser.parse(start_time)
             if dt > now:
                 upcoming.append(g)
         except Exception:
