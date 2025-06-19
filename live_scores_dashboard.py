@@ -6,6 +6,7 @@ from team_colors_all_leagues import team_colors as TEAM_COLORS
 from all_team_logos import team_logos as TEAM_LOGOS
 from pathlib import Path
 from expandable_game_view import display_game_details
+from dateutil import parser
 
 sports = ['mlb', 'nfl', 'nba', 'wnba', 'nhl']
 
