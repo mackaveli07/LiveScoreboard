@@ -249,7 +249,7 @@ sport_icons = {
     "MLB": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
 }
 
-selected_date = st.date_input("Select date to view games", datetime.now().date())
+selected_date = st.date_input("Select date to view games", datetime.now().date(), key="game_date_filter")
 
 # Functions for filtering and displaying games
 def filter_games_by_date(games, sport, date):
@@ -265,7 +265,7 @@ def filter_games_by_date(games, sport, date):
             if start_date == date:
                 filtered.append(g)
         except ValueError:
-            continue  # skip games with malformed dates
+            continue
     return filtered
 
 def get_next_games(games, sport):
@@ -286,12 +286,14 @@ def get_next_games(games, sport):
     upcoming.sort(key=lambda g: datetime.fromisoformat(g['start_time']))
     return upcoming[:3]
 
+def display_game_details(game):
+    st.write("Expanded game details for:", game['away_team']['name'], "vs", game['home_team']['name'])
 
 def display_games(games):
     for idx, game in enumerate(games):
-        away_team = game["away_team"]
-        home_team = game["home_team"]
-        info = game["info"]
+        away_team = game.get("away_team", {})
+        home_team = game.get("home_team", {})
+        info = game.get("info", {})
 
         game_id = f"{game.get('start_time', '')}_{away_team.get('abbreviation', '')}_{home_team.get('abbreviation', '')}_{idx}".replace(" ", "_")
 
@@ -299,10 +301,10 @@ def display_games(games):
 
         with col1:
             st.markdown(f"""
-                <div class='scoreboard-column' style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]});'>
-                    <h3>{away_team['name']}</h3>
-                    <img src="{away_team['logo']}" class="team-logo"/>
-                    <p style='font-size: 36px; margin: 10px 0;'>{away_team['score']}</p>
+                <div class='scoreboard-column' style='background: linear-gradient(135deg, {away_team.get('colors', ['#ccc', '#999'])[0]}, {away_team.get('colors', ['#ccc', '#999'])[1]});'>
+                    <h3>{away_team.get('name', 'Away')}</h3>
+                    <img src="{away_team.get('logo', '')}" class="team-logo"/>
+                    <p style='font-size: 36px; margin: 10px 0;'>{away_team.get('score', 0)}</p>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -362,21 +364,19 @@ def display_games(games):
 
         with col3:
             st.markdown(f"""
-                <div class='scoreboard-column' style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]}); border-radius: 10px; padding: 10px;'>
-                    <h3>{home_team['name']}</h3>
-                    <img src="{home_team['logo']}" width="100" />
-                    <p style='font-size: 36px; margin: 10px 0;'>{home_team['score']}</p>
+                <div class='scoreboard-column' style='background: linear-gradient(135deg, {home_team.get('colors', ['#ccc', '#999'])[0]}, {home_team.get('colors', ['#ccc', '#999'])[1]}); border-radius: 10px; padding: 10px;'>
+                    <h3>{home_team.get('name', 'Home')}</h3>
+                    <img src="{home_team.get('logo', '')}" width="100" />
+                    <p style='font-size: 36px; margin: 10px 0;'>{home_team.get('score', 0)}</p>
                 </div>
             """, unsafe_allow_html=True)
 
         st.markdown("<hr/>", unsafe_allow_html=True)
 
-
-
 if "expanded_game" not in st.session_state:
     st.session_state.expanded_game = None
 
-games = fetch_espn_scores()  # your function
+games = fetch_espn_scores()
 
 tabs = st.tabs([sport.upper() for sport in sports])
 
