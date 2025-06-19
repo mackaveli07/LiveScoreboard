@@ -44,7 +44,6 @@ def format_game_team_data(team):
     }
 
 @st.cache_data(ttl=60)
-
 def fetch_espn_scores():
     base_url = "https://site.api.espn.com/apis/site/v2/sports"
     sports = [
@@ -53,7 +52,6 @@ def fetch_espn_scores():
     ]
     games = []
     today = date.today().isoformat()
-
     for sport_path in sports:
         response = requests.get(f"{base_url}/{sport_path}/scoreboard")
         if response.status_code != 200:
@@ -61,72 +59,57 @@ def fetch_espn_scores():
         data = response.json()
         events = data.get("events", [])
         league_slug = sport_path.split("/")[1]
+    for event in events:
+        league_slug = event.get("league", {}).get("slug", "").lower()
+        competition = event.get("competitions", [{}])[0]
+        status = competition.get("status", {})
+        situation = competition.get("situation", {})
 
-        for event in events:
-            league_slug = event.get("league", {}).get("slug", "").lower()
-            competition = event.get("competitions", [{}])[0]
-            status = competition.get("status", {})
-            situation = competition.get("situation", {})
+       
+        info = {}
+        status = competition.get("status", {})
+        situation = competition.get("situation", {})
+       at_bat = "N/A"  # default value
 
-            # Extract away and home teams from competitors list
-            competitors = competition.get("competitors", [])
-            away = None
-            home = None
-            for team in competitors:
-                if team.get("homeAway") == "away":
-                    away = team
-                elif team.get("homeAway") == "home":
-                    home = team
+    if league_slug == "mlb":
+        # Try to get current batter info from 'atBat' or fallback to 'lastPlay'
+        at_bat = situation.get("atBat", {}).get("athlete", {}).get("displayName")
+        if not at_bat:
+            at_bat = situation.get("lastPlay", {}).get("athlete", {}).get("displayName", "N/A")
+        
+        info = {
+            "inning": status.get("type", {}).get("shortDetail", ""),
+            "at_bat": at_bat or "N/A",
+            "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName", "N/A"),
+            "onFirst": situation.get("onFirst", False),
+            "onSecond": situation.get("onSecond", False),
+            "onThird": situation.get("onThird", False),
+            "balls": situation.get("balls", 0),
+            "strikes": situation.get("strikes", 0),
+        }
 
-            # Default info dict
-            info = {}
-
-            # Handle league-specific info
-            at_bat = "N/A"  # default
-
-            if league_slug == "mlb":
-                at_bat = situation.get("atBat", {}).get("athlete", {}).get("displayName")
-                if not at_bat:
-                    at_bat = situation.get("lastPlay", {}).get("athlete", {}).get("displayName", "N/A")
-
-                info = {
-                    "inning": status.get("type", {}).get("shortDetail", ""),
-                    "at_bat": at_bat or "N/A",
-                    "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName", "N/A"),
-                    "onFirst": situation.get("onFirst", False),
-                    "onSecond": situation.get("onSecond", False),
-                    "onThird": situation.get("onThird", False),
-                    "balls": situation.get("balls", 0),
-                    "strikes": situation.get("strikes", 0),
-                }
-
-            elif league_slug == "nfl":
+        elif league_slug == "nfl":
                 info = {
                     "quarter": f"Q{status.get('period', 'N/A')}",
                     "possession": situation.get("possession", {}).get("displayName", "N/A")
                 }
-
-            elif league_slug in ["nba", "wnba"]:
+        elif league_slug in ["nba", "wnba"]:
                 info = {
                     "quarter": f"Q{status.get('period', 'N/A')}",
                     "clock": status.get("displayClock", "")
                 }
-
-            elif league_slug == "nhl":
+        elif league_slug == "nhl":
                 info = {
                     "period": f"Period {status.get('period', 'N/A')}",
                     "clock": status.get("displayClock", "")
                 }
 
-            # Add the game info, but only if both teams exist
-            if away and home:
-                games.append({
-                    "sport": league_slug,
-                    "away_team": format_game_team_data(away),
-                    "home_team": format_game_team_data(home),
-                    "info": info
-                })
-
+        games.append({
+                "sport": league_slug,
+                "away_team": format_game_team_data(away),
+                "home_team": format_game_team_data(home),
+                "info": info
+            })
     return games
 
 st.title("\U0001F3DF️ Live American Sports Scoreboard")
