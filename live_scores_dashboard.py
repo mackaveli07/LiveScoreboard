@@ -76,15 +76,18 @@ def fetch_espn_scores():
             status = competition.get("status", {})
             situation = competition.get("situation", {})
 
-            if league_slug == "mlb":
-                info = {
-                    "inning": status.get("type", {}).get("shortDetail", ""),
-                    "at_bat": situation.get("lastPlay", {}).get("athlete", {}).get("displayName", "N/A"),
-                    "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName", "N/A"),
-                    "onFirst": situation.get("onFirst", False),
-                    "onSecond": situation.get("onSecond", False),
-                    "onThird": situation.get("onThird", False),
-                }
+           if league_slug == "mlb":
+                    info = {
+                        "inning": status.get("type", {}).get("shortDetail", ""),
+                        "at_bat": situation.get("lastPlay", {}).get("athlete", {}).get("displayName", "N/A"),
+                        "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName", "N/A"),
+                        "onFirst": situation.get("onFirst", False),
+                        "onSecond": situation.get("onSecond", False),
+                        "onThird": situation.get("onThird", False),
+                        "balls": situation.get("balls", 0),
+                        "strikes": situation.get("strikes", 0),
+                    }
+
             elif league_slug == "nfl":
                 info = {
                     "quarter": f"Q{status.get('period', 'N/A')}",
@@ -310,9 +313,10 @@ for i, tab_key in enumerate(tabs_keys):
 
                         st.markdown(f"""
                             <div class='info-box'>
-                                ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
-                                🧢 <strong>At Bat:</strong> {at_bat}<br/>
-                                🥎 <strong>Pitcher:</strong> {pitcher}
+                               ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
+                               🧢 <strong>At Bat:</strong> {at_bat}<br/>
+                               🥎 <strong>Pitcher:</strong> {pitcher}<br/>
+                               🎯 <strong>Count:</strong> {info.get('balls', 0)} Balls, {info.get('strikes', 0)} Strikes
                                 <div class='diamond'>
                                     <div class='base second {second}'></div>
                                     <div class='base third {third}'></div>
