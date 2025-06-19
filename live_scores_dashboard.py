@@ -254,8 +254,15 @@ selected_date = st.date_input("Select date to view games", datetime.now().date()
 # Dummy fallback if fetch_espn_scores() is undefined
 try:
     games = fetch_espn_scores()
-except NameError:
+except Exception as e:
+    st.error("Failed to fetch scores.")
     games = []
+
+# Debugging: display game dates and sports
+if games:
+    st.sidebar.write("Fetched games:")
+    for g in games:
+        st.sidebar.write(f"{g.get('sport')} - {g.get('start_time')}")
 
 # Ensure session state
 if "expanded_game" not in st.session_state:
