@@ -4,6 +4,7 @@ import time
 from datetime import datetime, date
 from elo import EloRating
 import csv
+from streamlit_autorefresh import st_autorefresh
 
 from team_colors_all_leagues import team_colors as TEAM_COLORS
 from all_team_logos import team_logos as TEAM_LOGOS
