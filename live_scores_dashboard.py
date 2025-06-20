@@ -7,13 +7,12 @@ from pathlib import Path
 from expandable_game_view import display_game_details
 from streamlit_autorefresh import st_autorefresh
 
-# Force auto-refresh every 10 seconds
+# Auto-refresh every 10 seconds
 st_autorefresh(interval=10_000, key="refresh")
 
 st.set_page_config(page_title="Live Sports Scoreboard", layout="wide")
 st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
-
-st.title("F3DF️ Live American Sports Scoreboard")
+st.title("🏟️ Live American Sports Scoreboard")
 st.caption("🔁 Auto-refreshing every 10 seconds...")
 
 def get_team_colors(team_name):
@@ -36,10 +35,7 @@ def format_game_team_data(team):
 @st.cache_data(ttl=5)
 def fetch_espn_scores():
     base_url = "https://site.api.espn.com/apis/site/v2/sports"
-    sports = [
-        "baseball/mlb", "football/nfl", "basketball/nba",
-        "basketball/wnba", "hockey/nhl"
-    ]
+    sports = ["baseball/mlb", "football/nfl", "basketball/nba", "basketball/wnba", "hockey/nhl"]
     games = []
     today = date.today().isoformat()
     for sport_path in sports:
@@ -123,35 +119,23 @@ for i, tab_key in enumerate(tabs_keys):
         else:
             sport = tab_key
             icon_url = sport_icons.get(sport, "")
-            st.markdown(
-                f"<h2 style='display:flex; align-items:center; gap:8px;'>"
-                f"<img src='{icon_url}' height='32'/> {sport} Games</h2>",
-                unsafe_allow_html=True,
-            )
-
-            filtered_games = [
-                game for game in games if game.get("sport", "").upper() == sport
-            ]
+            st.markdown(f"<h2 style='display:flex; align-items:center; gap:8px;'><img src='{icon_url}' height='32'/> {sport} Games</h2>", unsafe_allow_html=True)
+            filtered_games = [game for game in games if game.get("sport", "").upper() == sport]
 
             for game in filtered_games:
                 away_team = game["away_team"]
                 home_team = game["home_team"]
                 info = game.get("info", {})
-
                 col1, col2, col3 = st.columns([3, 2, 3])
 
                 with col1:
-                    st.markdown(
-                        f"""
-                        <div style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]}); 
-                                    border-radius: 10px; padding: 10px;'>
+                    st.markdown(f"""
+                        <div style='background: linear-gradient(135deg, {away_team['colors'][0]}, {away_team['colors'][1]}); border-radius: 10px; padding: 10px;'>
                             <h3>{away_team['name']}</h3>
                             <img src="{away_team['logo']}" width="100" />
                             <p style='font-size: 36px; margin: 10px 0;'>{away_team['score']}</p>
                         </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+                    """, unsafe_allow_html=True)
 
                 with col2:
                     sport_lower = sport.lower()
@@ -167,7 +151,7 @@ for i, tab_key in enumerate(tabs_keys):
                         st.markdown(f"""
                             <div class='info-box'>
                                 ⚾ <strong>Inning:</strong> {info.get('inning', '')}<br/>
-                                🧂 <strong>At Bat:</strong> {at_bat}<br/>
+                                🧢 <strong>At Bat:</strong> {at_bat}<br/>
                                 🥎 <strong>Pitcher:</strong> {pitcher}<br/>
                                 🎯 <strong>Count:</strong> {balls} Balls, {strikes} Strikes
                                 <div class='diamond'>
@@ -180,61 +164,46 @@ for i, tab_key in enumerate(tabs_keys):
                         """, unsafe_allow_html=True)
 
                     elif sport_lower in ["nba", "wnba"]:
-                                st.markdown(f"""
-                                    <div class='info-box'>
-                                        🏀 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
-                                        ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                                    <div style='margin-top:10px; background:#f4a261; height:160px; position:relative; border:2px solid #333; border-radius:8px;'>
-                                            <!-- Half Court Line -->
-                                            <div style='position:absolute; top:0; left:50%; width:2px; height:100%; background:#000;'></div>
-                            
-                                            <!-- Top Hoop -->
-                                            <div style='position:absolute; left:calc(50% - 25px); top:-12px; width:50px; height:12px; background:#000; border-radius:0 0 12px 12px;'></div>
-                            
-                                            <!-- Bottom Hoop -->
-                                            <div style='position:absolute; left:calc(50% - 25px); bottom:-12px; width:50px; height:12px; background:#000; border-radius:12px 12px 0 0;'></div>
-                            
-                                            <!-- Top Free Throw Arc -->
-                                            <div style='position:absolute; left:calc(50% - 60px); top:15px; width:120px; height:60px; border:2px solid #000; border-top-left-radius:60px; border-top-right-radius:60px; border-bottom:none;'></div>
-                            
-                                            <!-- Bottom Free Throw Arc -->
-                                            <div style='position:absolute; left:calc(50% - 60px); bottom:15px; width:120px; height:60px; border:2px solid #000; border-bottom-left-radius:60px; border-bottom-right-radius:60px; border-top:none;'></div>
-                            
-                                            <!-- Top 3pt Arc -->
-                                            <div style='position:absolute; left:calc(50% - 80px); top:0px; width:160px; height:80px; border:2px solid #000; border-top-left-radius:80px; border-top-right-radius:80px; border-bottom:none;'></div>
-                            
-                                            <!-- Bottom 3pt Arc -->
-                                            <div style='position:absolute; left:calc(50% - 80px); bottom:0px; width:160px; height:80px; border:2px solid #000; border-bottom-left-radius:80px; border-bottom-right-radius:80px; border-top:none;'></div>
-                                        </div>
-                                    </div>
-                                """, unsafe_allow_html=True)
+                        st.markdown(f"""
+                            <div class='info-box'>
+                                🏀 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
+                                ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                                <div style='margin-top:10px; background:#f4a261; height:160px; position:relative; border:2px solid #333; border-radius:8px;'>
+                                    <!-- Half Court Line -->
+                                    <div style='position:absolute; top:0; left:50%; width:2px; height:100%; background:#000;'></div>
 
+                                    <!-- Top Hoop -->
+                                    <div style='position:absolute; left:calc(50% - 25px); top:-12px; width:50px; height:12px; background:#000; border-radius:0 0 12px 12px;'></div>
 
+                                    <!-- Bottom Hoop -->
+                                    <div style='position:absolute; left:calc(50% - 25px); bottom:-12px; width:50px; height:12px; background:#000; border-radius:12px 12px 0 0;'></div>
+
+                                    <!-- Top Free Throw Arc -->
+                                    <div style='position:absolute; left:calc(50% - 60px); top:15px; width:120px; height:60px; border:2px solid #000; border-top-left-radius:60px; border-top-right-radius:60px; border-bottom:none;'></div>
+
+                                    <!-- Bottom Free Throw Arc -->
+                                    <div style='position:absolute; left:calc(50% - 60px); bottom:15px; width:120px; height:60px; border:2px solid #000; border-bottom-left-radius:60px; border-bottom-right-radius:60px; border-top:none;'></div>
+
+                                    <!-- Top 3pt Arc -->
+                                    <div style='position:absolute; left:calc(50% - 80px); top:0px; width:160px; height:80px; border:2px solid #000; border-top-left-radius:80px; border-top-right-radius:80px; border-bottom:none;'></div>
+
+                                    <!-- Bottom 3pt Arc -->
+                                    <div style='position:absolute; left:calc(50% - 80px); bottom:0px; width:160px; height:80px; border:2px solid #000; border-bottom-left-radius:80px; border-bottom-right-radius:80px; border-top:none;'></div>
+                                </div>
                             </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
+                        """, unsafe_allow_html=True)
 
                     elif sport_lower == "nfl":
-                        st.markdown(
-                            f"**Quarter:** {info.get('quarter', 'N/A')}<br>🟢 Possession: {info.get('possession', '')}",
-                            unsafe_allow_html=True,
-                        )
+                        st.markdown(f"**Quarter:** {info.get('quarter', 'N/A')}<br>🟢 Possession: {info.get('possession', '')}", unsafe_allow_html=True)
+
                     elif sport_lower == "nhl":
-                        st.markdown(
-                            f"**Period:** {info.get('period', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
-                            unsafe_allow_html=True,
-                        )
+                        st.markdown(f"**Period:** {info.get('period', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}", unsafe_allow_html=True)
 
                 with col3:
-                    st.markdown(
-                        f"""
-                        <div style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]}); 
-                                    border-radius: 10px; padding: 10px;'>
+                    st.markdown(f"""
+                        <div style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]}); border-radius: 10px; padding: 10px;'>
                             <h3>{home_team['name']}</h3>
                             <img src="{home_team['logo']}" width="100" />
                             <p style='font-size: 36px; margin: 10px 0;'>{home_team['score']}</p>
                         </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+                    """, unsafe_allow_html=True)
