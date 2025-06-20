@@ -77,4 +77,89 @@
         opacity: 0.85;
         margin-top: 10px;
     }
+
+    .court {
+    margin-top: 10px;
+    background: #f4a261;
+    height: 160px;
+    position: relative;
+    border: 2px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.court div {
+    position: absolute;
+    background: #000;
+}
+.court .half-court {
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 100%;
+}
+.court .top-hoop {
+    top: -12px;
+    left: calc(50% - 25px);
+    width: 50px;
+    height: 12px;
+    border-radius: 0 0 12px 12px;
+}
+.court .bottom-hoop {
+    bottom: -12px;
+    left: calc(50% - 25px);
+    width: 50px;
+    height: 12px;
+    border-radius: 12px 12px 0 0;
+}
+.court .top-ft-arc, .court .bottom-ft-arc,
+.court .top-3pt-arc, .court .bottom-3pt-arc {
+    background: none;
+    border: 2px solid #000;
+}
+.court .top-ft-arc {
+    top: 15px;
+    left: calc(50% - 60px);
+    width: 120px;
+    height: 60px;
+    border-top-left-radius: 60px;
+    border-top-right-radius: 60px;
+    border-bottom: none;
+}
+.court .bottom-ft-arc {
+    bottom: 15px;
+    left: calc(50% - 60px);
+    width: 120px;
+    height: 60px;
+    border-bottom-left-radius: 60px;
+    border-bottom-right-radius: 60px;
+    border-top: none;
+}
+.court .top-3pt-arc {
+    top: 0;
+    left: calc(50% - 80px);
+    width: 160px;
+    height: 80px;
+    border-top-left-radius: 80px;
+    border-top-right-radius: 80px;
+    border-bottom: none;
+}
+.court .bottom-3pt-arc {
+    bottom: 0;
+    left: calc(50% - 80px);
+    width: 160px;
+    height: 80px;
+    border-bottom-left-radius: 80px;
+    border-bottom-right-radius: 80px;
+    border-top: none;
+}
 </style>
+
+<div class=\"court\">
+    <div class=\"half-court\"></div>\n
+    <div class=\"top-hoop\"></div>\n
+    <div class=\"bottom-hoop\"></div>\n
+    <div class=\"top-ft-arc\"></div>\n
+    <div class=\"bottom-ft-arc\"></div>\n
+    <div class=\"top-3pt-arc\"></div>\n
+    <div class=\"bottom-3pt-arc\"></div>\n
+</div>
