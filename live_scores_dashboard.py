@@ -169,8 +169,8 @@ for i, tab_key in enumerate(tabs_keys):
                                         🏀 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
                                         ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
                                         
-                                        <div class='court'></div>
-                                        <div class='court'></div>
+                                        
+                                        <div class='court'>
                                         <div class='half-court'></div>
                                         <div class='top-hoop'></div>
                                         <div class='bottom-hoop'></div>
@@ -180,7 +180,7 @@ for i, tab_key in enumerate(tabs_keys):
                                         <div class='bottom-3pt-arc'></div>
          
                                     
-                                </div>
+                                        </div>
                             """, unsafe_allow_html=True)
 
                     elif sport_lower == "nfl":
