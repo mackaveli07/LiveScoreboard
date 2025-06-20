@@ -43,7 +43,7 @@ def format_game_team_data(team):
         "logo": get_team_logo(team["team"]["displayName"])
     }
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=10)
 def fetch_espn_scores():
     base_url = "https://site.api.espn.com/apis/site/v2/sports"
     sports = ["baseball/mlb", "football/nfl", "basketball/nba", "basketball/wnba", "hockey/nhl"]
