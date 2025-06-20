@@ -164,8 +164,8 @@ for i, tab_key in enumerate(tabs_keys):
                         """, unsafe_allow_html=True)
 
                     elif sport_lower in ["nba", "wnba"]:
-                            st.markdown(f"""
-                                <div class='info-box'>
+                         st.markdown(f"""
+                             <div class='info-box'>
                                     🏀 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
                                     ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
                                     <div style='
@@ -192,7 +192,7 @@ for i, tab_key in enumerate(tabs_keys):
                                         <div style='position:absolute; left:calc(50% - 80px); top:0px; width:160px; height:80px; border:2px solid #000; border-top-left-radius:80px; border-top-right-radius:80px; border-bottom:none;'></div>
                                         <div style='position:absolute; left:calc(50% - 80px); bottom:0px; width:160px; height:80px; border:2px solid #000; border-bottom-left-radius:80px; border-bottom-right-radius:80px; border-top:none;'></div>
                                     </div>
-                                </div>
+                             </div>
                             """, unsafe_allow_html=True)
 
 
