@@ -163,7 +163,7 @@ for i, tab_key in enumerate(tabs_keys):
                             </div>
                         """, unsafe_allow_html=True)
 
-                     elif sport_lower in ["nba", "wnba"]:
+                         elif sport_lower in ["nba", "wnba"]:
                             st.markdown(f"""
                                     <div class='info-box'>
                                         🏀 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
