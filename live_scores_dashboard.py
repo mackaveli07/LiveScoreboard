@@ -181,9 +181,19 @@ for i, tab_key in enumerate(tabs_keys):
 
                     elif sport_lower in ["nba", "wnba"]:
                         st.markdown(
-                            f"**Quarter:** {info.get('quarter', 'N/A')}<br>⏱️ Clock: {info.get('clock', '')}",
+                            f"""
+                            <div class='info-box'>
+                                🏀 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
+                                ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                                <div style='margin-top:10px; background:#f4a261; height:120px; position:relative; border:2px solid #333; border-radius:8px;'>
+                                    <div style='position:absolute; left:calc(50% - 25px); top:-12px; width:50px; height:12px; background:#000; border-radius:0 0 12px 12px;'></div>
+                                    <div style='position:absolute; left:calc(50% - 25px); bottom:-12px; width:50px; height:12px; background:#000; border-radius:12px 12px 0 0;'></div>
+                                </div>
+                            </div>
+                            """,
                             unsafe_allow_html=True,
                         )
+
                     elif sport_lower == "nfl":
                         st.markdown(
                             f"**Quarter:** {info.get('quarter', 'N/A')}<br>🟢 Possession: {info.get('possession', '')}",
