@@ -180,40 +180,35 @@ for i, tab_key in enumerate(tabs_keys):
                         """, unsafe_allow_html=True)
 
                     elif sport_lower in ["nba", "wnba"]:
-                        st.markdown(
-                            f"""
-                            <div class='info-box'>
-                                🏀 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
-                                ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                                elif sport_lower in ["nba", "wnba"]:
-                                    st.markdown(f"""
-                                        <div class='info-box'>
-                                            🏀 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
-                                            ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                                            <div style='margin-top:10px; background:#f4a261; height:160px; position:relative; border:2px solid #333; border-radius:8px;'>
-                                                <!-- Half Court Line -->
-                                                <div style='position:absolute; top:0; left:50%; width:2px; height:100%; background:#000;'></div>
-                                
-                                                <!-- Top Hoop -->
-                                                <div style='position:absolute; left:calc(50% - 25px); top:-12px; width:50px; height:12px; background:#000; border-radius:0 0 12px 12px;'></div>
-                                
-                                                <!-- Bottom Hoop -->
-                                                <div style='position:absolute; left:calc(50% - 25px); bottom:-12px; width:50px; height:12px; background:#000; border-radius:12px 12px 0 0;'></div>
-                                
-                                                <!-- Top Free Throw Arc -->
-                                                <div style='position:absolute; left:calc(50% - 60px); top:15px; width:120px; height:60px; border:2px solid #000; border-top-left-radius:60px; border-top-right-radius:60px; border-bottom:none;'></div>
-                                
-                                                <!-- Bottom Free Throw Arc -->
-                                                <div style='position:absolute; left:calc(50% - 60px); bottom:15px; width:120px; height:60px; border:2px solid #000; border-bottom-left-radius:60px; border-bottom-right-radius:60px; border-top:none;'></div>
-                                
-                                                <!-- Top 3pt Arc -->
-                                                <div style='position:absolute; left:calc(50% - 80px); top:0px; width:160px; height:80px; border:2px solid #000; border-top-left-radius:80px; border-top-right-radius:80px; border-bottom:none;'></div>
-                                
-                                                <!-- Bottom 3pt Arc -->
-                                                <div style='position:absolute; left:calc(50% - 80px); bottom:0px; width:160px; height:80px; border:2px solid #000; border-bottom-left-radius:80px; border-bottom-right-radius:80px; border-top:none;'></div>
-                                            </div>
+                                st.markdown(f"""
+                                    <div class='info-box'>
+                                        🏀 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
+                                        ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                                        <div style='margin-top:10px; background:#f4a261; height:160px; position:relative; border:2px solid #333; border-radius:8px;'>
+                                            <!-- Half Court Line -->
+                                            <div style='position:absolute; top:0; left:50%; width:2px; height:100%; background:#000;'></div>
+                            
+                                            <!-- Top Hoop -->
+                                            <div style='position:absolute; left:calc(50% - 25px); top:-12px; width:50px; height:12px; background:#000; border-radius:0 0 12px 12px;'></div>
+                            
+                                            <!-- Bottom Hoop -->
+                                            <div style='position:absolute; left:calc(50% - 25px); bottom:-12px; width:50px; height:12px; background:#000; border-radius:12px 12px 0 0;'></div>
+                            
+                                            <!-- Top Free Throw Arc -->
+                                            <div style='position:absolute; left:calc(50% - 60px); top:15px; width:120px; height:60px; border:2px solid #000; border-top-left-radius:60px; border-top-right-radius:60px; border-bottom:none;'></div>
+                            
+                                            <!-- Bottom Free Throw Arc -->
+                                            <div style='position:absolute; left:calc(50% - 60px); bottom:15px; width:120px; height:60px; border:2px solid #000; border-bottom-left-radius:60px; border-bottom-right-radius:60px; border-top:none;'></div>
+                            
+                                            <!-- Top 3pt Arc -->
+                                            <div style='position:absolute; left:calc(50% - 80px); top:0px; width:160px; height:80px; border:2px solid #000; border-top-left-radius:80px; border-top-right-radius:80px; border-bottom:none;'></div>
+                            
+                                            <!-- Bottom 3pt Arc -->
+                                            <div style='position:absolute; left:calc(50% - 80px); bottom:0px; width:160px; height:80px; border:2px solid #000; border-bottom-left-radius:80px; border-bottom-right-radius:80px; border-top:none;'></div>
                                         </div>
-                                    """, unsafe_allow_html=True)
+                                    </div>
+                                """, unsafe_allow_html=True)
+
 
                             </div>
                             """,
