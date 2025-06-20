@@ -14,17 +14,17 @@ st.set_page_config(page_title="Live Sports Scoreboard", layout="wide")
 st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
 
 # Auto-refresh session state
-if "expanded_game" not in st.session_state:
-    st.session_state.expanded_game = None
+REFRESH_INTERVAL = 10  # seconds
+
+# Initialize refresh timer
 if "last_refresh" not in st.session_state:
     st.session_state.last_refresh = datetime.now()
-if st.session_state.expanded_game is None:
+
+# Check if it's time to refresh
+time_since_last = (datetime.now() - st.session_state.last_refresh).total_seconds()
+if time_since_last >= REFRESH_INTERVAL:
     st.session_state.last_refresh = datetime.now()
-    if "just_reran" not in st.session_state or not st.session_state.just_reran:
-        st.session_state.just_reran = True
-        st.rerun()
-    else:
-        st.session_state.just_reran = False
+    st.rerun()
 
 def get_team_colors(team_name):
     colors = TEAM_COLORS.get(team_name)
