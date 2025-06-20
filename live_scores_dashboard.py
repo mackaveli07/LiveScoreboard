@@ -168,7 +168,7 @@ for i, tab_key in enumerate(tabs_keys):
                                     <div class='info-box'>
                                         🏀 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
                                         ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                                    <div class='court'>
+                                    <div class='court responsive-court'>
                                         <div class='half-court'></div>
                                         <div class='top-hoop'></div>
                                         <div class='bottom-hoop'></div>
