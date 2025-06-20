@@ -2,19 +2,14 @@ import streamlit as st
 import requests
 import time
 from datetime import datetime, date
+from elo import EloRating
+from datetime import datetime
+import csv
+
 from team_colors_all_leagues import team_colors as TEAM_COLORS
 from all_team_logos import team_logos as TEAM_LOGOS
 from pathlib import Path
 from expandable_game_view import display_game_details
-from elo import EloRating
-
-elo_by_league = {
-    "mlb": EloRating(),
-    "nba": EloRating(),
-    "wnba": EloRating(),
-    "nfl": EloRating(),
-    "nhl": EloRating(),
-}
 
 
 st.set_page_config(page_title="Live Sports Scoreboard", layout="wide")
@@ -34,6 +29,13 @@ if st.session_state.expanded_game is None:
         st.session_state.just_reran = True
         st.rerun()  # 👈 use this instead of st.experimental_rerun()
     else:
+    elif tab_key == "Elo Ratings":
+        for league, elo in elo_by_league.items():
+            st.subheader(f"{league.upper()} Elo Ratings")
+            ratings = elo.get_all_ratings()
+            for team, rating in ratings.items():
+                st.write(f"{team}: {round(rating)}")
+
         st.session_state.just_reran = False
 def get_team_colors(team_name):
     colors = TEAM_COLORS.get(team_name)
@@ -256,11 +258,29 @@ sport_icons = {
     "MLB": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
 }
 
+
+# Initialize Elo rating systems per league
+elo_by_league = {
+    "mlb": EloRating(),
+    "nba": EloRating(),
+    "wnba": EloRating(),
+    "nfl": EloRating(),
+    "nhl": EloRating(),
+}
+
+
+def determine_result(home_score, away_score):
+    if home_score > away_score:
+        return 1  # Home win
+    elif home_score < away_score:
+        return 0  # Away win
+    return 0.5  # Draw
+
 games = fetch_espn_scores()
 
 available_sports = sorted(set(game.get("sport", "").upper() for game in games))
 
-tabs_keys = available_sports + ["Betting Info"]
+tabs_keys = available_sports + ["Betting Info", "Elo Ratings"]
 tabs = st.tabs(tabs_keys)
 
 
@@ -271,6 +291,13 @@ for i, tab_key in enumerate(tabs_keys):
             # TODO: Replace with your betting info display logic
             st.write("Display your betting odds, lines, or other betting info here.")
         else:
+    elif tab_key == "Elo Ratings":
+        for league, elo in elo_by_league.items():
+            st.subheader(f"{league.upper()} Elo Ratings")
+            ratings = elo.get_all_ratings()
+            for team, rating in ratings.items():
+                st.write(f"{team}: {round(rating)}")
+
             sport = tab_key
             icon_url = sport_icons.get(sport, "")
             st.markdown(
@@ -347,10 +374,42 @@ for i, tab_key in enumerate(tabs_keys):
                             unsafe_allow_html=True,
                         )
                     else:
+    elif tab_key == "Elo Ratings":
+        for league, elo in elo_by_league.items():
+            st.subheader(f"{league.upper()} Elo Ratings")
+            ratings = elo.get_all_ratings()
+            for team, rating in ratings.items():
+                st.write(f"{team}: {round(rating)}")
+
                         st.markdown("")
 
                 with col3:
-                    st.markdown(
+                    
+                try:
+                    home_score = int(home_team['score'])
+                    away_score = int(away_team['score'])
+
+                    sport_key = sport.lower()
+                    elo = elo_by_league[sport_key]
+
+                    result = determine_result(home_score, away_score)
+                    elo.update_ratings(home_team["name"], away_team["name"], result)
+
+                    with open("elo_history.csv", "a", newline="") as f:
+                        writer = csv.writer(f)
+                        writer.writerow([
+                            datetime.now().date(),
+                            sport.lower(),
+                            home_team["name"],
+                            away_team["name"],
+                            result,
+                            round(elo.get_rating(home_team["name"])),
+                            round(elo.get_rating(away_team["name"]))
+                        ])
+                except ValueError:
+                    pass
+
+st.markdown(
                         f"""
                         <div style='background: linear-gradient(135deg, {home_team['colors'][0]}, {home_team['colors'][1]}); 
                                     border-radius: 10px; padding: 10px;'>
