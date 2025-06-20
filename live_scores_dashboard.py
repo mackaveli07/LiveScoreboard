@@ -170,12 +170,12 @@ for i, tab_key in enumerate(tabs_keys):
                                         ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
                                     <div class='court'>
                                         <div class='half-court'></div>
-                                            <div class='top-hoop'></div>
-                                            <div class='bottom-hoop'></div>
-                                            <div class='top-ft-arc'></div>
-                                            <div class='bottom-ft-arc'></div>
-                                            <div class='top-3pt-arc'></div>
-                                            <div class='bottom-3pt-arc'></div>
+                                        <div class='top-hoop'></div>
+                                        <div class='bottom-hoop'></div>
+                                        <div class='top-ft-arc'></div>
+                                        <div class='bottom-ft-arc'></div>
+                                        <div class='top-3pt-arc'></div>
+                                        <div class='bottom-3pt-arc'></div>
                                     
                                      </div>
                              </div>
