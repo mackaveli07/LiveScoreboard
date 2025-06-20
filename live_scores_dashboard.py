@@ -184,7 +184,7 @@ for i, tab_key in enumerate(tabs_keys):
                                     <div class='info-box'>
                                         🏀 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
                                         ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-                                        <div style='margin-top:10px; background:#f4a261; height:160px; position:relative; border:2px solid #333; border-radius:8px;'>
+                                    <div style='margin-top:10px; background:#f4a261; height:160px; position:relative; border:2px solid #333; border-radius:8px;'>
                                             <!-- Half Court Line -->
                                             <div style='position:absolute; top:0; left:50%; width:2px; height:100%; background:#000;'></div>
                             
