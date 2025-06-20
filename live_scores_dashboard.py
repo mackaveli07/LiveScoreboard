@@ -164,15 +164,15 @@ for i, tab_key in enumerate(tabs_keys):
                         """, unsafe_allow_html=True)
 
                     elif sport_lower in ["nba", "wnba"]:
-    st.markdown(f"""
-        <div class='info-box'>
-            🏀 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
-            ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
-            <div class='court'></div>
-        </div>
-    """, unsafe_allow_html=True)
-                            </div>
-                        """, unsafe_allow_html=True)
+                                st.markdown(f"""
+                                    <div class='info-box'>
+                                        🏀 <strong>Quarter:</strong> {info.get('quarter', 'N/A')}<br/>
+                                        ⏱️ <strong>Clock:</strong> {info.get('clock', '')}
+                                        <div class='court'></div>
+                                    </div>
+                                """, unsafe_allow_html=True)
+                                </div>
+                            """, unsafe_allow_html=True)
 
                     elif sport_lower == "nfl":
                         st.markdown(f"**Quarter:** {info.get('quarter', 'N/A')}<br>🟢 Possession: {info.get('possession', '')}", unsafe_allow_html=True)
