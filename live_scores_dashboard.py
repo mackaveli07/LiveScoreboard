@@ -6,6 +6,15 @@ from team_colors_all_leagues import team_colors as TEAM_COLORS
 from all_team_logos import team_logos as TEAM_LOGOS
 from pathlib import Path
 from expandable_game_view import display_game_details
+from elo import EloRating
+
+elo_by_league = {
+    "mlb": EloRating(),
+    "nba": EloRating(),
+    "wnba": EloRating(),
+    "nfl": EloRating(),
+    "nhl": EloRating(),
+}
 
 
 st.set_page_config(page_title="Live Sports Scoreboard", layout="wide")
