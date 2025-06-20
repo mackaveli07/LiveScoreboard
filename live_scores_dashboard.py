@@ -12,6 +12,16 @@ from pathlib import Path
 from expandable_game_view import display_game_details
 
 st.set_page_config(page_title="Live Sports Scoreboard", layout="wide")
+st.markdown("""
+    <script>
+    function refreshEvery(seconds) {
+        setTimeout(function(){
+            window.location.reload();
+        }, seconds * 1000);
+    }
+    refreshEvery(10);
+    </script>
+""", unsafe_allow_html=True)
 st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
 
 # Auto-refresh session state
