@@ -128,3 +128,54 @@ team_colors = {
     "Washington Capitals": {"primary": "#041E42", "secondary": "#C8102E"},
     "Winnipeg Jets": {"primary": "#041E42", "secondary": "#AC162C"}
 }
+wnba_team_colors = {
+    "Atlanta Dream": {
+        "primary_color": "#E31837",   # Red
+        "secondary_color": "#26282A"  # Dark Gray/Black
+    },
+    "Chicago Sky": {
+        "primary_color": "#4A90E2",   # Sky Blue
+        "secondary_color": "#FBB040"  # Yellow/Gold
+    },
+    "Connecticut Sun": {
+        "primary_color": "#F16B3E",   # Orange
+        "secondary_color": "#00205B"  # Navy Blue
+    },
+    "Dallas Wings": {
+        "primary_color": "#007A33",   # Green
+        "secondary_color": "#FFC72C"  # Yellow
+    },
+    "Indiana Fever": {
+        "primary_color": "#ED174C",   # Red
+        "secondary_color": "#002D62"  # Dark Blue
+    },
+    "Las Vegas Aces": {
+        "primary_color": "#000000",   # Black
+        "secondary_color": "#B4975A"  # Champagne Gold
+    },
+    "Los Angeles Sparks": {
+        "primary_color": "#552583",   # Purple
+        "secondary_color": "#FDB927"  # Gold
+    },
+    "Minnesota Lynx": {
+        "primary_color": "#006778",   # Teal Blue
+        "secondary_color": "#78BE20"  # Lime Green
+    },
+    "New York Liberty": {
+        "primary_color": "#19B2AD",   # Seafoam Green
+        "secondary_color": "#000000"  # Black
+    },
+    "Phoenix Mercury": {
+        "primary_color": "#E56020",   # Orange
+        "secondary_color": "#000000"  # Black
+    },
+    "Seattle Storm": {
+        "primary_color": "#2B5134",   # Dark Green
+        "secondary_color": "#FFCD00"  # Yellow
+    },
+    "Washington Mystics": {
+        "primary_color": "#002B5C",   # Navy Blue
+        "secondary_color": "#E31837"  # Red
+    }
+}
+
