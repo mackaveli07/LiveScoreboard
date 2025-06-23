@@ -1,7 +1,51 @@
 import json
-import mysql.connector
+
 from elo import update_elo_ratings
 from team_mapping import get_team_mapping
+
+import psycopg2
+
+def save_betting_data(league, data):
+    conn = psycopg2.connect(
+        host="your-postgres-server.postgres.database.azure.com",
+        user="your_user@your-postgres-server",
+        password="your_password",
+        dbname="sports_data"
+    )
+    cur = conn.cursor()
+    cur.execute(f\""" 
+        CREATE TABLE IF NOT EXISTS betting_odds (
+            id SERIAL PRIMARY KEY,
+            game_date DATE,
+            league VARCHAR(10),
+            home_team VARCHAR(20),
+            away_team VARCHAR(20),
+            elo_home INT,
+            elo_away INT,
+            market_ml_home INT,
+            market_ml_away INT,
+            spread FLOAT,
+            total FLOAT,
+            value_home FLOAT,
+            value_away FLOAT
+        )
+    \""")
+    for g in data:
+        cur.execute(f\""" 
+            INSERT INTO betting_odds 
+            (game_date, league, home_team, away_team, elo_home, elo_away,
+             market_ml_home, market_ml_away, spread, total, value_home, value_away)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        \""", (
+            g["date"], g["league"], g["home"], g["away"],
+            g["elo_home"], g["elo_away"],
+            g["market_ml_home"], g["market_ml_away"],
+            g["spread"], g["total"],
+            g["value_edge_home"], g["value_edge_away"]
+        ))
+    conn.commit()
+    cur.close()
+    conn.close()
 
 def run_elo_pipeline():
     update_elo_ratings()  # assumes elo.py handles updating elo_history.json
