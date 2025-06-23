@@ -5,9 +5,8 @@ requests
 datetime
 selenium==4.20.0
 beautifulsoup4==4.12.3
+psycopg2-binary==2.9.9
 pandas==2.2.2
-mysql-connector-python==8.3.0
-
 
 
 
