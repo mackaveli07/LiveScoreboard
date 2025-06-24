@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Connect to Azure PostgreSQL
 DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
     "port": 5432,
@@ -27,7 +26,6 @@ def connect_to_db():
         password=DB_CONFIG["password"]
     )
 
-# Leagues and URL patterns
 LEAGUE_INFO = {
     "NBA": "https://www.basketball-reference.com/leagues/NBA_{}_games.html",
     "WNBA": "https://www.basketball-reference.com/wnba/years/{}_games.html",
@@ -42,11 +40,9 @@ def fetch_game_data(league, year):
     url = LEAGUE_INFO[league].format(year)
     res = requests.get(url)
     soup = BeautifulSoup(res.text, "html.parser")
-
     tables = soup.find_all("table")
     if not tables:
         return []
-
     games = []
     table = tables[0]
     rows = table.find("tbody").find_all("tr")
@@ -64,69 +60,41 @@ def fetch_game_data(league, year):
             away_score = int(cols[2].text.strip())
             home_score = int(cols[3].text.strip())
             games.append({
-                "league": league,
                 "game_date": date,
                 "home_team": home_team,
                 "away_team": away_team,
                 "home_score": home_score,
                 "away_score": away_score
             })
-        except Exception as e:
+        except Exception:
             continue
     return games
 
-def run_elo_for_league(league):
-    print(f"Processing {league}")
-    games = []
-    for year in YEARS:
-        games += fetch_game_data(league, year)
-
-    # Sort by date
-    games = sorted(games, key=lambda x: x["game_date"])
-
-    # Elo processor
+def run_elo(games):
     elo = EloRating()
-    game_rows = []
-
-    for g in games:
+    rows = []
+    for g in sorted(games, key=lambda x: x["game_date"]):
         home = g["home_team"]
         away = g["away_team"]
         home_score = g["home_score"]
         away_score = g["away_score"]
-
-        home_elo = elo.get_rating(home)
-        away_elo = elo.get_rating(away)
-
-        if home_score > away_score:
-            winner = home
-        else:
-            winner = away
-
+        home_elo_before = elo.get_rating(home)
+        away_elo_before = elo.get_rating(away)
+        winner = home if home_score > away_score else away
         elo.update_elo(home, away, winner)
-
-        game_rows.append((
-            g["league"],
-            g["game_date"],
-            home,
-            away,
-            home_score,
-            away_score,
-            home_elo,
-            away_elo,
-            elo.get_rating(home),
-            elo.get_rating(away)
+        home_elo_after = elo.get_rating(home)
+        away_elo_after = elo.get_rating(away)
+        rows.append((
+            g["game_date"], home, away, home_score, away_score,
+            home_elo_before, away_elo_before,
+            home_elo_after, away_elo_after
         ))
+    return rows
 
-    return game_rows
-
-def write_to_postgres(game_rows):
-    conn = connect_to_db()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS elo_history (
+def create_league_table(cursor, table_name):
+    cursor.execute(f"""
+    CREATE TABLE IF NOT EXISTS {table_name} (
         id SERIAL PRIMARY KEY,
-        league TEXT,
         game_date DATE,
         home_team TEXT,
         away_team TEXT,
@@ -138,24 +106,37 @@ def write_to_postgres(game_rows):
         away_elo_after FLOAT
     );
     """)
-    conn.commit()
 
-    insert_query = """
-    INSERT INTO elo_history (
-        league, game_date, home_team, away_team, home_score, away_score,
-        home_elo_before, away_elo_before, home_elo_after, away_elo_after
-    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+def insert_elo_data(cursor, table_name, rows):
+    insert_query = f"""
+    INSERT INTO {table_name} (
+        game_date, home_team, away_team,
+        home_score, away_score,
+        home_elo_before, away_elo_before,
+        home_elo_after, away_elo_after
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
+    cursor.executemany(insert_query, rows)
 
-    cursor.executemany(insert_query, game_rows)
-    conn.commit()
+def process_league(league):
+    print(f"Processing {league}")
+    all_games = []
+    for year in YEARS:
+        all_games += fetch_game_data(league, year)
+    return run_elo(all_games)
+
+def main():
+    conn = connect_to_db()
+    cursor = conn.cursor()
+    for league in LEAGUE_INFO:
+        table_name = f"elo_{league.lower()}"
+        rows = process_league(league)
+        create_league_table(cursor, table_name)
+        insert_elo_data(cursor, table_name, rows)
+        conn.commit()
+        print(f"Inserted {len(rows)} rows into {table_name}")
     cursor.close()
     conn.close()
-    print(f"Inserted {len(game_rows)} rows to Azure DB.")
 
 if __name__ == "__main__":
-    all_game_rows = []
-    for league in LEAGUE_INFO:
-        all_game_rows += run_elo_for_league(league)
-
-    write_to_postgres(all_game_rows)
+    main()
