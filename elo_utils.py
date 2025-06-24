@@ -1,64 +1,14 @@
 import json
-
+import os
+import psycopg2
 from elo import update_elo_ratings
 from team_mapping import get_team_mapping
+from dotenv import load_dotenv
 
-import psycopg2
-
-import os
-
-
-conn = psycopg2.connect(
-    host=os.getenv("DB_HOST"),
-    dbname=os.getenv("DB_NAME"),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD")
-)
-
-def save_betting_data(league, data):
-    conn = psycopg2.connect(
-        host="your-postgres-server.postgres.database.azure.com",
-        user="your_user@your-postgres-server",
-        password="your_password",
-        dbname="sports_data"
-    )
-    cur = conn.cursor()
-    cur.execute(f\""" 
-        CREATE TABLE IF NOT EXISTS betting_odds (
-            id SERIAL PRIMARY KEY,
-            game_date DATE,
-            league VARCHAR(10),
-            home_team VARCHAR(20),
-            away_team VARCHAR(20),
-            elo_home INT,
-            elo_away INT,
-            market_ml_home INT,
-            market_ml_away INT,
-            spread FLOAT,
-            total FLOAT,
-            value_home FLOAT,
-            value_away FLOAT
-        )
-    \""")
-    for g in data:
-        cur.execute(f\""" 
-            INSERT INTO betting_odds 
-            (game_date, league, home_team, away_team, elo_home, elo_away,
-             market_ml_home, market_ml_away, spread, total, value_home, value_away)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        \""", (
-            g["date"], g["league"], g["home"], g["away"],
-            g["elo_home"], g["elo_away"],
-            g["market_ml_home"], g["market_ml_away"],
-            g["spread"], g["total"],
-            g["value_edge_home"], g["value_edge_away"]
-        ))
-    conn.commit()
-    cur.close()
-    conn.close()
+load_dotenv()
 
 def run_elo_pipeline():
-    update_elo_ratings()  # assumes elo.py handles updating elo_history.json
+    update_elo_ratings()
 
 def merge_market_with_elo(league, market_games):
     with open("elo_history.json", "r") as f:
@@ -97,16 +47,16 @@ def merge_market_with_elo(league, market_games):
     return merged
 
 def save_betting_data(league, data):
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="your_user",
-        password="your_password",
-        database="sports_data"
+    conn = psycopg2.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        dbname=os.getenv("DB_NAME")
     )
     cur = conn.cursor()
-    cur.execute(f"""
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS betting_odds (
-            id INT AUTO_INCREMENT PRIMARY KEY,
+            id SERIAL PRIMARY KEY,
             game_date DATE,
             league VARCHAR(10),
             home_team VARCHAR(20),
@@ -122,15 +72,17 @@ def save_betting_data(league, data):
         )
     """)
     for g in data:
-        cur.execute(f"""
-            INSERT INTO betting_odds
+        cur.execute("""
+            INSERT INTO betting_odds 
             (game_date, league, home_team, away_team, elo_home, elo_away,
-            market_ml_home, market_ml_away, spread, total, value_home, value_away)
+             market_ml_home, market_ml_away, spread, total, value_home, value_away)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             g["date"], g["league"], g["home"], g["away"],
-            g["elo_home"], g["elo_away"], g["market_ml_home"], g["market_ml_away"],
-            g["spread"], g["total"], g["value_edge_home"], g["value_edge_away"]
+            g["elo_home"], g["elo_away"],
+            g["market_ml_home"], g["market_ml_away"],
+            g["spread"], g["total"],
+            g["value_edge_home"], g["value_edge_away"]
         ))
     conn.commit()
     cur.close()

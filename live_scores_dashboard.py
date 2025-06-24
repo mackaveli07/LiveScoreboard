@@ -5,7 +5,7 @@ from elo_utils import run_elo_pipeline, merge_market_with_elo, save_betting_data
 from betiq_scraper import scrape_betiq_odds
 
 st.set_page_config(layout="wide")
-st.title("🏟️ Cross-League Elo Betting Dashboard")
+st.title("🏟️ Elo + BetIQ Betting Dashboard (Azure + PostgreSQL)")
 
 @st.cache_data(ttl=3600)
 def update_all_leagues():

@@ -1,14 +1,6 @@
-streamlit>=1.35.0
-streamlit_extras
-streamlit_autorefresh
-requests
-datetime
+streamlit==1.35.0
 selenium==4.20.0
 beautifulsoup4==4.12.3
-psycopg2-binary==2.9.9
 pandas==2.2.2
-
-
-
-
-
+psycopg2-binary==2.9.9
+python-dotenv==1.0.1
