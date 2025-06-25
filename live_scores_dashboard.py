@@ -5,7 +5,7 @@ from team_colors_all_leagues import team_colors as TEAM_COLORS
 from all_team_logos import team_logos as TEAM_LOGOS
 from pathlib import Path
 from expandable_game_view import display_game_details
-from streamlit_autorefresh import st_autorefresh
+
 import pandas as pd
 import json
 from elo_utils import run_elo_pipeline, merge_market_with_elo, save_betting_data
