@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 from datetime import datetime
-import psycopg2
+import pymssql
 import os
 from elo_utils import EloRating
 from dotenv import load_dotenv
@@ -17,13 +17,16 @@ DB_CONFIG = {
     "password": os.getenv("DB_PASSWORD")
 }
 
+
+
 def connect_to_db():
-    return psycopg2.connect(
-        host=DB_CONFIG["host"],
-        port=DB_CONFIG["port"],
-        dbname=DB_CONFIG["database"],
-        user=DB_CONFIG["user"],
-        password=DB_CONFIG["password"]
+    db = st.secrets["database"]
+    return pymssql.connect(
+        server=db["sports-db.database.windows.net"],
+        port=db["1433"],
+        user=db["Mackaveli"],
+        password=db["Masterpimp+1"],
+        database=db["Sports Data"]
     )
 
 LEAGUE_INFO = {
