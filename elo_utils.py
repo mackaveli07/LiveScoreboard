@@ -1,6 +1,6 @@
 import json
 import os
-import psycopg2
+
 from elo import update_elo_ratings
 from team_mapping import get_team_mapping
 from dotenv import load_dotenv
