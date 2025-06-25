@@ -5,7 +5,7 @@ from elo import update_elo_ratings
 from team_mapping import get_team_mapping
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv("creds.ev")
 
 def run_elo_pipeline():
     update_elo_ratings()
