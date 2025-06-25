@@ -2,7 +2,7 @@ import pyodbc
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # Loads from .env
+load_dotenv("creds.env")  # Loads from .env
 
 def connect_to_db():
     conn = pyodbc.connect(
