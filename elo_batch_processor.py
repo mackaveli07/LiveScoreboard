@@ -2,32 +2,11 @@ import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 from datetime import datetime
-import pymssql
-import os
+from db_utils import connect_to_db
 from elo_utils import EloRating
 from dotenv import load_dotenv
 
 load_dotenv()
-
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST"),
-    "port": 5432,
-    "database": os.getenv("DB_NAME"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD")
-}
-
-
-
-def connect_to_db():
-    db = st.secrets["database"]
-    return pymssql.connect(
-        server=db["sports-db.database.windows.net"],
-        port=db["1433"],
-        user=db["Mackaveli"],
-        password=db["Masterpimp+1"],
-        database=db["Sports Data"]
-    )
 
 LEAGUE_INFO = {
     "NBA": "https://www.basketball-reference.com/leagues/NBA_{}_games.html",
@@ -95,12 +74,13 @@ def run_elo(games):
     return rows
 
 def create_league_table(cursor, table_name):
-    cursor.execute(f"""
-    CREATE TABLE IF NOT EXISTS {table_name} (
-        id SERIAL PRIMARY KEY,
+    create_table_sql = f"""
+    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{table_name}' AND xtype='U')
+    CREATE TABLE {table_name} (
+        id INT IDENTITY(1,1) PRIMARY KEY,
         game_date DATE,
-        home_team TEXT,
-        away_team TEXT,
+        home_team NVARCHAR(100),
+        away_team NVARCHAR(100),
         home_score INT,
         away_score INT,
         home_elo_before FLOAT,
@@ -108,7 +88,8 @@ def create_league_table(cursor, table_name):
         home_elo_after FLOAT,
         away_elo_after FLOAT
     );
-    """)
+    """
+    cursor.execute(create_table_sql)
 
 def insert_elo_data(cursor, table_name, rows):
     insert_query = f"""
@@ -117,7 +98,7 @@ def insert_elo_data(cursor, table_name, rows):
         home_score, away_score,
         home_elo_before, away_elo_before,
         home_elo_after, away_elo_after
-    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
     cursor.executemany(insert_query, rows)
 
@@ -129,17 +110,23 @@ def process_league(league):
     return run_elo(all_games)
 
 def main():
-    conn = connect_to_db()
-    cursor = conn.cursor()
-    for league in LEAGUE_INFO:
-        table_name = f"elo_{league.lower()}"
-        rows = process_league(league)
-        create_league_table(cursor, table_name)
-        insert_elo_data(cursor, table_name, rows)
-        conn.commit()
-        print(f"Inserted {len(rows)} rows into {table_name}")
-    cursor.close()
-    conn.close()
+    try:
+        conn = connect_to_db()
+        cursor = conn.cursor()
+
+        for league in LEAGUE_INFO:
+            table_name = f"elo_{league.lower()}"
+            rows = process_league(league)
+            create_league_table(cursor, table_name)
+            insert_elo_data(cursor, table_name, rows)
+            conn.commit()
+            print(f"Inserted {len(rows)} rows into {table_name}")
+
+        cursor.close()
+        conn.close()
+
+    except Exception as e:
+        print(f"Database error: {e}")
 
 if __name__ == "__main__":
     main()
