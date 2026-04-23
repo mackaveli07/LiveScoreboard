@@ -13,7 +13,7 @@ from betiq_scraper import scrape_betiq_odds
 
 import time
 
-REFRESH_INTERVAL = 10  # seconds
+
 
 if "last_refresh" not in st.session_state:
     st.session_state.last_refresh = time.time()
