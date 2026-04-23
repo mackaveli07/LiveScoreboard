@@ -11,8 +11,18 @@ import json
 from elo_utils import run_elo_pipeline, merge_market_with_elo, save_betting_data
 from betiq_scraper import scrape_betiq_odds
 
-# Auto-refresh every 10 seconds
-st_autorefresh(interval=10_000, key="refresh")
+import time
+
+REFRESH_INTERVAL = 10  # seconds
+
+if "last_refresh" not in st.session_state:
+    st.session_state.last_refresh = time.time()
+
+# Only refresh if NOT updating betting data
+if not st.session_state.get("updating_bets", False):
+    if time.time() - st.session_state.last_refresh > REFRESH_INTERVAL:
+        st.session_state.last_refresh = time.time()
+        st.rerun()
 
 st.set_page_config(page_title="Live Sports Scoreboard", layout="wide")
 st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
@@ -35,6 +45,14 @@ def format_game_team_data(team):
         "colors": get_team_colors(team["team"]["displayName"]),
         "logo": get_team_logo(team["team"]["displayName"])
     }
+
+if st.button("🔁 Refresh Elo Ratings + Odds"):
+    st.session_state.updating_bets = True
+
+    update_betting_predictions()
+
+    st.session_state.updating_bets = False
+    st.success("Betting predictions updated!")
 
 @st.cache_data(ttl=5)
 def fetch_espn_scores():
@@ -100,6 +118,9 @@ def fetch_espn_scores():
                 "info": info
             })
     return games
+
+@st.cache_data(ttl=300)
+def load_betting_data(league):
 
 sport_icons = {
     "NBA": "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
