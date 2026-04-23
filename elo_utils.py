@@ -1,5 +1,9 @@
 import json
 import os
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent))
 
 from elo import update_elo_ratings
 from team_mapping import get_team_mapping
