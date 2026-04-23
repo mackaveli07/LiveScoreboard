@@ -25,3 +25,15 @@ class EloRating:
 
     def get_all_ratings(self):
         return dict(sorted(self.ratings.items(), key=lambda item: item[1], reverse=True))
+
+def update_elo_ratings(games, k=20):
+    elo = EloRating(k=k)
+
+    for game in games:
+        team1 = game["team1"]
+        team2 = game["team2"]
+        result = game["result"]  # 1 = team1 win, 0 = loss
+
+        elo.update_ratings(team1, team2, result)
+
+    return elo.get_all_ratings()
