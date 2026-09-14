@@ -119,7 +119,7 @@ def fetch_espn_scores():
             })
     return games
 
- @st.cache_data(ttl=300)
+@st.cache_data(ttl=300)
 def load_betting_data(league):
 
     sport_icons = {
