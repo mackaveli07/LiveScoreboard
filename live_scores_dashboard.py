@@ -119,8 +119,8 @@ def fetch_espn_scores():
             })
     return games
 
-    @st.cache_data(ttl=300)
-    def load_betting_data(league):
+ @st.cache_data(ttl=300)
+def load_betting_data(league):
 
     sport_icons = {
         "NBA": "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
