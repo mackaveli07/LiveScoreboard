@@ -122,13 +122,13 @@ def fetch_espn_scores():
     @st.cache_data(ttl=300)
     def load_betting_data(league):
 
-sport_icons = {
-    "NBA": "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
-    "WNBA": "https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png",
-    "NFL": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
-    "NHL": "https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png",
-    "MLB": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
-}
+    sport_icons = {
+        "NBA": "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
+        "WNBA": "https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png",
+        "NFL": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
+        "NHL": "https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png",
+        "MLB": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
+    }
 
 games = fetch_espn_scores()
 
