@@ -552,8 +552,8 @@ def render_last_play(last_play_text: str) -> str:
     if not last_play_text:
         return "<div style='text-align: center; color: #6b7280; font-size: 12px;'>No play data available</div>"
     
-    escaped_text = escape(last_play_text)
-    display_text = escaped_text[:150] + "..." if len(escaped_text) > 150 else escaped_text
+    truncated_text = last_play_text[:150] + "..." if len(last_play_text) > 150 else last_play_text
+    display_text = escape(truncated_text)
     
     return f"""
     <div style='background: #f7f9fd; border-left: 4px solid #FF6B6B; padding: 10px; border-radius: 6px; margin-top: 8px;'>
