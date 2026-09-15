@@ -174,20 +174,6 @@ st.markdown(
         color: #1f2a44;
         font-weight: 700;
     }
-    .score-tile {
-        background: #ffffff;
-        border: 1px solid #e6ebf3;
-        border-radius: 16px;
-        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
-        padding: 16px 18px;
-        margin-bottom: 14px;
-    }
-    .tile-head {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        margin-bottom: 6px;
-    }
     .league-badge {
         background: #edf3ff;
         border: 1px solid #d7e3ff;
@@ -232,13 +218,6 @@ st.markdown(
         font-size: 11px;
         letter-spacing: .4px;
         text-transform: uppercase;
-    }
-    .betting-shell {
-        background: #ffffff;
-        border: 1px solid #e5ebf5;
-        border-radius: 14px;
-        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
-        padding: 10px 12px;
     }
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
@@ -622,16 +601,16 @@ def get_info_renderer(league: str):
 
 def render_game_card(game: GameInfo):
     """Render a single game card."""
-    st.markdown(
-        f"<div class='tile-head'><span class='league-badge'>{escape(game.league.upper())}</span></div>",
-        unsafe_allow_html=True,
-    )
     col1, col2, col3 = st.columns([3, 2, 3])
     
     with col1:
         st.markdown(render_team_card(game.away_team, align="right"), unsafe_allow_html=True)
     
     with col2:
+        st.markdown(
+            f"<div style='text-align:center; margin-bottom:8px;'><span class='league-badge'>{escape(game.league.upper())}</span></div>",
+            unsafe_allow_html=True,
+        )
         renderer = get_info_renderer(game.league)
         st.markdown(renderer(game.info), unsafe_allow_html=True)
     
@@ -681,7 +660,6 @@ def render_betting_tab():
                     available_cols = [col for col in preferred_order if col in df.columns]
                     remaining_cols = [col for col in df.columns if col not in available_cols]
                     display_df = df[available_cols + remaining_cols]
-                    st.markdown("<div class='betting-shell'>", unsafe_allow_html=True)
                     formatters = {
                         "elo_home_pct": "{:.1f}%",
                         "market_home_odds": "{:.2f}",
@@ -693,7 +671,6 @@ def render_betting_tab():
                     }
                     styled_df = display_df.style.format(active_formatters) if active_formatters else display_df
                     st.dataframe(styled_df, use_container_width=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
                 else:
                     st.info(f"No betting data for {league.upper()} yet.")
             except Exception as e:
