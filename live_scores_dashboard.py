@@ -724,7 +724,7 @@ def render_scores_tabs(games: List[GameInfo]):
             if config:
                 st.markdown(
                     f"<div class='section-header'>"
-                    f"<img src='{config['icon']}' width='30' style='vertical-align:middle;'> "
+                    f"<img src='{escape(config['icon'])}' width='30' style='vertical-align:middle;'> "
                     f"<h3>{escape(sport)} Games</h3></div>",
                     unsafe_allow_html=True,
                 )
