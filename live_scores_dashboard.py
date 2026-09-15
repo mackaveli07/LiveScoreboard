@@ -673,19 +673,19 @@ def render_betting_tab():
                     column_config = {}
                     if "elo_home_pct" in display_df.columns:
                         column_config["elo_home_pct"] = st.column_config.NumberColumn(
-                            "elo_home_pct", format="%.3f"
+                            "Elo Home %", format="%.3f"
                         )
                     if "market_home_odds" in display_df.columns:
                         column_config["market_home_odds"] = st.column_config.NumberColumn(
-                            "market_home_odds", format="%.2f"
+                            "Market Home Odds", format="%.2f"
                         )
                     if "value_edge_home" in display_df.columns:
                         column_config["value_edge_home"] = st.column_config.NumberColumn(
-                            "value_edge_home", format="%.2f"
+                            "Value Edge Home", format="%.2f"
                         )
                     if "value_edge_away" in display_df.columns:
                         column_config["value_edge_away"] = st.column_config.NumberColumn(
-                            "value_edge_away", format="%.2f"
+                            "Value Edge Away", format="%.2f"
                         )
                     st.dataframe(
                         display_df,
