@@ -255,6 +255,27 @@ st.markdown(
         letter-spacing: .5px;
         margin-top: 2px;
     }
+    .team-odds {
+        margin-top: 8px;
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+    }
+    .team-odds-label {
+        font-size: 9px;
+        color: rgba(255, 255, 255, 0.82);
+        text-transform: uppercase;
+        letter-spacing: .45px;
+        font-weight: 700;
+    }
+    .team-odds-value {
+        font-size: 13px;
+        color: #ffffff;
+        font-weight: 800;
+        margin-top: 1px;
+    }
     .info-panel {
         background: #f8faff;
         border: 1px solid #e3e9f5;
@@ -574,7 +595,7 @@ def update_betting_predictions():
 # UI COMPONENTS
 # ============================================================================
 
-def render_team_card(team: TeamData, align: str = "right") -> str:
+def render_team_card(team: TeamData, align: str = "right", moneyline: Any = None) -> str:
     """Render a team score card."""
     team_name = escape(team.name)
     team_score = escape(team.score)
@@ -586,11 +607,23 @@ def render_team_card(team: TeamData, align: str = "right") -> str:
         if team.logo
         else ""
     )
+    moneyline_display = format_moneyline(moneyline) if moneyline is not None else "N/A"
+    odds_html = (
+        f"""
+        <div class='team-odds'>
+            <div class='team-odds-label'>Moneyline</div>
+            <div class='team-odds-value'>{escape(moneyline_display)}</div>
+        </div>
+        """
+        if moneyline_display != "N/A"
+        else ""
+    )
     return f"""
     <div class='team-card' style='text-align: {align}; background: {gradient}; border: 1px solid rgba(255,255,255,0.24); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);'>
         {logo_html}
         <div class='team-name' style='color: #ffffff;'>{team_name}</div>
         <div class='team-score' style='color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.35);'>{team_score}</div>
+        {odds_html}
     </div>
     """
 
@@ -733,25 +766,13 @@ def render_betiq_odds(odds: Optional[Dict[str, Any]]) -> str:
     if not odds:
         return ""
 
-    away_name = escape(str(odds.get("away", "Away")))
-    home_name = escape(str(odds.get("home", "Home")))
-    away_ml = escape(format_moneyline(odds.get("ml_away")))
-    home_ml = escape(format_moneyline(odds.get("ml_home")))
     spread = escape(str(odds.get("spread", "N/A")))
     total = escape(str(odds.get("total", "N/A")))
 
     return f"""
     <div class='info-panel odds-panel'>
-        <div class='info-title'>BetIQ Odds</div>
+        <div class='info-title'>BetIQ Market</div>
         <div class='odds-grid'>
-            <div class='odds-chip'>
-                <div class='odds-chip-label'>{away_name} Moneyline</div>
-                <div class='odds-chip-value'>{away_ml}</div>
-            </div>
-            <div class='odds-chip'>
-                <div class='odds-chip-label'>{home_name} Moneyline</div>
-                <div class='odds-chip-value'>{home_ml}</div>
-            </div>
             <div class='odds-chip'>
                 <div class='odds-chip-label'>Spread</div>
                 <div class='odds-chip-value'>{spread}</div>
@@ -779,9 +800,14 @@ def render_game_card(game: GameInfo):
     """Render a single game card."""
     col1, col2, col3 = st.columns([3, 2, 3])
     game_odds = find_game_odds(game.league, game.away_team.name, game.home_team.name)
+    away_moneyline = game_odds.get("ml_away") if game_odds else None
+    home_moneyline = game_odds.get("ml_home") if game_odds else None
     
     with col1:
-        st.markdown(render_team_card(game.away_team, align="right"), unsafe_allow_html=True)
+        st.markdown(
+            render_team_card(game.away_team, align="right", moneyline=away_moneyline),
+            unsafe_allow_html=True,
+        )
     
     with col2:
         st.markdown(
@@ -792,7 +818,10 @@ def render_game_card(game: GameInfo):
         st.markdown(renderer(game.info) + render_betiq_odds(game_odds), unsafe_allow_html=True)
     
     with col3:
-        st.markdown(render_team_card(game.home_team, align="left"), unsafe_allow_html=True)
+        st.markdown(
+            render_team_card(game.home_team, align="left", moneyline=home_moneyline),
+            unsafe_allow_html=True,
+        )
 
 # ============================================================================
 # BETTING TAB
