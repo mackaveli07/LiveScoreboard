@@ -251,10 +251,10 @@ for i, tab_key in enumerate(tabs_keys[:-1]):  # Exclude last tab (Betting Info)
                             🧢 At Bat: {at_bat}<br>
                             🥎 Pitcher: {pitcher}<br>
                             🎯 Count: {balls} Balls, {strikes} Strikes<br><br>
-                            <div style='line-height: 1.2;'>
-                                <span style='color: {'green' if info.get('onThird') else 'gray'}'>3rd: {third}</span><br>
-                                <span style='color: {'green' if info.get('onSecond') else 'gray'}'>2nd: {second}</span><br>
-                                <span style='color: {'green' if info.get('onFirst') else 'gray'}'>1st: {first}</span>
+                            <div style='line-height: 1.8; letter-spacing: 2px;'>
+                                <div style='color: {'green' if info.get('onSecond') else 'gray'}'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{second}</div>
+                                <div style='color: {'green' if info.get('onThird') else 'gray'}'>{third}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{first}</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;H</div>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
