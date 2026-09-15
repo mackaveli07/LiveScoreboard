@@ -51,7 +51,7 @@ def format_game_team_data(team):
         }
     return {
         "name": team["team"].get("displayName", "Unknown"),
-        "score": team.get("score", "0"),
+        "score": str(team.get("score", "0")),
         "colors": get_team_colors(team["team"]["displayName"]),
         "logo": get_team_logo(team["team"]["displayName"])
     }
@@ -123,7 +123,7 @@ def fetch_espn_scores():
                 elif league_slug == "nfl":
                     info = {
                         "quarter": f"Q{status.get('period', 'N/A')}",
-                        "possession": situation.get("possession", {}).get("displayName", "N/A")
+                        "possession": situation.get("possession", {}).get("abbreviation", "N/A")
                     }
                 elif league_slug in ["nba", "wnba"]:
                     info = {
@@ -211,7 +211,7 @@ for i, tab_key in enumerate(tabs_keys[:-1]):  # Exclude last tab (Betting Info)
         sport = tab_key
         icon_url = sport_icons.get(sport, "")
         if icon_url:
-            st.markdown(f"<h3><img src='{icon_url}' width='25' style='vertical-align:middle;'> {sport} Games</h3>", unsafe_allow_html=True)
+            st.markdown(f"<img src='{icon_url}' width='30' style='vertical-align:middle;'> <h3 style='display:inline;'>{sport} Games</h3>", unsafe_allow_html=True)
         else:
             st.markdown(f"### {sport} Games")
             
@@ -231,7 +231,7 @@ for i, tab_key in enumerate(tabs_keys[:-1]):  # Exclude last tab (Betting Info)
                 st.markdown(f"""
                     <div style='text-align: right; padding: 10px;'>
                         <div style='font-size: 18px; font-weight: bold;'>{away_team['name']}</div>
-                        <div style='font-size: 24px; font-weight: bold; color: {away_team['colors'][0]}'>{away_team['score']}</div>
+                        <div style='font-size: 24px; font-weight: bold; color: #000;'>{away_team['score']}</div>
                     </div>
                 """, unsafe_allow_html=True)
             
@@ -246,41 +246,41 @@ for i, tab_key in enumerate(tabs_keys[:-1]):  # Exclude last tab (Betting Info)
                     balls = info.get('balls', 0)
                     strikes = info.get('strikes', 0)
                     st.markdown(f"""
-                        <div style='text-align: center; padding: 10px; font-size: 14px;'>
-                            <div>⚾ Inning: {info.get('inning', '')}</div>
-                            <div>🧢 At Bat: {at_bat}</div>
-                            <div>🥎 Pitcher: {pitcher}</div>
-                            <div>🎯 Count: {balls} Balls, {strikes} Strikes</div>
-                            <div style='margin-top: 10px; font-family: monospace;'>
-                                3rd: {third}<br>
-                                2nd: {second}<br>
-                                1st: {first}
+                        <div style='text-align: center; font-family: monospace;'>
+                            ⚾ Inning: {info.get('inning', '')}<br>
+                            🧢 At Bat: {at_bat}<br>
+                            🥎 Pitcher: {pitcher}<br>
+                            🎯 Count: {balls} Balls, {strikes} Strikes<br><br>
+                            <div style='line-height: 1.2;'>
+                                <span style='color: {'green' if info.get('onThird') else 'gray'}'>3rd: {third}</span><br>
+                                <span style='color: {'green' if info.get('onSecond') else 'gray'}'>2nd: {second}</span><br>
+                                <span style='color: {'green' if info.get('onFirst') else 'gray'}'>1st: {first}</span>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
                 
                 elif sport_lower in ["nba", "wnba"]:
                     st.markdown(f"""
-                        <div style='text-align: center; padding: 10px; font-size: 14px;'>
-                            <div>🏀 Quarter: {info.get('quarter', 'N/A')}</div>
-                            <div>⏱️ Clock: {info.get('clock', '')}</div>
+                        <div style='text-align: center;'>
+                            🏀 Quarter: {info.get('quarter', 'N/A')}<br>
+                            ⏱️ Clock: {info.get('clock', '')}
                         </div>
                     """, unsafe_allow_html=True)
                 
                 elif sport_lower == "nfl":
                     possession = info.get('possession', '')
                     st.markdown(f"""
-                        <div style='text-align: center; padding: 10px; font-size: 14px;'>
-                            <div><strong>Quarter:</strong> {info.get('quarter', 'N/A')}</div>
-                            <div>🟢 <strong>Possession:</strong> {possession if possession else 'N/A'}</div>
+                        <div style='text-align: center;'>
+                            Quarter: {info.get('quarter', 'N/A')}<br>
+                            🟢 Possession: {possession if possession else 'N/A'}
                         </div>
                     """, unsafe_allow_html=True)
                 
                 elif sport_lower == "nhl":
                     st.markdown(f"""
-                        <div style='text-align: center; padding: 10px; font-size: 14px;'>
-                            <div><strong>Period:</strong> {info.get('period', 'N/A')}</div>
-                            <div>⏱️ <strong>Clock:</strong> {info.get('clock', '')}</div>
+                        <div style='text-align: center;'>
+                            Period: {info.get('period', 'N/A')}<br>
+                            ⏱️ Clock: {info.get('clock', '')}
                         </div>
                     """, unsafe_allow_html=True)
             
@@ -288,6 +288,6 @@ for i, tab_key in enumerate(tabs_keys[:-1]):  # Exclude last tab (Betting Info)
                 st.markdown(f"""
                     <div style='text-align: left; padding: 10px;'>
                         <div style='font-size: 18px; font-weight: bold;'>{home_team['name']}</div>
-                        <div style='font-size: 24px; font-weight: bold; color: {home_team['colors'][0]}'>{home_team['score']}</div>
+                        <div style='font-size: 24px; font-weight: bold; color: #000;'>{home_team['score']}</div>
                     </div>
                 """, unsafe_allow_html=True)
