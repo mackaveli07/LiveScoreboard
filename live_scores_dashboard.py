@@ -469,16 +469,19 @@ def render_team_card(team: TeamData, align: str = "right") -> str:
     """Render a team score card."""
     team_name = escape(team.name)
     team_score = escape(team.score)
+    primary = team.colors[0] if isinstance(team.colors, list) and len(team.colors) > 0 else "#1f2937"
+    secondary = team.colors[1] if isinstance(team.colors, list) and len(team.colors) > 1 else "#111827"
+    gradient = f"linear-gradient(140deg, {escape(str(primary))} 0%, {escape(str(secondary))} 100%)"
     logo_html = (
         f"<img src='{escape(team.logo)}' width='56' style='display: block; margin: 0 auto;' alt='{team_name} logo'><br>"
         if team.logo
         else ""
     )
     return f"""
-    <div class='team-card' style='text-align: {align};'>
+    <div class='team-card' style='text-align: {align}; background: {gradient}; border: 1px solid rgba(255,255,255,0.24); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);'>
         {logo_html}
-        <div class='team-name'>{team_name}</div>
-        <div class='team-score'>{team_score}</div>
+        <div class='team-name' style='color: #ffffff;'>{team_name}</div>
+        <div class='team-score' style='color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.35);'>{team_score}</div>
     </div>
     """
 
