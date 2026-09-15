@@ -526,8 +526,8 @@ def render_field_position(yard_line: str) -> str:
     # Parse yard line (e.g., "50", "20" means 20 yards from endzone)
     try:
         yards = int(yard_line.replace("+", ""))
-        # Use a single 0-100 convention for marker placement
-        position_percent = max(0, min(100, yards))
+        # Convert 0-50 yard-line values into 0-100 display space and clamp
+        position_percent = max(0, min(100, yards * 2))
     except Exception:
         position_percent = 50
     
