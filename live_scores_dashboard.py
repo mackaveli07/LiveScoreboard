@@ -660,10 +660,6 @@ def render_betting_tab():
                     available_cols = [col for col in preferred_order if col in df.columns]
                     remaining_cols = [col for col in df.columns if col not in available_cols]
                     display_df = df[available_cols + remaining_cols].copy()
-                    if "elo_home_pct" in display_df.columns:
-                        elo_series = pd.to_numeric(display_df["elo_home_pct"], errors="coerce")
-                        if elo_series.notna().any() and elo_series.max() <= 1.0:
-                            display_df["elo_home_pct"] = elo_series * 100
                     column_config = {}
                     if "elo_home_pct" in display_df.columns:
                         column_config["elo_home_pct"] = st.column_config.NumberColumn(
