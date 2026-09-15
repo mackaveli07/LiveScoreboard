@@ -623,7 +623,7 @@ def get_info_renderer(league: str):
 def render_game_card(game: GameInfo):
     """Render a single game card."""
     st.markdown(
-        f"<div class='score-tile'><div class='tile-head'><span class='league-badge'>{escape(game.league.upper())}</span></div>",
+        f"<div class='tile-head'><span class='league-badge'>{escape(game.league.upper())}</span></div>",
         unsafe_allow_html=True,
     )
     col1, col2, col3 = st.columns([3, 2, 3])
@@ -637,7 +637,6 @@ def render_game_card(game: GameInfo):
     
     with col3:
         st.markdown(render_team_card(game.home_team, align="left"), unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # ============================================================================
 # BETTING TAB
