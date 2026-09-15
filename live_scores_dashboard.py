@@ -663,8 +663,10 @@ def render_betting_tab():
                     if "elo_home_pct" in display_df.columns:
                         elo_pct_series = pd.to_numeric(display_df["elo_home_pct"], errors="coerce")
                         if elo_pct_series.notna().any():
-                            display_df["elo_home_pct"] = (
-                                elo_pct_series * 100 if elo_pct_series.max() <= 1 else elo_pct_series
+                            display_df["elo_home_pct"] = elo_pct_series.apply(
+                                lambda value: value * 100
+                                if pd.notna(value) and 0 <= value <= 1
+                                else value
                             )
                     column_config = {}
                     if "elo_home_pct" in display_df.columns:
