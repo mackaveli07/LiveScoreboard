@@ -228,8 +228,11 @@ for i, tab_key in enumerate(tabs_keys[:-1]):  # Exclude last tab (Betting Info)
             col1, col2, col3 = st.columns([3, 2, 3])
             
             with col1:
+                away_logo = away_team.get("logo", "")
+                logo_html = f"<img src='{away_logo}' width='60' style='display: block; margin: 0 auto;'><br>" if away_logo else ""
                 st.markdown(f"""
                     <div style='text-align: right; padding: 10px;'>
+                        {logo_html}
                         <div style='font-size: 18px; font-weight: bold;'>{away_team['name']}</div>
                         <div style='font-size: 24px; font-weight: bold; color: #000;'>{away_team['score']}</div>
                     </div>
@@ -300,8 +303,11 @@ for i, tab_key in enumerate(tabs_keys[:-1]):  # Exclude last tab (Betting Info)
                     """, unsafe_allow_html=True)
             
             with col3:
+                home_logo = home_team.get("logo", "")
+                logo_html = f"<img src='{home_logo}' width='60' style='display: block; margin: 0 auto;'><br>" if home_logo else ""
                 st.markdown(f"""
                     <div style='text-align: left; padding: 10px;'>
+                        {logo_html}
                         <div style='font-size: 18px; font-weight: bold;'>{home_team['name']}</div>
                         <div style='font-size: 24px; font-weight: bold; color: #000;'>{home_team['score']}</div>
                     </div>
