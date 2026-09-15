@@ -245,17 +245,32 @@ for i, tab_key in enumerate(tabs_keys[:-1]):  # Exclude last tab (Betting Info)
                     pitcher = info.get('pitcher', 'N/A')
                     balls = info.get('balls', 0)
                     strikes = info.get('strikes', 0)
+                    second_color = 'green' if info.get('onSecond') else 'gray'
+                    third_color = 'green' if info.get('onThird') else 'gray'
+                    first_color = 'green' if info.get('onFirst') else 'gray'
                     st.markdown(f"""
-                        <div style='text-align: center; font-family: monospace;'>
+                        <div style='text-align: center;'>
                             ⚾ Inning: {info.get('inning', '')}<br>
                             🧢 At Bat: {at_bat}<br>
                             🥎 Pitcher: {pitcher}<br>
                             🎯 Count: {balls} Balls, {strikes} Strikes<br><br>
-                            <div style='line-height: 1.5; letter-spacing: 3px; word-spacing: 8px;'>
-                                <div style='color: {'green' if info.get('onSecond') else 'gray'}'>&nbsp;&nbsp;&nbsp;&nbsp;{second}</div>
-                                <div style='color: {'green' if info.get('onThird') else 'gray'}'>{third}&nbsp;&nbsp;{first}</div>
-                                <div>&nbsp;&nbsp;&nbsp;&nbsp;H</div>
-                            </div>
+                            <table style='margin: 0 auto; border-collapse: collapse;'>
+                                <tr>
+                                    <td style='width: 40px; text-align: center;'></td>
+                                    <td style='width: 40px; text-align: center; color: {second_color}; font-size: 20px;'>{second}</td>
+                                    <td style='width: 40px; text-align: center;'></td>
+                                </tr>
+                                <tr>
+                                    <td style='width: 40px; text-align: center; color: {third_color}; font-size: 20px;'>{third}</td>
+                                    <td style='width: 40px; text-align: center;'></td>
+                                    <td style='width: 40px; text-align: center; color: {first_color}; font-size: 20px;'>{first}</td>
+                                </tr>
+                                <tr>
+                                    <td style='width: 40px; text-align: center;'></td>
+                                    <td style='width: 40px; text-align: center; font-weight: bold;'>H</td>
+                                    <td style='width: 40px; text-align: center;'></td>
+                                </tr>
+                            </table>
                         </div>
                     """, unsafe_allow_html=True)
                 
