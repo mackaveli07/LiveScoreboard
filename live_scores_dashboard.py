@@ -236,10 +236,20 @@ st.markdown(
         color: #0f172a;
         border-color: #d9e3f4;
     }
+    .stTabs [data-baseweb="tab"]:focus-visible,
+    .stTabs [data-baseweb="tab"]:focus {
+        outline: 2px solid #2563eb !important;
+        outline-offset: 2px !important;
+    }
     .stButton button {
         border-radius: 8px;
         border: 1px solid #cfdaf0;
         font-weight: 600;
+    }
+    .stButton button:focus-visible,
+    .stButton button:focus {
+        outline: 2px solid #2563eb !important;
+        outline-offset: 2px !important;
     }
     </style>
     """,
@@ -608,7 +618,7 @@ def render_game_card(game: GameInfo):
     
     with col2:
         st.markdown(
-            f"<div style='text-align:center; margin-bottom:8px;'><span class='league-badge'>{escape(game.league.upper())}</span></div>",
+            f"<div style='text-align:center; margin-bottom:8px;'><span class='league-badge'>{escape(str(game.league).upper())}</span></div>",
             unsafe_allow_html=True,
         )
         renderer = get_info_renderer(game.league)
@@ -660,18 +670,10 @@ def render_betting_tab():
                     available_cols = [col for col in preferred_order if col in df.columns]
                     remaining_cols = [col for col in df.columns if col not in available_cols]
                     display_df = df[available_cols + remaining_cols].copy()
-                    if "elo_home_pct" in display_df.columns:
-                        elo_pct_series = pd.to_numeric(display_df["elo_home_pct"], errors="coerce")
-                        if elo_pct_series.notna().any():
-                            display_df["elo_home_pct"] = elo_pct_series.apply(
-                                lambda value: value * 100
-                                if pd.notna(value) and 0 <= value <= 1
-                                else value
-                            )
                     column_config = {}
                     if "elo_home_pct" in display_df.columns:
                         column_config["elo_home_pct"] = st.column_config.NumberColumn(
-                            "elo_home_pct (%)", format="%.1f"
+                            "elo_home_pct", format="%.3f"
                         )
                     if "market_home_odds" in display_df.columns:
                         column_config["market_home_odds"] = st.column_config.NumberColumn(
