@@ -10,305 +10,470 @@ import json
 from elo_utils import run_elo_pipeline, merge_market_with_elo, save_betting_data
 from betiq_scraper import scrape_betiq_odds
 import time
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Any
 
-# Define constants
+# ============================================================================
+# CONSTANTS & CONFIG
+# ============================================================================
+
 REFRESH_INTERVAL = 10  # seconds
+FETCH_TIMEOUT = 10  # seconds
+ESPN_BASE_URL = "https://site.api.espn.com/apis/site/v2/sports"
 
-if "last_refresh" not in st.session_state:
-    st.session_state.last_refresh = time.time()
+SPORTS_CONFIG = {
+    "baseball/mlb": {
+        "league": "mlb",
+        "name": "MLB",
+        "icon": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
+    },
+    "football/nfl": {
+        "league": "nfl",
+        "name": "NFL",
+        "icon": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
+    },
+    "basketball/nba": {
+        "league": "nba",
+        "name": "NBA",
+        "icon": "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
+    },
+    "basketball/wnba": {
+        "league": "wnba",
+        "name": "WNBA",
+        "icon": "https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png",
+    },
+    "hockey/nhl": {
+        "league": "nhl",
+        "name": "NHL",
+        "icon": "https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png",
+    },
+}
 
-# Only refresh if NOT updating betting data
-if not st.session_state.get("updating_bets", False):
-    if time.time() - st.session_state.last_refresh > REFRESH_INTERVAL:
+BETTING_LEAGUES = ["mlb", "nba", "nfl", "nhl", "wnba"]
+
+# ============================================================================
+# DATA MODELS
+# ============================================================================
+
+@dataclass
+class TeamData:
+    name: str
+    score: str
+    colors: List[str]
+    logo: str
+
+@dataclass
+class GameInfo:
+    sport: str
+    league: str
+    away_team: TeamData
+    home_team: TeamData
+    info: Dict[str, Any]
+
+# ============================================================================
+# UTILITY FUNCTIONS
+# ============================================================================
+
+def safe_get(obj: Any, *keys, default: Any = None) -> Any:
+    """Safely navigate nested dictionaries."""
+    for key in keys:
+        if isinstance(obj, dict):
+            obj = obj.get(key)
+        else:
+            return default
+    return obj if obj is not None else default
+
+def get_team_colors(team_name: str) -> List[str]:
+    """Get team colors with fallback to defaults."""
+    colors = TEAM_COLORS.get(team_name, {})
+    return [colors.get("primary", "#333"), colors.get("secondary", "#555")]
+
+def get_team_logo(team_name: str) -> str:
+    """Get team logo URL."""
+    return TEAM_LOGOS.get(team_name, "")
+
+def format_team_data(team: Optional[Dict]) -> TeamData:
+    """Convert API team data to TeamData object."""
+    if not team or "team" not in team:
+        return TeamData(name="TBD", score="0", colors=["#333", "#555"], logo="")
+    
+    display_name = safe_get(team, "team", "displayName", default="Unknown")
+    return TeamData(
+        name=display_name,
+        score=str(safe_get(team, "score", default="0")),
+        colors=get_team_colors(display_name),
+        logo=get_team_logo(display_name),
+    )
+
+# ============================================================================
+# SESSION STATE MANAGEMENT
+# ============================================================================
+
+def init_session_state():
+    """Initialize session state variables."""
+    if "last_refresh" not in st.session_state:
         st.session_state.last_refresh = time.time()
-        st.rerun()
+    if "updating_bets" not in st.session_state:
+        st.session_state.updating_bets = False
+
+def should_refresh() -> bool:
+    """Check if auto-refresh should trigger."""
+    if st.session_state.get("updating_bets", False):
+        return False
+    return time.time() - st.session_state.last_refresh > REFRESH_INTERVAL
+
+def trigger_refresh():
+    """Trigger page refresh."""
+    st.session_state.last_refresh = time.time()
+    st.rerun()
+
+init_session_state()
+if should_refresh():
+    trigger_refresh()
+
+# ============================================================================
+# PAGE CONFIG
+# ============================================================================
 
 st.set_page_config(page_title="Live Sports Scoreboard", layout="wide")
 try:
     st.markdown(Path("styles.html").read_text(), unsafe_allow_html=True)
 except FileNotFoundError:
-    pass  # Ignore if styles.html doesn't exist
+    pass
 
 st.title("🏟️ Live American Sports Scoreboard")
 st.caption("🔁 Auto-refreshing every 10 seconds...")
 
-def get_team_colors(team_name):
-    colors = TEAM_COLORS.get(team_name, {})
-    primary = colors.get("primary", "#333")
-    secondary = colors.get("secondary", "#555")
-    return [primary, secondary]
-
-def get_team_logo(team_name):
-    return TEAM_LOGOS.get(team_name, "")
-
-def format_game_team_data(team):
-    if not team or "team" not in team:
-        return {
-            "name": "TBD",
-            "score": "0",
-            "colors": ["#333", "#555"],
-            "logo": ""
-        }
-    return {
-        "name": team["team"].get("displayName", "Unknown"),
-        "score": str(team.get("score", "0")),
-        "colors": get_team_colors(team["team"]["displayName"]),
-        "logo": get_team_logo(team["team"]["displayName"])
-    }
-
-def update_betting_predictions():
-    st.session_state.updating_bets = True
-    try:
-        run_elo_pipeline()
-        leagues = ["mlb", "nba", "nfl", "nhl", "wnba"]
-        for league in leagues:
-            market_odds = scrape_betiq_odds(league)
-            merged = merge_market_with_elo(league, market_odds)
-            save_betting_data(league, merged)
-            with open(f"{league}_predicted_odds.json", "w") as f:
-                json.dump(merged, f, indent=2)
-    except Exception as e:
-        st.error(f"Error updating betting predictions: {e}")
-    finally:
-        st.session_state.updating_bets = False
+# ============================================================================
+# GAME DATA FETCHING
+# ============================================================================
 
 @st.cache_data(ttl=5)
-def fetch_espn_scores():
-    base_url = "https://site.api.espn.com/apis/site/v2/sports"
-    sports = ["baseball/mlb", "football/nfl", "basketball/nba", "basketball/wnba", "hockey/nhl"]
+def fetch_espn_scores() -> List[GameInfo]:
+    """Fetch live game scores from ESPN API."""
     games = []
     today = date.today().isoformat()
     
-    for sport_path in sports:
+    for sport_path, config in SPORTS_CONFIG.items():
         try:
-            response = requests.get(f"{base_url}/{sport_path}/scoreboard", timeout=10)
+            response = requests.get(
+                f"{ESPN_BASE_URL}/{sport_path}/scoreboard",
+                timeout=FETCH_TIMEOUT,
+            )
             if response.status_code != 200:
                 continue
+            
             data = response.json()
-            league_slug = sport_path.split("/")[-1]
-            events = data.get("events", [])
+            league = config["league"]
+            events = safe_get(data, "events", default=[])
             
             for event in events:
-                if not event.get("date", "").startswith(today):
+                if not safe_get(event, "date", "").startswith(today):
                     continue
-                competitions = event.get("competitions", [])
-                if len(competitions) == 0:
+                
+                competitions = safe_get(event, "competitions", default=[])
+                if not competitions:
                     continue
+                
                 competition = competitions[0]
-                competitors = competition.get("competitors", [])
+                competitors = safe_get(competition, "competitors", default=[])
+                
                 if len(competitors) < 2:
                     continue
-
-                away = next((team for team in competitors if team.get("homeAway") == "away"), None)
-                home = next((team for team in competitors if team.get("homeAway") == "home"), None)
-
+                
+                away = next(
+                    (t for t in competitors if t.get("homeAway") == "away"), None
+                )
+                home = next(
+                    (t for t in competitors if t.get("homeAway") == "home"), None
+                )
+                
                 if not away or not home:
                     continue
-
-                info = {}
-                status = competition.get("status", {})
-                situation = competition.get("situation", {})
-
-                if league_slug == "mlb":
-                    info = {
-                        "inning": status.get("type", {}).get("shortDetail", ""),
-                        "at_bat": situation.get("lastPlay", {}).get("athlete", {}).get("displayName", "N/A"),
-                        "pitcher": situation.get("pitcher", {}).get("athlete", {}).get("displayName", "N/A"),
-                        "onFirst": bool(situation.get("onFirst")),
-                        "onSecond": bool(situation.get("onSecond")),
-                        "onThird": bool(situation.get("onThird")),
-                        "balls": situation.get("balls", 0),
-                        "strikes": situation.get("strikes", 0),
-                    }
-                elif league_slug == "nfl":
-                    info = {
-                        "quarter": f"Q{status.get('period', 'N/A')}",
-                        "possession": situation.get("possession", {}).get("abbreviation", "N/A")
-                    }
-                elif league_slug in ["nba", "wnba"]:
-                    info = {
-                        "quarter": f"Q{status.get('period', 'N/A')}",
-                        "clock": status.get("displayClock", "")
-                    }
-                elif league_slug == "nhl":
-                    info = {
-                        "period": f"Period {status.get('period', 'N/A')}",
-                        "clock": status.get("displayClock", "")
-                    }
-
-                games.append({
-                    "sport": league_slug,
-                    "away_team": format_game_team_data(away),
-                    "home_team": format_game_team_data(home),
-                    "info": info
-                })
+                
+                game_info = extract_game_info(league, competition)
+                
+                games.append(
+                    GameInfo(
+                        sport=config["name"],
+                        league=league,
+                        away_team=format_team_data(away),
+                        home_team=format_team_data(home),
+                        info=game_info,
+                    )
+                )
+        
+        except requests.RequestException as e:
+            st.warning(f"Failed to fetch {config['name']}: {str(e)[:100]}")
         except Exception as e:
-            continue  # Skip this sport if there's an error
+            st.warning(f"Error parsing {config['name']} data: {str(e)[:100]}")
     
     return games
 
+def extract_game_info(league: str, competition: Dict) -> Dict[str, Any]:
+    """Extract league-specific game info from competition data."""
+    status = safe_get(competition, "status", default={})
+    situation = safe_get(competition, "situation", default={})
+    
+    info = {}
+    
+    if league == "mlb":
+        info = {
+            "inning": safe_get(status, "type", "shortDetail", default=""),
+            "at_bat": safe_get(situation, "lastPlay", "athlete", "displayName", default="N/A"),
+            "pitcher": safe_get(situation, "pitcher", "athlete", "displayName", default="N/A"),
+            "onFirst": bool(situation.get("onFirst")),
+            "onSecond": bool(situation.get("onSecond")),
+            "onThird": bool(situation.get("onThird")),
+            "balls": situation.get("balls", 0),
+            "strikes": situation.get("strikes", 0),
+        }
+    
+    elif league == "nfl":
+        info = {
+            "quarter": f"Q{status.get('period', 'N/A')}",
+            "possession": safe_get(situation, "possession", "abbreviation", default="N/A"),
+        }
+    
+    elif league in ["nba", "wnba"]:
+        info = {
+            "quarter": f"Q{status.get('period', 'N/A')}",
+            "clock": status.get("displayClock", ""),
+        }
+    
+    elif league == "nhl":
+        info = {
+            "period": f"Period {status.get('period', 'N/A')}",
+            "clock": status.get("displayClock", ""),
+        }
+    
+    return info
+
+# ============================================================================
+# BETTING DATA
+# ============================================================================
+
 @st.cache_data(ttl=300)
-def load_betting_data(league):
-    """Placeholder function - actual implementation may vary"""
+def load_betting_data(league: str) -> List[Dict]:
+    """Load cached betting predictions."""
     try:
         with open(f"{league}_predicted_odds.json", "r") as f:
             return json.load(f)
     except FileNotFoundError:
         return []
 
-# Fetch games
+def update_betting_predictions():
+    """Update all league betting predictions."""
+    st.session_state.updating_bets = True
+    try:
+        run_elo_pipeline()
+        for league in BETTING_LEAGUES:
+            try:
+                market_odds = scrape_betiq_odds(league)
+                merged = merge_market_with_elo(league, market_odds)
+                save_betting_data(league, merged)
+                with open(f"{league}_predicted_odds.json", "w") as f:
+                    json.dump(merged, f, indent=2)
+            except Exception as e:
+                st.warning(f"Error updating {league.upper()}: {str(e)[:100]}")
+    except Exception as e:
+        st.error(f"Error in betting pipeline: {str(e)[:100]}")
+    finally:
+        st.session_state.updating_bets = False
+
+# ============================================================================
+# UI COMPONENTS
+# ============================================================================
+
+def render_team_card(team: TeamData, align: str = "right") -> str:
+    """Render a team score card."""
+    logo_html = (
+        f"<img src='{team.logo}' width='60' style='display: block; margin: 0 auto;'><br>"
+        if team.logo
+        else ""
+    )
+    return f"""
+    <div style='text-align: {align}; padding: 10px;'>
+        {logo_html}
+        <div style='font-size: 18px; font-weight: bold;'>{team.name}</div>
+        <div style='font-size: 24px; font-weight: bold; color: #000;'>{team.score}</div>
+    </div>
+    """
+
+def render_mlb_info(info: Dict) -> str:
+    """Render MLB-specific game info."""
+    first = "●" if info.get("onFirst") else "○"
+    second = "●" if info.get("onSecond") else "○"
+    third = "●" if info.get("onThird") else "○"
+    
+    first_color = "green" if info.get("onFirst") else "gray"
+    second_color = "green" if info.get("onSecond") else "gray"
+    third_color = "green" if info.get("onThird") else "gray"
+    
+    return f"""
+    <div style='text-align: center;'>
+        ⚾ Inning: {info.get('inning', '')}<br>
+        🧢 At Bat: {info.get('at_bat', 'N/A')}<br>
+        🥎 Pitcher: {info.get('pitcher', 'N/A')}<br>
+        🎯 Count: {info.get('balls', 0)} Balls, {info.get('strikes', 0)} Strikes<br><br>
+        <table style='margin: 0 auto; border-collapse: collapse;'>
+            <tr>
+                <td style='width: 40px; text-align: center;'></td>
+                <td style='width: 40px; text-align: center; color: {second_color}; font-size: 20px;'>{second}</td>
+                <td style='width: 40px; text-align: center;'></td>
+            </tr>
+            <tr>
+                <td style='width: 40px; text-align: center; color: {third_color}; font-size: 20px;'>{third}</td>
+                <td style='width: 40px; text-align: center;'></td>
+                <td style='width: 40px; text-align: center; color: {first_color}; font-size: 20px;'>{first}</td>
+            </tr>
+            <tr>
+                <td style='width: 40px; text-align: center;'></td>
+                <td style='width: 40px; text-align: center; font-weight: bold;'>H</td>
+                <td style='width: 40px; text-align: center;'></td>
+            </tr>
+        </table>
+    </div>
+    """
+
+def render_nba_wnba_info(info: Dict) -> str:
+    """Render NBA/WNBA game info."""
+    return f"""
+    <div style='text-align: center;'>
+        🏀 Quarter: {info.get('quarter', 'N/A')}<br>
+        ⏱️ Clock: {info.get('clock', '')}
+    </div>
+    """
+
+def render_nfl_info(info: Dict) -> str:
+    """Render NFL game info."""
+    return f"""
+    <div style='text-align: center;'>
+        🏈 Quarter: {info.get('quarter', 'N/A')}<br>
+        🟢 Possession: {info.get('possession', 'N/A')}
+    </div>
+    """
+
+def render_nhl_info(info: Dict) -> str:
+    """Render NHL game info."""
+    return f"""
+    <div style='text-align: center;'>
+        🏒 {info.get('period', 'N/A')}<br>
+        ⏱️ Clock: {info.get('clock', '')}
+    </div>
+    """
+
+def get_info_renderer(league: str):
+    """Get the appropriate info renderer for a league."""
+    renderers = {
+        "mlb": render_mlb_info,
+        "nba": render_nba_wnba_info,
+        "wnba": render_nba_wnba_info,
+        "nfl": render_nfl_info,
+        "nhl": render_nhl_info,
+    }
+    return renderers.get(league, lambda x: "")
+
+def render_game_card(game: GameInfo):
+    """Render a single game card."""
+    col1, col2, col3 = st.columns([3, 2, 3])
+    
+    with col1:
+        st.markdown(render_team_card(game.away_team, align="right"), unsafe_allow_html=True)
+    
+    with col2:
+        renderer = get_info_renderer(game.league)
+        st.markdown(renderer(game.info), unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(render_team_card(game.home_team, align="left"), unsafe_allow_html=True)
+
+# ============================================================================
+# BETTING TAB
+# ============================================================================
+
+def render_betting_tab():
+    """Render the betting information tab."""
+    st.header("📈 Elo Predictions vs BetIQ Market")
+    
+    col1, col2 = st.columns([3, 1])
+    with col2:
+        if st.button("🔁 Refresh", key="refresh_bets"):
+            update_betting_predictions()
+            st.success("Predictions updated!")
+    
+    betting_tabs = st.tabs([l.upper() for l in BETTING_LEAGUES])
+    
+    for league_tab, league in zip(betting_tabs, BETTING_LEAGUES):
+        with league_tab:
+            try:
+                data = load_betting_data(league)
+                if data:
+                    df = pd.DataFrame(data)
+                    df["Value On"] = df.apply(
+                        lambda x: "HOME"
+                        if x.get("value_edge_home", 0) > x.get("value_edge_away", 0)
+                        else "AWAY",
+                        axis=1,
+                    )
+                    st.dataframe(df, use_container_width=True)
+                else:
+                    st.info(f"No betting data for {league.upper()} yet.")
+            except Exception as e:
+                st.warning(f"Could not load {league.upper()} data: {str(e)[:100]}")
+
+# ============================================================================
+# SCORES TAB
+# ============================================================================
+
+def render_scores_tabs(games: List[GameInfo]):
+    """Render tabs for each sport."""
+    available_sports = sorted(set(game.sport for game in games))
+    
+    if not available_sports:
+        st.info("No live games currently.")
+        return
+    
+    tabs_keys = available_sports + ["Betting Info"]
+    tabs = st.tabs(tabs_keys)
+    
+    # Sport tabs
+    for tab, sport in zip(tabs[:-1], available_sports):
+        with tab:
+            config = next(
+                (c for c in SPORTS_CONFIG.values() if c["name"] == sport), None
+            )
+            if config:
+                st.markdown(
+                    f"<img src='{config['icon']}' width='30' style='vertical-align:middle;'> "
+                    f"<h3 style='display:inline;'>{sport} Games</h3>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(f"### {sport} Games")
+            
+            sport_games = [g for g in games if g.sport == sport]
+            
+            if not sport_games:
+                st.write("No live games currently.")
+                continue
+            
+            for game in sport_games:
+                render_game_card(game)
+                st.divider()
+    
+    # Betting tab
+    with tabs[-1]:
+        render_betting_tab()
+
+# ============================================================================
+# MAIN
+# ============================================================================
+
 try:
     games = fetch_espn_scores()
 except Exception as e:
-    st.error("Failed to fetch live scores. Please try again later.")
+    st.error(f"Failed to fetch live scores: {str(e)[:100]}")
     games = []
 
-# Get available sports from games
-available_sports = sorted(set(game.get("sport", "").upper() for game in games if game.get("sport")))
-
-# Create tabs
-tabs_keys = available_sports + ["Betting Info"]
-tabs = st.tabs(tabs_keys)
-
-# Betting Info Tab
-with tabs[-1]:
-    st.header("📈 Elo Predictions vs BetIQ Market")
-    if st.button("🔁 Refresh Elo Ratings + Odds"):
-        update_betting_predictions()
-        st.success("Betting predictions updated!")
-    
-    leagues = ["mlb", "nba", "nfl", "nhl", "wnba"]
-    betting_tabs = st.tabs([l.upper() for l in leagues])
-    
-    for j, league in enumerate(leagues):
-        with betting_tabs[j]:
-            try:
-                with open(f"{league}_predicted_odds.json", "r") as f:
-                    data = json.load(f)
-                df = pd.DataFrame(data)
-                if not df.empty:
-                    df["Value On"] = df.apply(
-                        lambda x: "HOME" if x.get("value_edge_home", 0) > x.get("value_edge_away", 0) else "AWAY", 
-                        axis=1
-                    )
-                st.dataframe(df, use_container_width=True)
-            except FileNotFoundError:
-                st.info(f"No betting data available for {league.upper()} yet. Click 'Refresh' to generate.")
-            except Exception as e:
-                st.warning(f"Could not load betting data for {league.upper()}: {e}")
-
-# Sport-specific tabs
-sport_icons = {
-    "NBA": "https://a.espncdn.com/i/teamlogos/leagues/500/nba.png",
-    "WNBA": "https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png",
-    "NFL": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
-    "NHL": "https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png",
-    "MLB": "https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png",
-}
-
-for i, tab_key in enumerate(tabs_keys[:-1]):  # Exclude last tab (Betting Info)
-    with tabs[i]:
-        sport = tab_key
-        icon_url = sport_icons.get(sport, "")
-        if icon_url:
-            st.markdown(f"<img src='{icon_url}' width='30' style='vertical-align:middle;'> <h3 style='display:inline;'>{sport} Games</h3>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"### {sport} Games")
-            
-        filtered_games = [game for game in games if game.get("sport", "").upper() == sport]
-        
-        if not filtered_games:
-            st.write("No live games currently.")
-            continue
-            
-        for game in filtered_games:
-            away_team = game["away_team"]
-            home_team = game["home_team"]
-            info = game.get("info", {})
-            col1, col2, col3 = st.columns([3, 2, 3])
-            
-            with col1:
-                away_logo = away_team.get("logo", "")
-                logo_html = f"<img src='{away_logo}' width='60' style='display: block; margin: 0 auto;'><br>" if away_logo else ""
-                st.markdown(f"""
-                    <div style='text-align: right; padding: 10px;'>
-                        {logo_html}
-                        <div style='font-size: 18px; font-weight: bold;'>{away_team['name']}</div>
-                        <div style='font-size: 24px; font-weight: bold; color: #000;'>{away_team['score']}</div>
-                    </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                sport_lower = game["sport"]
-                if sport_lower == "mlb":
-                    first = '●' if info.get('onFirst') else '○'
-                    second = '●' if info.get('onSecond') else '○'
-                    third = '●' if info.get('onThird') else '○'
-                    at_bat = info.get('at_bat', 'N/A')
-                    pitcher = info.get('pitcher', 'N/A')
-                    balls = info.get('balls', 0)
-                    strikes = info.get('strikes', 0)
-                    second_color = 'green' if info.get('onSecond') else 'gray'
-                    third_color = 'green' if info.get('onThird') else 'gray'
-                    first_color = 'green' if info.get('onFirst') else 'gray'
-                    st.markdown(f"""
-                        <div style='text-align: center;'>
-                            ⚾ Inning: {info.get('inning', '')}<br>
-                            🧢 At Bat: {at_bat}<br>
-                            🥎 Pitcher: {pitcher}<br>
-                            🎯 Count: {balls} Balls, {strikes} Strikes<br><br>
-                            <table style='margin: 0 auto; border-collapse: collapse;'>
-                                <tr>
-                                    <td style='width: 40px; text-align: center;'></td>
-                                    <td style='width: 40px; text-align: center; color: {second_color}; font-size: 20px;'>{second}</td>
-                                    <td style='width: 40px; text-align: center;'></td>
-                                </tr>
-                                <tr>
-                                    <td style='width: 40px; text-align: center; color: {third_color}; font-size: 20px;'>{third}</td>
-                                    <td style='width: 40px; text-align: center;'></td>
-                                    <td style='width: 40px; text-align: center; color: {first_color}; font-size: 20px;'>{first}</td>
-                                </tr>
-                                <tr>
-                                    <td style='width: 40px; text-align: center;'></td>
-                                    <td style='width: 40px; text-align: center; font-weight: bold;'>H</td>
-                                    <td style='width: 40px; text-align: center;'></td>
-                                </tr>
-                            </table>
-                        </div>
-                    """, unsafe_allow_html=True)
-                
-                elif sport_lower in ["nba", "wnba"]:
-                    st.markdown(f"""
-                        <div style='text-align: center;'>
-                            🏀 Quarter: {info.get('quarter', 'N/A')}<br>
-                            ⏱️ Clock: {info.get('clock', '')}
-                        </div>
-                    """, unsafe_allow_html=True)
-                
-                elif sport_lower == "nfl":
-                    possession = info.get('possession', '')
-                    st.markdown(f"""
-                        <div style='text-align: center;'>
-                            Quarter: {info.get('quarter', 'N/A')}<br>
-                            🟢 Possession: {possession if possession else 'N/A'}
-                        </div>
-                    """, unsafe_allow_html=True)
-                
-                elif sport_lower == "nhl":
-                    st.markdown(f"""
-                        <div style='text-align: center;'>
-                            Period: {info.get('period', 'N/A')}<br>
-                            ⏱️ Clock: {info.get('clock', '')}
-                        </div>
-                    """, unsafe_allow_html=True)
-            
-            with col3:
-                home_logo = home_team.get("logo", "")
-                logo_html = f"<img src='{home_logo}' width='60' style='display: block; margin: 0 auto;'><br>" if home_logo else ""
-                st.markdown(f"""
-                    <div style='text-align: left; padding: 10px;'>
-                        {logo_html}
-                        <div style='font-size: 18px; font-weight: bold;'>{home_team['name']}</div>
-                        <div style='font-size: 24px; font-weight: bold; color: #000;'>{home_team['score']}</div>
-                    </div>
-                """, unsafe_allow_html=True)
+render_scores_tabs(games)
