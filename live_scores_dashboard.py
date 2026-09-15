@@ -660,17 +660,28 @@ def render_betting_tab():
                     available_cols = [col for col in preferred_order if col in df.columns]
                     remaining_cols = [col for col in df.columns if col not in available_cols]
                     display_df = df[available_cols + remaining_cols]
-                    formatters = {
-                        "elo_home_pct": "{:.1f}%",
-                        "market_home_odds": "{:.2f}",
-                        "value_edge_home": "{:.2f}",
-                        "value_edge_away": "{:.2f}",
-                    }
-                    active_formatters = {
-                        key: value for key, value in formatters.items() if key in display_df.columns
-                    }
-                    styled_df = display_df.style.format(active_formatters) if active_formatters else display_df
-                    st.dataframe(styled_df, use_container_width=True)
+                    column_config = {}
+                    if "elo_home_pct" in display_df.columns:
+                        column_config["elo_home_pct"] = st.column_config.NumberColumn(
+                            "elo_home_pct", format="%.1f%%"
+                        )
+                    if "market_home_odds" in display_df.columns:
+                        column_config["market_home_odds"] = st.column_config.NumberColumn(
+                            "market_home_odds", format="%.2f"
+                        )
+                    if "value_edge_home" in display_df.columns:
+                        column_config["value_edge_home"] = st.column_config.NumberColumn(
+                            "value_edge_home", format="%.2f"
+                        )
+                    if "value_edge_away" in display_df.columns:
+                        column_config["value_edge_away"] = st.column_config.NumberColumn(
+                            "value_edge_away", format="%.2f"
+                        )
+                    st.dataframe(
+                        display_df,
+                        use_container_width=True,
+                        column_config=column_config if column_config else None,
+                    )
                 else:
                     st.info(f"No betting data for {league.upper()} yet.")
             except Exception as e:
