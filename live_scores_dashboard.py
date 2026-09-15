@@ -527,8 +527,10 @@ def render_field_position(yard_line: str) -> str:
     try:
         yards = int(yard_line.replace("+", ""))
         # Normalize to 0-100 position (0 = away endzone, 100 = home endzone)
-        normalized_yards = yards if yards <= 50 else 100 - yards
-        position_percent = max(0, min(100, normalized_yards * 2))
+        if 0 <= yards <= 100:
+            position_percent = yards
+        else:
+            position_percent = max(0, min(100, yards * 2))
     except Exception:
         position_percent = 50
     
