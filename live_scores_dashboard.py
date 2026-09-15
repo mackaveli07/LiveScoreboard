@@ -502,7 +502,7 @@ def render_mlb_info(info: Dict) -> str:
         🧢 At Bat: {escape(str(info.get('at_bat', 'N/A')))}<br>
         🥎 Pitcher: {escape(str(info.get('pitcher', 'N/A')))}<br>
         🎯 Count: {escape(str(info.get('balls', 0)))} Balls, {escape(str(info.get('strikes', 0)))} Strikes<br><br>
-        <table style='margin: 0 auto; border-collapse: collapse;'>
+        <table style='margin: 0 auto; border-collapse: collapse; background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%); border-radius: 8px; padding: 6px 8px;'>
             <tr>
                 <td style='width: 40px; text-align: center;'></td>
                 <td style='width: 40px; text-align: center; color: {second_color}; font-size: 20px;'>{second}</td>
