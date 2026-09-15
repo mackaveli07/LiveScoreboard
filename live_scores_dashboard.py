@@ -79,6 +79,8 @@ def safe_get(obj: Any, *keys, default: Any = None) -> Any:
     for key in keys:
         if isinstance(obj, dict):
             obj = obj.get(key)
+            if obj is None:
+                return default
         else:
             return default
     return obj if obj is not None else default
@@ -165,43 +167,52 @@ def fetch_espn_scores() -> List[GameInfo]:
             
             data = response.json()
             league = config["league"]
-            events = safe_get(data, "events", default=[])
+            events = data.get("events", []) if isinstance(data, dict) else []
             
             for event in events:
-                if not safe_get(event, "date", "").startswith(today):
+                if not isinstance(event, dict):
+                    continue
+                    
+                if not event.get("date", "").startswith(today):
                     continue
                 
-                competitions = safe_get(event, "competitions", default=[])
-                if not competitions:
+                competitions = event.get("competitions", [])
+                if not competitions or not isinstance(competitions, list):
                     continue
                 
                 competition = competitions[0]
-                competitors = safe_get(competition, "competitors", default=[])
+                if not isinstance(competition, dict):
+                    continue
+                    
+                competitors = competition.get("competitors", [])
                 
                 if len(competitors) < 2:
                     continue
                 
                 away = next(
-                    (t for t in competitors if t.get("homeAway") == "away"), None
+                    (t for t in competitors if isinstance(t, dict) and t.get("homeAway") == "away"), None
                 )
                 home = next(
-                    (t for t in competitors if t.get("homeAway") == "home"), None
+                    (t for t in competitors if isinstance(t, dict) and t.get("homeAway") == "home"), None
                 )
                 
                 if not away or not home:
                     continue
                 
-                game_info = extract_game_info(league, competition)
-                
-                games.append(
-                    GameInfo(
-                        sport=config["name"],
-                        league=league,
-                        away_team=format_team_data(away),
-                        home_team=format_team_data(home),
-                        info=game_info,
+                try:
+                    game_info = extract_game_info(league, competition)
+                    
+                    games.append(
+                        GameInfo(
+                            sport=config["name"],
+                            league=league,
+                            away_team=format_team_data(away),
+                            home_team=format_team_data(home),
+                            info=game_info,
+                        )
                     )
-                )
+                except Exception as e:
+                    continue
         
         except requests.RequestException as e:
             st.warning(f"Failed to fetch {config['name']}: {str(e)[:100]}")
@@ -212,40 +223,76 @@ def fetch_espn_scores() -> List[GameInfo]:
 
 def extract_game_info(league: str, competition: Dict) -> Dict[str, Any]:
     """Extract league-specific game info from competition data."""
-    status = safe_get(competition, "status", default={})
-    situation = safe_get(competition, "situation", default={})
+    if not isinstance(competition, dict):
+        return {}
+    
+    status = competition.get("status", {})
+    situation = competition.get("situation", {})
+    
+    # Ensure status and situation are dicts
+    if not isinstance(status, dict):
+        status = {}
+    if not isinstance(situation, dict):
+        situation = {}
     
     info = {}
     
-    if league == "mlb":
-        info = {
-            "inning": safe_get(status, "type", "shortDetail", default=""),
-            "at_bat": safe_get(situation, "lastPlay", "athlete", "displayName", default="N/A"),
-            "pitcher": safe_get(situation, "pitcher", "athlete", "displayName", default="N/A"),
-            "onFirst": bool(situation.get("onFirst")),
-            "onSecond": bool(situation.get("onSecond")),
-            "onThird": bool(situation.get("onThird")),
-            "balls": situation.get("balls", 0),
-            "strikes": situation.get("strikes", 0),
-        }
+    try:
+        if league == "mlb":
+            status_type = status.get("type", {})
+            last_play = situation.get("lastPlay", {})
+            pitcher = situation.get("pitcher", {})
+            
+            # Safely get nested values
+            inning = ""
+            if isinstance(status_type, dict):
+                inning = status_type.get("shortDetail", "")
+            
+            at_bat = "N/A"
+            if isinstance(last_play, dict) and last_play.get("athlete"):
+                at_bat = last_play["athlete"].get("displayName", "N/A")
+            
+            pitcher_name = "N/A"
+            if isinstance(pitcher, dict) and pitcher.get("athlete"):
+                pitcher_name = pitcher["athlete"].get("displayName", "N/A")
+            
+            info = {
+                "inning": inning,
+                "at_bat": at_bat,
+                "pitcher": pitcher_name,
+                "onFirst": bool(situation.get("onFirst")),
+                "onSecond": bool(situation.get("onSecond")),
+                "onThird": bool(situation.get("onThird")),
+                "balls": situation.get("balls", 0),
+                "strikes": situation.get("strikes", 0),
+            }
+        
+        elif league == "nfl":
+            possession = situation.get("possession", {})
+            possession_abbr = "N/A"
+            if isinstance(possession, dict):
+                possession_abbr = possession.get("abbreviation", "N/A")
+            
+            info = {
+                "quarter": f"Q{status.get('period', 'N/A')}",
+                "possession": possession_abbr,
+            }
+        
+        elif league in ["nba", "wnba"]:
+            info = {
+                "quarter": f"Q{status.get('period', 'N/A')}",
+                "clock": status.get("displayClock", ""),
+            }
+        
+        elif league == "nhl":
+            info = {
+                "period": f"Period {status.get('period', 'N/A')}",
+                "clock": status.get("displayClock", ""),
+            }
     
-    elif league == "nfl":
-        info = {
-            "quarter": f"Q{status.get('period', 'N/A')}",
-            "possession": safe_get(situation, "possession", "abbreviation", default="N/A"),
-        }
-    
-    elif league in ["nba", "wnba"]:
-        info = {
-            "quarter": f"Q{status.get('period', 'N/A')}",
-            "clock": status.get("displayClock", ""),
-        }
-    
-    elif league == "nhl":
-        info = {
-            "period": f"Period {status.get('period', 'N/A')}",
-            "clock": status.get("displayClock", ""),
-        }
+    except Exception:
+        # Return empty info dict if anything goes wrong
+        info = {}
     
     return info
 
