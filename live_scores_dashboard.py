@@ -527,10 +527,12 @@ def render_field_position(yard_line: str) -> str:
     try:
         yards = int(yard_line.replace("+", ""))
         # Normalize to 0-100 position (0 = away endzone, 100 = home endzone)
-        if 0 <= yards <= 100:
+        if 0 <= yards <= 50:
+            position_percent = yards * 2
+        elif 50 < yards <= 100:
             position_percent = yards
         else:
-            position_percent = max(0, min(100, yards * 2))
+            position_percent = max(0, min(100, yards))
     except Exception:
         position_percent = 50
     
@@ -550,8 +552,8 @@ def render_last_play(last_play_text: str) -> str:
     if not last_play_text:
         return "<div style='text-align: center; color: #6b7280; font-size: 12px;'>No play data available</div>"
     
-    # Truncate if too long
-    display_text = escape(last_play_text[:150] + "..." if len(last_play_text) > 150 else last_play_text)
+    escaped_text = escape(last_play_text)
+    display_text = escaped_text[:150] + "..." if len(escaped_text) > 150 else escaped_text
     
     return f"""
     <div style='background: #f7f9fd; border-left: 4px solid #FF6B6B; padding: 10px; border-radius: 6px; margin-top: 8px;'>
