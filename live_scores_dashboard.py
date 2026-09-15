@@ -273,9 +273,16 @@ def extract_game_info(league: str, competition: Dict) -> Dict[str, Any]:
             if isinstance(possession, dict):
                 possession_abbr = possession.get("abbreviation", "N/A")
             
+            # Get field position (yard line)
+            field_position = safe_get(situation, "lastPlay", "statistics", 0, "yards", default="")
+            yard_line = safe_get(situation, "yardLine", default="")
+            down_distance = safe_get(situation, "shortDownDistanceText", default="")
+            
             info = {
                 "quarter": f"Q{status.get('period', 'N/A')}",
                 "possession": possession_abbr,
+                "yard_line": yard_line,
+                "down_distance": down_distance,
             }
         
         elif league in ["nba", "wnba"]:
@@ -383,21 +390,54 @@ def render_mlb_info(info: Dict) -> str:
     </div>
     """
 
+def render_field_position(yard_line: str) -> str:
+    """Render a visual field position indicator."""
+    if not yard_line:
+        return "<div style='text-align: center; color: #999;'>No field position data</div>"
+    
+    # Parse yard line (e.g., "50", "20" means 20 yards from endzone)
+    try:
+        yards = int(yard_line.replace("+", ""))
+        # Calculate percentage position on field (0 = away endzone, 100 = home endzone)
+        position_percent = yards * 2  # Scale 0-50 to 0-100
+    except:
+        position_percent = 50
+    
+    # Create field visualization
+    return f"""
+    <div style='text-align: center; margin: 10px 0;'>
+        <div style='font-size: 12px; font-weight: bold; margin-bottom: 5px;'>{yard_line} Yard Line</div>
+        <div style='background: linear-gradient(to right, #1a4d2e 0%, #2d5a3d 40%, #ffffff 50%, #2d5a3d 60%, #1a4d2e 100%); height: 30px; position: relative; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);'>
+            <div style='position: absolute; top: 50%; left: {position_percent}%; transform: translate(-50%, -50%); width: 8px; height: 8px; background: #FF6B6B; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);'></div>
+        </div>
+        <div style='font-size: 10px; color: #666; margin-top: 4px;'>Away ← Field Position → Home</div>
+    </div>
+    """
+
+def render_nfl_info(info: Dict) -> str:
+    """Render NFL-specific game info with field position."""
+    yard_line = info.get("yard_line", "")
+    down_distance = info.get("down_distance", "")
+    possession = info.get("possession", "N/A")
+    quarter = info.get("quarter", "N/A")
+    
+    field_viz = render_field_position(yard_line)
+    down_info = f"<br>📊 {down_distance}" if down_distance else ""
+    
+    return f"""
+    <div style='text-align: center;'>
+        🏈 {quarter}<br>
+        🟢 Possession: {possession}{down_info}
+        {field_viz}
+    </div>
+    """
+
 def render_nba_wnba_info(info: Dict) -> str:
     """Render NBA/WNBA game info."""
     return f"""
     <div style='text-align: center;'>
         🏀 Quarter: {info.get('quarter', 'N/A')}<br>
         ⏱️ Clock: {info.get('clock', '')}
-    </div>
-    """
-
-def render_nfl_info(info: Dict) -> str:
-    """Render NFL game info."""
-    return f"""
-    <div style='text-align: center;'>
-        🏈 Quarter: {info.get('quarter', 'N/A')}<br>
-        🟢 Possession: {info.get('possession', 'N/A')}
     </div>
     """
 
