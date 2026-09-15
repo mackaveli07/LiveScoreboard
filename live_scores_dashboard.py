@@ -10,6 +10,7 @@ import json
 from elo_utils import run_elo_pipeline, merge_market_with_elo, save_betting_data
 from betiq_scraper import scrape_betiq_odds
 import time
+import re
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 from html import escape
@@ -525,7 +526,10 @@ def render_field_position(yard_line: str) -> str:
     
     # Parse yard line (e.g., "50", "20" means 20 yards from endzone)
     try:
-        yards = int(yard_line.replace("+", ""))
+        match = re.search(r"\d+", str(yard_line))
+        if not match:
+            return "<div style='text-align: center; color: #6b7280;'>No field position data</div>"
+        yards = int(match.group())
         # Convert 0-50 yard-line values into 0-100 display space and clamp
         position_percent = max(0, min(100, yards * 2))
     except Exception:
