@@ -526,13 +526,8 @@ def render_field_position(yard_line: str) -> str:
     # Parse yard line (e.g., "50", "20" means 20 yards from endzone)
     try:
         yards = int(yard_line.replace("+", ""))
-        # Normalize to 0-100 position (0 = away endzone, 100 = home endzone)
-        if 0 <= yards <= 50:
-            position_percent = yards * 2
-        elif 50 < yards <= 100:
-            position_percent = yards
-        else:
-            position_percent = max(0, min(100, yards))
+        # Use a single 0-100 convention for marker placement
+        position_percent = max(0, min(100, yards))
     except Exception:
         position_percent = 50
     
@@ -727,7 +722,9 @@ def render_scores_tabs(games: List[GameInfo]):
             if config:
                 st.markdown(
                     f"<div class='section-header'>"
-                    f"<img src='{escape(config['icon'])}' width='30' style='vertical-align:middle;' alt='{escape(sport)} icon'> "
+                    f"<span style='display:flex; align-items:center; margin-right:6px;'>"
+                    f"<img src='{escape(config['icon'])}' width='30' style='vertical-align:middle;' alt='{escape(sport)} icon'>"
+                    f"</span>"
                     f"<h3>{escape(sport)} Games</h3></div>",
                     unsafe_allow_html=True,
                 )
