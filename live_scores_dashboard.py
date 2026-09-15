@@ -10,8 +10,10 @@ import json
 from elo_utils import run_elo_pipeline, merge_market_with_elo, save_betting_data
 from betiq_scraper import scrape_betiq_odds
 import time
+import re
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
+from html import escape
 
 # ============================================================================
 # CONSTANTS & CONFIG
@@ -143,42 +145,157 @@ try:
 except FileNotFoundError:
     pass
 
-st.markdown("""
-<style>
-.mlb-diamond-wrap {
-    display: inline-block;
-    padding: 12px 16px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #1b5e20, #2e7d32);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-.mlb-diamond-table {
-    margin: 0 auto;
-    border-collapse: collapse;
-}
-.mlb-diamond-table td {
-    width: 40px;
-    text-align: center;
-}
-.mlb-base {
-    font-size: 24px;
-    line-height: 1;
-}
-.mlb-home {
-    color: white;
-    font-weight: bold;
-}
-.mlb-occupied {
-    color: #00C853;
-}
-.mlb-empty {
-    color: #F5F5F5;
-}
-</style>
-""", unsafe_allow_html=True)
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background: radial-gradient(circle at top, #f8fbff 0%, #f2f5fb 40%, #eef2f8 100%);
+    }
+    .dashboard-header {
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid #e4e9f2;
+        border-radius: 14px;
+        box-shadow: 0 6px 20px rgba(17, 24, 39, 0.08);
+        padding: 14px 18px;
+        margin-bottom: 12px;
+    }
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #ffffff;
+        border: 1px solid #e7ebf3;
+        border-radius: 12px;
+        box-shadow: 0 3px 12px rgba(17, 24, 39, 0.06);
+        padding: 10px 14px;
+        margin: 8px 0 14px;
+    }
+    .section-header h3 {
+        margin: 0;
+        color: #1f2a44;
+        font-weight: 700;
+    }
+    .league-badge {
+        background: #edf3ff;
+        border: 1px solid #d7e3ff;
+        color: #1d4ed8;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .6px;
+        text-transform: uppercase;
+        border-radius: 999px;
+        padding: 3px 10px;
+    }
+    .team-card {
+        text-align: center;
+        padding: 10px 8px;
+    }
+    .team-name {
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.25;
+        color: #172034;
+        margin-top: 6px;
+    }
+    .team-score {
+        font-size: 34px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: .5px;
+        margin-top: 2px;
+    }
+    .info-panel {
+        background: #f8faff;
+        border: 1px solid #e3e9f5;
+        border-radius: 12px;
+        padding: 10px 12px;
+        text-align: center;
+        color: #263145;
+        font-size: 13px;
+        line-height: 1.55;
+    }
+    .info-title {
+        color: #4b5567;
+        font-weight: 600;
+        font-size: 11px;
+        letter-spacing: .4px;
+        text-transform: uppercase;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        border-bottom: 1px solid #e5eaf3;
+        padding-bottom: 4px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background: #f5f7fb;
+        border: 1px solid #e5eaf3;
+        border-radius: 9px 9px 0 0;
+        padding: 8px 14px;
+        font-weight: 600;
+    }
+    .stTabs [aria-selected="true"] {
+        background: #ffffff;
+        color: #0f172a;
+        border-color: #d9e3f4;
+    }
+    .stTabs [data-baseweb="tab"]:focus-visible,
+    .stTabs [data-baseweb="tab"]:focus {
+        outline: 2px solid #2563eb !important;
+        outline-offset: 2px !important;
+    }
+    .stButton button {
+        border-radius: 8px;
+        border: 1px solid #cfdaf0;
+        font-weight: 600;
+    }
+    .stButton button:focus-visible,
+    .stButton button:focus {
+        outline: 2px solid #2563eb !important;
+        outline-offset: 2px !important;
+    }
+    .mlb-diamond-wrap {
+        display: inline-block;
+        padding: 12px 16px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #1b5e20, #2e7d32);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .mlb-diamond-table {
+        margin: 0 auto;
+        border-collapse: collapse;
+    }
+    .mlb-diamond-table td {
+        width: 40px;
+        text-align: center;
+    }
+    .mlb-base {
+        font-size: 24px;
+        line-height: 1;
+    }
+    .mlb-home {
+        color: white;
+        font-weight: bold;
+    }
+    .mlb-occupied {
+        color: #00C853;
+    }
+    .mlb-empty {
+        color: #F5F5F5;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-st.title("🏟️ Live American Sports Scoreboard")
-st.caption("🔁 Auto-refreshing every 10 seconds...")
+st.markdown(
+    """
+    <div class='dashboard-header'>
+        <h1 style='margin: 0; color: #10182b;'>🏟️ Live American Sports Scoreboard</h1>
+        <p style='margin: 6px 0 0; color: #4a5568;'>🔁 Auto-refreshing every 10 seconds...</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 # ============================================================================
 # GAME DATA FETCHING
@@ -379,16 +496,21 @@ def update_betting_predictions():
 
 def render_team_card(team: TeamData, align: str = "right") -> str:
     """Render a team score card."""
+    team_name = escape(team.name)
+    team_score = escape(team.score)
+    primary = team.colors[0] if isinstance(team.colors, list) and len(team.colors) > 0 else "#1f2937"
+    secondary = team.colors[1] if isinstance(team.colors, list) and len(team.colors) > 1 else "#111827"
+    gradient = f"linear-gradient(140deg, {escape(str(primary))} 0%, {escape(str(secondary))} 100%)"
     logo_html = (
-        f"<img src='{team.logo}' width='60' style='display: block; margin: 0 auto;'><br>"
+        f"<img src='{escape(team.logo)}' width='56' style='display: block; margin: 0 auto;' alt='{team_name} logo'><br>"
         if team.logo
         else ""
     )
     return f"""
-    <div style='text-align: {align}; padding: 10px;'>
+    <div class='team-card' style='text-align: {align}; background: {gradient}; border: 1px solid rgba(255,255,255,0.24); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);'>
         {logo_html}
-        <div style='font-size: 18px; font-weight: bold;'>{team.name}</div>
-        <div style='font-size: 24px; font-weight: bold; color: #000;'>{team.score}</div>
+        <div class='team-name' style='color: #ffffff;'>{team_name}</div>
+        <div class='team-score' style='color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.35);'>{team_score}</div>
     </div>
     """
 
@@ -413,11 +535,12 @@ def render_mlb_info(info: Dict) -> str:
     third_inline = occupied_color if on_third else empty_color
     
     return f"""
-    <div style='text-align: center;'>
-        ⚾ Inning: {info.get('inning', '')}<br>
-        🧢 At Bat: {info.get('at_bat', 'N/A')}<br>
-        🥎 Pitcher: {info.get('pitcher', 'N/A')}<br>
-        🎯 Count: {info.get('balls', 0)} Balls, {info.get('strikes', 0)} Strikes<br><br>
+    <div class='info-panel'>
+        <div class='info-title'>MLB Live Situation</div>
+        ⚾ Inning: {escape(str(info.get('inning', '')))}<br>
+        🧢 At Bat: {escape(str(info.get('at_bat', 'N/A')))}<br>
+        🥎 Pitcher: {escape(str(info.get('pitcher', 'N/A')))}<br>
+        🎯 Count: {escape(str(info.get('balls', 0)))} Balls, {escape(str(info.get('strikes', 0)))} Strikes<br><br>
         <div class='mlb-diamond-wrap' style='display:inline-block; padding:12px 16px; border-radius:10px; background:linear-gradient(135deg, #1b5e20, #2e7d32);'>
             <table class='mlb-diamond-table' style='margin:0 auto; border-collapse:collapse;'>
                 <tr>
@@ -443,14 +566,17 @@ def render_mlb_info(info: Dict) -> str:
 def render_field_position(yard_line: str) -> str:
     """Render a visual field position indicator."""
     if not yard_line:
-        return "<div style='text-align: center; color: #999;'>No field position data</div>"
+        return "<div style='text-align: center; color: #6b7280;'>No field position data</div>"
     
     # Parse yard line (e.g., "50", "20" means 20 yards from endzone)
     try:
-        yards = int(yard_line.replace("+", ""))
-        # Calculate percentage position on field (0 = away endzone, 100 = home endzone)
-        position_percent = yards * 2  # Scale 0-50 to 0-100
-    except:
+        match = re.search(r"\d+", str(yard_line))
+        if not match:
+            return "<div style='text-align: center; color: #6b7280;'>No field position data</div>"
+        yards = int(match.group())
+        # Convert 0-50 yard-line values into 0-100 display space and clamp
+        position_percent = max(0, min(100, yards * 2))
+    except Exception:
         position_percent = 50
     
     # Create field visualization
@@ -460,21 +586,21 @@ def render_field_position(yard_line: str) -> str:
         <div style='background: linear-gradient(to right, #1a4d2e 0%, #2d5a3d 40%, #ffffff 50%, #2d5a3d 60%, #1a4d2e 100%); height: 30px; position: relative; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);'>
             <div style='position: absolute; top: 50%; left: {position_percent}%; transform: translate(-50%, -50%); width: 8px; height: 8px; background: #FF6B6B; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);'></div>
         </div>
-        <div style='font-size: 10px; color: #666; margin-top: 4px;'>Away ← Field Position → Home</div>
+        <div style='font-size: 10px; color: #5f6674; margin-top: 4px;'>Away ← Field Position → Home</div>
     </div>
     """
 
 def render_last_play(last_play_text: str) -> str:
     """Render the last play description with styling."""
     if not last_play_text:
-        return "<div style='text-align: center; color: #999; font-size: 12px;'>No play data available</div>"
+        return "<div style='text-align: center; color: #6b7280; font-size: 12px;'>No play data available</div>"
     
-    # Truncate if too long
-    display_text = last_play_text[:150] + "..." if len(last_play_text) > 150 else last_play_text
+    truncated_text = last_play_text[:150] + "..." if len(last_play_text) > 150 else last_play_text
+    display_text = escape(truncated_text)
     
     return f"""
-    <div style='background: #f5f5f5; border-left: 4px solid #FF6B6B; padding: 10px; border-radius: 4px; margin-top: 8px;'>
-        <div style='font-size: 11px; color: #666; margin-bottom: 4px;'>📋 LAST PLAY</div>
+    <div style='background: #f7f9fd; border-left: 4px solid #FF6B6B; padding: 10px; border-radius: 6px; margin-top: 8px;'>
+        <div style='font-size: 11px; color: #5f6674; margin-bottom: 4px;'>📋 LAST PLAY</div>
         <div style='font-size: 12px; color: #333; line-height: 1.4;'>{display_text}</div>
     </div>
     """
@@ -489,12 +615,13 @@ def render_nfl_info(info: Dict) -> str:
     
     field_viz = render_field_position(yard_line)
     last_play_viz = render_last_play(last_play)
-    down_info = f"<br>📊 {down_distance}" if down_distance else ""
+    down_info = f"<br>📊 {escape(down_distance)}" if down_distance else ""
     
     return f"""
-    <div style='text-align: center;'>
-        🏈 {quarter}<br>
-        🟢 Possession: {possession}{down_info}
+    <div class='info-panel'>
+        <div class='info-title'>NFL Game Flow</div>
+        🏈 {escape(quarter)}<br>
+        🟢 Possession: {escape(possession)}{down_info}
         {field_viz}
         {last_play_viz}
     </div>
@@ -503,18 +630,20 @@ def render_nfl_info(info: Dict) -> str:
 def render_nba_wnba_info(info: Dict) -> str:
     """Render NBA/WNBA game info."""
     return f"""
-    <div style='text-align: center;'>
-        🏀 Quarter: {info.get('quarter', 'N/A')}<br>
-        ⏱️ Clock: {info.get('clock', '')}
+    <div class='info-panel'>
+        <div class='info-title'>Live Game Clock</div>
+        🏀 Quarter: {escape(str(info.get('quarter', 'N/A')))}<br>
+        ⏱️ Clock: {escape(str(info.get('clock', '')))}
     </div>
     """
 
 def render_nhl_info(info: Dict) -> str:
     """Render NHL game info."""
     return f"""
-    <div style='text-align: center;'>
-        🏒 {info.get('period', 'N/A')}<br>
-        ⏱️ Clock: {info.get('clock', '')}
+    <div class='info-panel'>
+        <div class='info-title'>Live Game Clock</div>
+        🏒 {escape(str(info.get('period', 'N/A')))}<br>
+        ⏱️ Clock: {escape(str(info.get('clock', '')))}
     </div>
     """
 
@@ -537,6 +666,10 @@ def render_game_card(game: GameInfo):
         st.markdown(render_team_card(game.away_team, align="right"), unsafe_allow_html=True)
     
     with col2:
+        st.markdown(
+            f"<div style='text-align:center; margin-bottom:8px;'><span class='league-badge'>{escape(str(game.league))}</span></div>",
+            unsafe_allow_html=True,
+        )
         renderer = get_info_renderer(game.league)
         st.markdown(renderer(game.info), unsafe_allow_html=True)
     
@@ -549,7 +682,10 @@ def render_game_card(game: GameInfo):
 
 def render_betting_tab():
     """Render the betting information tab."""
-    st.header("📈 Elo Predictions vs BetIQ Market")
+    st.markdown(
+        "<div class='section-header'><h3>📈 Elo Predictions vs BetIQ Market</h3></div>",
+        unsafe_allow_html=True,
+    )
     
     col1, col2 = st.columns([3, 1])
     with col2:
@@ -571,7 +707,40 @@ def render_betting_tab():
                         else "AWAY",
                         axis=1,
                     )
-                    st.dataframe(df, use_container_width=True)
+                    preferred_order = [
+                        "away_team",
+                        "home_team",
+                        "elo_home_pct",
+                        "market_home_odds",
+                        "value_edge_home",
+                        "value_edge_away",
+                        "Value On",
+                    ]
+                    available_cols = [col for col in preferred_order if col in df.columns]
+                    remaining_cols = [col for col in df.columns if col not in available_cols]
+                    display_df = df[available_cols + remaining_cols].copy()
+                    column_config = {}
+                    if "elo_home_pct" in display_df.columns:
+                        column_config["elo_home_pct"] = st.column_config.NumberColumn(
+                            "Elo Home %", format="%.3f"
+                        )
+                    if "market_home_odds" in display_df.columns:
+                        column_config["market_home_odds"] = st.column_config.NumberColumn(
+                            "Market Home Odds", format="%.2f"
+                        )
+                    if "value_edge_home" in display_df.columns:
+                        column_config["value_edge_home"] = st.column_config.NumberColumn(
+                            "Value Edge Home", format="%.2f"
+                        )
+                    if "value_edge_away" in display_df.columns:
+                        column_config["value_edge_away"] = st.column_config.NumberColumn(
+                            "Value Edge Away", format="%.2f"
+                        )
+                    st.dataframe(
+                        display_df,
+                        use_container_width=True,
+                        column_config=column_config if column_config else None,
+                    )
                 else:
                     st.info(f"No betting data for {league.upper()} yet.")
             except Exception as e:
@@ -600,8 +769,11 @@ def render_scores_tabs(games: List[GameInfo]):
             )
             if config:
                 st.markdown(
-                    f"<img src='{config['icon']}' width='30' style='vertical-align:middle;'> "
-                    f"<h3 style='display:inline;'>{sport} Games</h3>",
+                    f"<div class='section-header'>"
+                    f"<span style='display:flex; align-items:center; margin-right:6px;'>"
+                    f"<img src='{escape(config['icon'])}' width='30' style='vertical-align:middle;' alt='{escape(sport)} icon'>"
+                    f"</span>"
+                    f"<h3>{escape(sport)} Games</h3></div>",
                     unsafe_allow_html=True,
                 )
             else:
