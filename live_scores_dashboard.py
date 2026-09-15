@@ -278,11 +278,15 @@ def extract_game_info(league: str, competition: Dict) -> Dict[str, Any]:
             yard_line = safe_get(situation, "yardLine", default="")
             down_distance = safe_get(situation, "shortDownDistanceText", default="")
             
+            # Get last play description
+            last_play_text = safe_get(situation, "lastPlay", "text", default="")
+            
             info = {
                 "quarter": f"Q{status.get('period', 'N/A')}",
                 "possession": possession_abbr,
                 "yard_line": yard_line,
                 "down_distance": down_distance,
+                "last_play": last_play_text,
             }
         
         elif league in ["nba", "wnba"]:
@@ -414,14 +418,31 @@ def render_field_position(yard_line: str) -> str:
     </div>
     """
 
+def render_last_play(last_play_text: str) -> str:
+    """Render the last play description with styling."""
+    if not last_play_text:
+        return "<div style='text-align: center; color: #999; font-size: 12px;'>No play data available</div>"
+    
+    # Truncate if too long
+    display_text = last_play_text[:150] + "..." if len(last_play_text) > 150 else last_play_text
+    
+    return f"""
+    <div style='background: #f5f5f5; border-left: 4px solid #FF6B6B; padding: 10px; border-radius: 4px; margin-top: 8px;'>
+        <div style='font-size: 11px; color: #666; margin-bottom: 4px;'>📋 LAST PLAY</div>
+        <div style='font-size: 12px; color: #333; line-height: 1.4;'>{display_text}</div>
+    </div>
+    """
+
 def render_nfl_info(info: Dict) -> str:
-    """Render NFL-specific game info with field position."""
+    """Render NFL-specific game info with field position and last play."""
     yard_line = info.get("yard_line", "")
     down_distance = info.get("down_distance", "")
     possession = info.get("possession", "N/A")
     quarter = info.get("quarter", "N/A")
+    last_play = info.get("last_play", "")
     
     field_viz = render_field_position(yard_line)
+    last_play_viz = render_last_play(last_play)
     down_info = f"<br>📊 {down_distance}" if down_distance else ""
     
     return f"""
@@ -429,6 +450,7 @@ def render_nfl_info(info: Dict) -> str:
         🏈 {quarter}<br>
         🟢 Possession: {possession}{down_info}
         {field_viz}
+        {last_play_viz}
     </div>
     """
 
