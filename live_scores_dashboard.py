@@ -96,6 +96,57 @@ def get_team_logo(team_name: str) -> str:
     """Get team logo URL."""
     return TEAM_LOGOS.get(team_name, "")
 
+
+def normalize_team_name(team_name: str) -> str:
+    """Normalize team names for cross-source matching."""
+    return re.sub(r"[^a-z0-9]+", " ", str(team_name).lower()).strip()
+
+
+def build_team_aliases(team_name: str) -> set[str]:
+    """Build a small alias set for matching sportsbook and ESPN names."""
+    normalized = normalize_team_name(team_name)
+    aliases = {normalized}
+    tokens = normalized.split()
+
+    for size in (1, 2, 3):
+        if len(tokens) >= size:
+            aliases.add(" ".join(tokens[-size:]))
+
+    return {alias for alias in aliases if alias}
+
+
+@st.cache_data(ttl=300)
+def load_betiq_odds(league: str) -> List[Dict[str, Any]]:
+    """Load live BetIQ odds for a league."""
+    try:
+        return scrape_betiq_odds(league)
+    except Exception:
+        return []
+
+
+def find_game_odds(league: str, away_team: str, home_team: str) -> Optional[Dict[str, Any]]:
+    """Find BetIQ odds for the given game."""
+    away_aliases = build_team_aliases(away_team)
+    home_aliases = build_team_aliases(home_team)
+
+    for odds in load_betiq_odds(league):
+        if (
+            normalize_team_name(odds.get("away", "")) in away_aliases
+            and normalize_team_name(odds.get("home", "")) in home_aliases
+        ):
+            return odds
+
+    return None
+
+
+def format_moneyline(value: Any) -> str:
+    """Format moneyline values for display."""
+    try:
+        numeric = int(value)
+    except (TypeError, ValueError):
+        return "N/A"
+    return f"+{numeric}" if numeric > 0 else str(numeric)
+
 def format_team_data(team: Optional[Dict]) -> TeamData:
     """Convert API team data to TeamData object."""
     if not team or "team" not in team:
@@ -214,12 +265,41 @@ st.markdown(
         font-size: 13px;
         line-height: 1.55;
     }
+    .odds-panel {
+        margin-top: 10px;
+        background: #ffffff;
+    }
     .info-title {
         color: #4b5567;
         font-weight: 600;
         font-size: 11px;
         letter-spacing: .4px;
         text-transform: uppercase;
+    }
+    .odds-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 8px;
+    }
+    .odds-chip {
+        background: #eef4ff;
+        border: 1px solid #d8e3fb;
+        border-radius: 10px;
+        padding: 8px 10px;
+    }
+    .odds-chip-label {
+        font-size: 10px;
+        color: #5f6674;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .35px;
+    }
+    .odds-chip-value {
+        font-size: 14px;
+        font-weight: 700;
+        color: #172034;
+        margin-top: 2px;
     }
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
@@ -647,6 +727,43 @@ def render_nhl_info(info: Dict) -> str:
     </div>
     """
 
+
+def render_betiq_odds(odds: Optional[Dict[str, Any]]) -> str:
+    """Render BetIQ odds when available."""
+    if not odds:
+        return ""
+
+    away_name = escape(str(odds.get("away", "Away")))
+    home_name = escape(str(odds.get("home", "Home")))
+    away_ml = escape(format_moneyline(odds.get("ml_away")))
+    home_ml = escape(format_moneyline(odds.get("ml_home")))
+    spread = escape(str(odds.get("spread", "N/A")))
+    total = escape(str(odds.get("total", "N/A")))
+
+    return f"""
+    <div class='info-panel odds-panel'>
+        <div class='info-title'>BetIQ Odds</div>
+        <div class='odds-grid'>
+            <div class='odds-chip'>
+                <div class='odds-chip-label'>{away_name} Moneyline</div>
+                <div class='odds-chip-value'>{away_ml}</div>
+            </div>
+            <div class='odds-chip'>
+                <div class='odds-chip-label'>{home_name} Moneyline</div>
+                <div class='odds-chip-value'>{home_ml}</div>
+            </div>
+            <div class='odds-chip'>
+                <div class='odds-chip-label'>Spread</div>
+                <div class='odds-chip-value'>{spread}</div>
+            </div>
+            <div class='odds-chip'>
+                <div class='odds-chip-label'>Total</div>
+                <div class='odds-chip-value'>{total}</div>
+            </div>
+        </div>
+    </div>
+    """
+
 def get_info_renderer(league: str):
     """Get the appropriate info renderer for a league."""
     renderers = {
@@ -661,6 +778,7 @@ def get_info_renderer(league: str):
 def render_game_card(game: GameInfo):
     """Render a single game card."""
     col1, col2, col3 = st.columns([3, 2, 3])
+    game_odds = find_game_odds(game.league, game.away_team.name, game.home_team.name)
     
     with col1:
         st.markdown(render_team_card(game.away_team, align="right"), unsafe_allow_html=True)
@@ -671,7 +789,7 @@ def render_game_card(game: GameInfo):
             unsafe_allow_html=True,
         )
         renderer = get_info_renderer(game.league)
-        st.markdown(renderer(game.info), unsafe_allow_html=True)
+        st.markdown(renderer(game.info) + render_betiq_odds(game_odds), unsafe_allow_html=True)
     
     with col3:
         st.markdown(render_team_card(game.home_team, align="left"), unsafe_allow_html=True)
@@ -708,10 +826,13 @@ def render_betting_tab():
                         axis=1,
                     )
                     preferred_order = [
-                        "away_team",
-                        "home_team",
-                        "elo_home_pct",
-                        "market_home_odds",
+                        "away",
+                        "home",
+                        "prob_home",
+                        "market_ml_away",
+                        "market_ml_home",
+                        "spread",
+                        "total",
                         "value_edge_home",
                         "value_edge_away",
                         "Value On",
@@ -720,13 +841,25 @@ def render_betting_tab():
                     remaining_cols = [col for col in df.columns if col not in available_cols]
                     display_df = df[available_cols + remaining_cols].copy()
                     column_config = {}
-                    if "elo_home_pct" in display_df.columns:
-                        column_config["elo_home_pct"] = st.column_config.NumberColumn(
+                    if "prob_home" in display_df.columns:
+                        column_config["prob_home"] = st.column_config.NumberColumn(
                             "Elo Home %", format="%.3f"
                         )
-                    if "market_home_odds" in display_df.columns:
-                        column_config["market_home_odds"] = st.column_config.NumberColumn(
-                            "Market Home Odds", format="%.2f"
+                    if "market_ml_home" in display_df.columns:
+                        column_config["market_ml_home"] = st.column_config.NumberColumn(
+                            "BetIQ Home ML", format="%d"
+                        )
+                    if "market_ml_away" in display_df.columns:
+                        column_config["market_ml_away"] = st.column_config.NumberColumn(
+                            "BetIQ Away ML", format="%d"
+                        )
+                    if "spread" in display_df.columns:
+                        column_config["spread"] = st.column_config.NumberColumn(
+                            "Spread", format="%.1f"
+                        )
+                    if "total" in display_df.columns:
+                        column_config["total"] = st.column_config.NumberColumn(
+                            "Total", format="%.1f"
                         )
                     if "value_edge_home" in display_df.columns:
                         column_config["value_edge_home"] = st.column_config.NumberColumn(
