@@ -253,6 +253,35 @@ st.markdown(
         outline: 2px solid #2563eb !important;
         outline-offset: 2px !important;
     }
+    .mlb-diamond-wrap {
+        display: inline-block;
+        padding: 12px 16px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #1b5e20, #2e7d32);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .mlb-diamond-table {
+        margin: 0 auto;
+        border-collapse: collapse;
+    }
+    .mlb-diamond-table td {
+        width: 40px;
+        text-align: center;
+    }
+    .mlb-base {
+        font-size: 24px;
+        line-height: 1;
+    }
+    .mlb-home {
+        color: white;
+        font-weight: bold;
+    }
+    .mlb-occupied {
+        color: #00C853;
+    }
+    .mlb-empty {
+        color: #F5F5F5;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -487,13 +516,23 @@ def render_team_card(team: TeamData, align: str = "right") -> str:
 
 def render_mlb_info(info: Dict) -> str:
     """Render MLB-specific game info."""
-    first = "●" if info.get("onFirst") else "○"
-    second = "●" if info.get("onSecond") else "○"
-    third = "●" if info.get("onThird") else "○"
-    
-    first_color = "green" if info.get("onFirst") else "gray"
-    second_color = "green" if info.get("onSecond") else "gray"
-    third_color = "green" if info.get("onThird") else "gray"
+    on_first = bool(info.get("onFirst"))
+    on_second = bool(info.get("onSecond"))
+    on_third = bool(info.get("onThird"))
+
+    first_class = "mlb-occupied" if on_first else "mlb-empty"
+    second_class = "mlb-occupied" if on_second else "mlb-empty"
+    third_class = "mlb-occupied" if on_third else "mlb-empty"
+
+    first_symbol = "●" if on_first else "○"
+    second_symbol = "●" if on_second else "○"
+    third_symbol = "●" if on_third else "○"
+
+    occupied_color = "#00C853"
+    empty_color = "#F5F5F5"
+    first_inline = occupied_color if on_first else empty_color
+    second_inline = occupied_color if on_second else empty_color
+    third_inline = occupied_color if on_third else empty_color
     
     return f"""
     <div class='info-panel'>
@@ -502,23 +541,25 @@ def render_mlb_info(info: Dict) -> str:
         🧢 At Bat: {escape(str(info.get('at_bat', 'N/A')))}<br>
         🥎 Pitcher: {escape(str(info.get('pitcher', 'N/A')))}<br>
         🎯 Count: {escape(str(info.get('balls', 0)))} Balls, {escape(str(info.get('strikes', 0)))} Strikes<br><br>
-        <table style='margin: 0 auto; border-collapse: collapse; background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%); border-radius: 8px; padding: 6px 8px;'>
-            <tr>
-                <td style='width: 40px; text-align: center;'></td>
-                <td style='width: 40px; text-align: center; color: {second_color}; font-size: 20px;'>{second}</td>
-                <td style='width: 40px; text-align: center;'></td>
-            </tr>
-            <tr>
-                <td style='width: 40px; text-align: center; color: {third_color}; font-size: 20px;'>{third}</td>
-                <td style='width: 40px; text-align: center;'></td>
-                <td style='width: 40px; text-align: center; color: {first_color}; font-size: 20px;'>{first}</td>
-            </tr>
-            <tr>
-                <td style='width: 40px; text-align: center;'></td>
-                <td style='width: 40px; text-align: center; font-weight: bold;'>H</td>
-                <td style='width: 40px; text-align: center;'></td>
-            </tr>
-        </table>
+        <div class='mlb-diamond-wrap' style='display:inline-block; padding:12px 16px; border-radius:10px; background:linear-gradient(135deg, #1b5e20, #2e7d32);'>
+            <table class='mlb-diamond-table' style='margin:0 auto; border-collapse:collapse;'>
+                <tr>
+                    <td style='width:40px; text-align:center;'></td>
+                    <td class='mlb-base {second_class}' style='width:40px; text-align:center; font-size:24px; line-height:1; color:{second_inline};'>{second_symbol}</td>
+                    <td style='width:40px; text-align:center;'></td>
+                </tr>
+                <tr>
+                    <td class='mlb-base {third_class}' style='width:40px; text-align:center; font-size:24px; line-height:1; color:{third_inline};'>{third_symbol}</td>
+                    <td class='mlb-home' style='width:40px; text-align:center; color:white; font-weight:bold;'>◆</td>
+                    <td class='mlb-base {first_class}' style='width:40px; text-align:center; font-size:24px; line-height:1; color:{first_inline};'>{first_symbol}</td>
+                </tr>
+                <tr>
+                    <td style='width:40px; text-align:center;'></td>
+                    <td class='mlb-home' style='width:40px; text-align:center; color:white; font-weight:bold;'>H</td>
+                    <td style='width:40px; text-align:center;'></td>
+                </tr>
+            </table>
+        </div>
     </div>
     """
 
