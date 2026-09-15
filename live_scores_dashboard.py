@@ -822,6 +822,16 @@ def render_game_card(game: GameInfo):
             render_team_card(game.home_team, align="left", moneyline=home_moneyline),
             unsafe_allow_html=True,
         )
+    
+    display_game_details(
+        {
+            "sport": game.league,
+            "away_team": {"name": game.away_team.name, "score": game.away_team.score},
+            "home_team": {"name": game.home_team.name, "score": game.home_team.score},
+            "info": game.info,
+            "odds": game_odds or {},
+        }
+    )
 
 # ============================================================================
 # BETTING TAB

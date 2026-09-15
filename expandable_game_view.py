@@ -25,18 +25,20 @@ def display_game_details(game):
 
         if sport == "nba":
             # ESPN team IDs could be mapped or extracted from full API
-            away_team_id = get_team_id_from_name(away["name"])
-            home_team_id = get_team_id_from_name(home["name"])
-            away_stats = fetch_team_stats(away_team_id)
-            home_stats = fetch_team_stats(home_team_id)
+            away_team_name = away.get("name", "")
+            home_team_name = home.get("name", "")
+            away_team_id = get_team_id_from_name(away_team_name)
+            home_team_id = get_team_id_from_name(home_team_name)
+            away_stats = fetch_team_stats(away_team_id) if away_team_id else None
+            home_stats = fetch_team_stats(home_team_id) if home_team_id else None
 
             if away_stats:
-                st.markdown(f"### {away['name']} Player Stats")
+                st.markdown(f"### {away_team_name} Player Stats")
                 for player in away_stats.get("athletes", []):
                     st.write(f"- **{player.get('displayName', '')}**: {player.get('position', {}).get('abbreviation', '')}")
 
             if home_stats:
-                st.markdown(f"### {home['name']} Player Stats")
+                st.markdown(f"### {home_team_name} Player Stats")
                 for player in home_stats.get("athletes", []):
                     st.write(f"- **{player.get('displayName', '')}**: {player.get('position', {}).get('abbreviation', '')}")
 
@@ -47,4 +49,4 @@ def get_team_id_from_name(team_name):
         "Golden State Warriors": "9",
         # Add more team mappings here
     }
-    return mapping.get(team_name, "")
+    return mapping.get(team_name)
