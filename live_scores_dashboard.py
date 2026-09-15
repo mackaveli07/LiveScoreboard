@@ -181,6 +181,7 @@ st.markdown(
         font-size: 11px;
         font-weight: 700;
         letter-spacing: .6px;
+        text-transform: uppercase;
         border-radius: 999px;
         padding: 3px 10px;
     }
@@ -525,8 +526,9 @@ def render_field_position(yard_line: str) -> str:
     # Parse yard line (e.g., "50", "20" means 20 yards from endzone)
     try:
         yards = int(yard_line.replace("+", ""))
-        # Calculate percentage position on field (0 = away endzone, 100 = home endzone)
-        position_percent = yards * 2  # Scale 0-50 to 0-100
+        # Normalize to 0-100 position (0 = away endzone, 100 = home endzone)
+        normalized_yards = yards if yards <= 50 else 100 - yards
+        position_percent = max(0, min(100, normalized_yards * 2))
     except Exception:
         position_percent = 50
     
@@ -618,7 +620,7 @@ def render_game_card(game: GameInfo):
     
     with col2:
         st.markdown(
-            f"<div style='text-align:center; margin-bottom:8px;'><span class='league-badge'>{escape(str(game.league).upper())}</span></div>",
+            f"<div style='text-align:center; margin-bottom:8px;'><span class='league-badge'>{escape(str(game.league))}</span></div>",
             unsafe_allow_html=True,
         )
         renderer = get_info_renderer(game.league)
