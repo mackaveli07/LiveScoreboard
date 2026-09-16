@@ -626,9 +626,15 @@ def build_betting_display_df(
         return df
 
     df[recommendation_col] = df.apply(
-        lambda row: "HOME"
-        if row.get("value_edge_home", 0) > row.get("value_edge_away", 0)
-        else "AWAY",
+        lambda row: (
+            "HOME"
+            if row.get("value_edge_home", 0) > row.get("value_edge_away", 0)
+            else (
+                "AWAY"
+                if row.get("value_edge_away", 0) > row.get("value_edge_home", 0)
+                else "PASS"
+            )
+        ),
         axis=1,
     )
     preferred_order = BETTING_DISPLAY_COLUMNS + [recommendation_col]
