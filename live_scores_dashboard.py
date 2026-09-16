@@ -418,7 +418,7 @@ st.markdown(
 @st.cache_data(ttl=5)
 def fetch_espn_league_scores(
     sport_path: str, _refresh_key: int = 0, filter_today: bool = True
-) -> List[GameInfo]:
+) -> Optional[List[GameInfo]]:
     """Fetch live game scores for a single league from ESPN API."""
     config = SPORTS_CONFIG.get(sport_path)
     if not config:
@@ -433,7 +433,7 @@ def fetch_espn_league_scores(
             timeout=FETCH_TIMEOUT,
         )
         if response.status_code != 200:
-            return []
+            return None
 
         data = response.json()
         league = config["league"]
@@ -489,7 +489,7 @@ def fetch_espn_league_scores(
     except Exception as e:
         st.warning(f"Error parsing {config['name']} data: {str(e)[:100]}")
 
-    return games
+    return None
 
 
 @st.cache_data(ttl=5)
@@ -497,7 +497,9 @@ def fetch_espn_scores() -> List[GameInfo]:
     """Fetch live game scores from ESPN API."""
     games = []
     for sport_path in SPORTS_CONFIG:
-        games.extend(fetch_espn_league_scores(sport_path))
+        league_games = fetch_espn_league_scores(sport_path)
+        if league_games is not None:
+            games.extend(league_games)
     return games
 
 def extract_game_info(league: str, competition: Dict) -> Dict[str, Any]:
@@ -988,12 +990,14 @@ def render_nfl_section(games: List[GameInfo]):
         refresh_nfl = st.button("🔁 Refresh NFL", key="refresh_nfl")
         if refresh_nfl:
             st.session_state.nfl_refresh_key = st.session_state.get("nfl_refresh_key", 0) + 1
-            st.session_state.refreshed_nfl_games = fetch_espn_league_scores(
+            refreshed_games = fetch_espn_league_scores(
                 "football/nfl",
                 _refresh_key=st.session_state.nfl_refresh_key,
                 filter_today=False,
             )
-            st.session_state.refreshed_nfl_games_at = time.time()
+            if refreshed_games is not None:
+                st.session_state.refreshed_nfl_games = refreshed_games
+                st.session_state.refreshed_nfl_games_at = time.time()
 
     nfl_refresh_key = st.session_state.get("nfl_refresh_key", 0)
     nfl_games = [game for game in games if game.league == "nfl"]
