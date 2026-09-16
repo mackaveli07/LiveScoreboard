@@ -983,16 +983,14 @@ def render_nfl_section(games: List[GameInfo]):
 
     _, col2 = st.columns([3, 1])
     with col2:
-        if st.button("🔁 Refresh NFL", key="refresh_nfl"):
+        refresh_nfl = st.button("🔁 Refresh NFL", key="refresh_nfl")
+        if refresh_nfl:
             st.session_state.nfl_refresh_key = st.session_state.get("nfl_refresh_key", 0) + 1
-            st.rerun()
 
-    nfl_refresh_key = st.session_state.pop("nfl_refresh_key", 0)
-    nfl_games = (
-        fetch_espn_league_scores("football/nfl", _refresh_key=nfl_refresh_key)
-        if nfl_refresh_key
-        else [game for game in games if game.league == "nfl"]
-    )
+    nfl_refresh_key = st.session_state.get("nfl_refresh_key", 0)
+    nfl_games = [game for game in games if game.league == "nfl"]
+    if refresh_nfl:
+        nfl_games = fetch_espn_league_scores("football/nfl", _refresh_key=nfl_refresh_key)
 
     st.markdown(
         "<div class='section-header'><h3>🏈 NFL Live Games</h3></div>",
