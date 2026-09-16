@@ -52,6 +52,17 @@ SPORTS_CONFIG = {
 }
 
 BETTING_LEAGUES = ["mlb", "nba", "nfl", "nhl", "wnba"]
+BETTING_DISPLAY_COLUMNS = [
+    "away",
+    "home",
+    "prob_home",
+    "market_ml_away",
+    "market_ml_home",
+    "spread",
+    "total",
+    "value_edge_home",
+    "value_edge_away",
+]
 
 # ============================================================================
 # DATA MODELS
@@ -591,6 +602,80 @@ def update_betting_predictions():
     finally:
         st.session_state.updating_bets = False
 
+
+def build_betting_display_df(
+    data: List[Dict[str, Any]], recommendation_col: str = "Value On"
+) -> pd.DataFrame:
+    """Build a formatted betting dataframe for display."""
+    df = pd.DataFrame(data)
+    if df.empty:
+        return df
+
+    df[recommendation_col] = df.apply(
+        lambda row: "HOME"
+        if row.get("value_edge_home", 0) > row.get("value_edge_away", 0)
+        else "AWAY",
+        axis=1,
+    )
+    preferred_order = BETTING_DISPLAY_COLUMNS + [recommendation_col]
+    available_cols = [col for col in preferred_order if col in df.columns]
+    remaining_cols = [col for col in df.columns if col not in available_cols]
+    return df[available_cols + remaining_cols].copy()
+
+
+def get_betting_column_config(columns) -> Dict[str, Any]:
+    """Build column configuration for betting data tables."""
+    column_config = {}
+    if "prob_home" in columns:
+        column_config["prob_home"] = st.column_config.NumberColumn(
+            "Elo Home %", format="%.3f"
+        )
+    if "market_ml_home" in columns:
+        column_config["market_ml_home"] = st.column_config.NumberColumn(
+            "BetIQ Home ML", format="%d"
+        )
+    if "market_ml_away" in columns:
+        column_config["market_ml_away"] = st.column_config.NumberColumn(
+            "BetIQ Away ML", format="%d"
+        )
+    if "spread" in columns:
+        column_config["spread"] = st.column_config.NumberColumn(
+            "Spread", format="%.1f"
+        )
+    if "total" in columns:
+        column_config["total"] = st.column_config.NumberColumn(
+            "Total", format="%.1f"
+        )
+    if "value_edge_home" in columns:
+        column_config["value_edge_home"] = st.column_config.NumberColumn(
+            "Value Edge Home", format="%.2f"
+        )
+    if "value_edge_away" in columns:
+        column_config["value_edge_away"] = st.column_config.NumberColumn(
+            "Value Edge Away", format="%.2f"
+        )
+    return column_config
+
+
+def render_betting_table(
+    league: str,
+    empty_message: str,
+    recommendation_col: str = "Value On",
+):
+    """Render a betting table for a given league."""
+    data = load_betting_data(league)
+    if not data:
+        st.info(empty_message)
+        return
+
+    display_df = build_betting_display_df(data, recommendation_col=recommendation_col)
+    column_config = get_betting_column_config(display_df.columns)
+    st.dataframe(
+        display_df,
+        use_container_width=True,
+        column_config=column_config if column_config else None,
+    )
+
 # ============================================================================
 # UI COMPONENTS
 # ============================================================================
@@ -855,68 +940,54 @@ def render_betting_tab():
     for league_tab, league in zip(betting_tabs, BETTING_LEAGUES):
         with league_tab:
             try:
-                data = load_betting_data(league)
-                if data:
-                    df = pd.DataFrame(data)
-                    df["Value On"] = df.apply(
-                        lambda x: "HOME"
-                        if x.get("value_edge_home", 0) > x.get("value_edge_away", 0)
-                        else "AWAY",
-                        axis=1,
-                    )
-                    preferred_order = [
-                        "away",
-                        "home",
-                        "prob_home",
-                        "market_ml_away",
-                        "market_ml_home",
-                        "spread",
-                        "total",
-                        "value_edge_home",
-                        "value_edge_away",
-                        "Value On",
-                    ]
-                    available_cols = [col for col in preferred_order if col in df.columns]
-                    remaining_cols = [col for col in df.columns if col not in available_cols]
-                    display_df = df[available_cols + remaining_cols].copy()
-                    column_config = {}
-                    if "prob_home" in display_df.columns:
-                        column_config["prob_home"] = st.column_config.NumberColumn(
-                            "Elo Home %", format="%.3f"
-                        )
-                    if "market_ml_home" in display_df.columns:
-                        column_config["market_ml_home"] = st.column_config.NumberColumn(
-                            "BetIQ Home ML", format="%d"
-                        )
-                    if "market_ml_away" in display_df.columns:
-                        column_config["market_ml_away"] = st.column_config.NumberColumn(
-                            "BetIQ Away ML", format="%d"
-                        )
-                    if "spread" in display_df.columns:
-                        column_config["spread"] = st.column_config.NumberColumn(
-                            "Spread", format="%.1f"
-                        )
-                    if "total" in display_df.columns:
-                        column_config["total"] = st.column_config.NumberColumn(
-                            "Total", format="%.1f"
-                        )
-                    if "value_edge_home" in display_df.columns:
-                        column_config["value_edge_home"] = st.column_config.NumberColumn(
-                            "Value Edge Home", format="%.2f"
-                        )
-                    if "value_edge_away" in display_df.columns:
-                        column_config["value_edge_away"] = st.column_config.NumberColumn(
-                            "Value Edge Away", format="%.2f"
-                        )
-                    st.dataframe(
-                        display_df,
-                        use_container_width=True,
-                        column_config=column_config if column_config else None,
-                    )
-                else:
-                    st.info(f"No betting data for {league.upper()} yet.")
+                render_betting_table(
+                    league,
+                    empty_message=f"No betting data for {league.upper()} yet.",
+                )
             except Exception as e:
                 st.warning(f"Could not load {league.upper()} data: {str(e)[:100]}")
+
+
+def render_nfl_section(games: List[GameInfo]):
+    """Render a dedicated NFL section with live games and betting predictions."""
+    st.markdown(
+        "<div class='section-header'><h3>🏈 NFL Live Games & Betting</h3></div>",
+        unsafe_allow_html=True,
+    )
+
+    col1, col2 = st.columns([3, 1])
+    with col2:
+        if st.button("🔁 Refresh NFL", key="refresh_nfl"):
+            fetch_espn_scores.clear()
+            load_betting_data.clear()
+            load_betiq_odds.clear()
+            st.rerun()
+
+    nfl_games = [game for game in games if game.league == "nfl"]
+
+    st.markdown(
+        "<div class='section-header'><h3>🏈 NFL Live Games</h3></div>",
+        unsafe_allow_html=True,
+    )
+    if nfl_games:
+        for game in nfl_games:
+            render_game_card(game)
+            st.divider()
+    else:
+        st.info("No live NFL games currently.")
+
+    st.markdown(
+        "<div class='section-header'><h3>📊 NFL Betting Predictions</h3></div>",
+        unsafe_allow_html=True,
+    )
+    try:
+        render_betting_table(
+            "nfl",
+            empty_message="No NFL betting data available yet.",
+            recommendation_col="Recommended Bet",
+        )
+    except Exception as e:
+        st.warning(f"Could not load NFL data: {str(e)[:100]}")
 
 # ============================================================================
 # SCORES TAB
@@ -976,3 +1047,5 @@ except Exception as e:
     games = []
 
 render_scores_tabs(games)
+st.markdown("---")
+render_nfl_section(games)
