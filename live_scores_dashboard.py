@@ -127,7 +127,7 @@ def build_team_aliases(team_name: str) -> set[str]:
 
 
 @st.cache_data(ttl=300)
-def load_betiq_odds(league: str) -> List[Dict[str, Any]]:
+def load_betiq_odds(league: str, refresh_key: int = 0) -> List[Dict[str, Any]]:
     """Load live BetIQ odds for a league."""
     try:
         return scrape_betiq_odds(league)
@@ -135,12 +135,14 @@ def load_betiq_odds(league: str) -> List[Dict[str, Any]]:
         return []
 
 
-def find_game_odds(league: str, away_team: str, home_team: str) -> Optional[Dict[str, Any]]:
+def find_game_odds(
+    league: str, away_team: str, home_team: str, refresh_key: int = 0
+) -> Optional[Dict[str, Any]]:
     """Find BetIQ odds for the given game."""
     away_aliases = build_team_aliases(away_team)
     home_aliases = build_team_aliases(home_team)
 
-    for odds in load_betiq_odds(league):
+    for odds in load_betiq_odds(league, refresh_key=refresh_key):
         if (
             normalize_team_name(odds.get("away", "")) in away_aliases
             and normalize_team_name(odds.get("home", "")) in home_aliases
@@ -414,74 +416,86 @@ st.markdown(
 # ============================================================================
 
 @st.cache_data(ttl=5)
+def fetch_espn_league_scores(sport_path: str, refresh_key: int = 0) -> List[GameInfo]:
+    """Fetch live game scores for a single league from ESPN API."""
+    config = SPORTS_CONFIG.get(sport_path)
+    if not config:
+        return []
+
+    games = []
+    today = date.today().isoformat()
+
+    try:
+        response = requests.get(
+            f"{ESPN_BASE_URL}/{sport_path}/scoreboard",
+            timeout=FETCH_TIMEOUT,
+        )
+        if response.status_code != 200:
+            return []
+
+        data = response.json()
+        league = config["league"]
+        events = data.get("events", []) if isinstance(data, dict) else []
+
+        for event in events:
+            if not isinstance(event, dict):
+                continue
+
+            if not event.get("date", "").startswith(today):
+                continue
+
+            competitions = event.get("competitions", [])
+            if not competitions or not isinstance(competitions, list):
+                continue
+
+            competition = competitions[0]
+            if not isinstance(competition, dict):
+                continue
+
+            competitors = competition.get("competitors", [])
+
+            if len(competitors) < 2:
+                continue
+
+            away = next(
+                (t for t in competitors if isinstance(t, dict) and t.get("homeAway") == "away"), None
+            )
+            home = next(
+                (t for t in competitors if isinstance(t, dict) and t.get("homeAway") == "home"), None
+            )
+
+            if not away or not home:
+                continue
+
+            try:
+                game_info = extract_game_info(league, competition)
+
+                games.append(
+                    GameInfo(
+                        sport=config["name"],
+                        league=league,
+                        away_team=format_team_data(away),
+                        home_team=format_team_data(home),
+                        info=game_info,
+                    )
+                )
+            except Exception:
+                continue
+
+    except requests.RequestException as e:
+        st.warning(f"Failed to fetch {config['name']}: {str(e)[:100]}")
+    except Exception as e:
+        st.warning(f"Error parsing {config['name']} data: {str(e)[:100]}")
+
+    return games
+
+
+@st.cache_data(ttl=5)
 def fetch_espn_scores() -> List[GameInfo]:
     """Fetch live game scores from ESPN API."""
     games = []
-    today = date.today().isoformat()
-    
-    for sport_path, config in SPORTS_CONFIG.items():
-        try:
-            response = requests.get(
-                f"{ESPN_BASE_URL}/{sport_path}/scoreboard",
-                timeout=FETCH_TIMEOUT,
-            )
-            if response.status_code != 200:
-                continue
-            
-            data = response.json()
-            league = config["league"]
-            events = data.get("events", []) if isinstance(data, dict) else []
-            
-            for event in events:
-                if not isinstance(event, dict):
-                    continue
-                    
-                if not event.get("date", "").startswith(today):
-                    continue
-                
-                competitions = event.get("competitions", [])
-                if not competitions or not isinstance(competitions, list):
-                    continue
-                
-                competition = competitions[0]
-                if not isinstance(competition, dict):
-                    continue
-                    
-                competitors = competition.get("competitors", [])
-                
-                if len(competitors) < 2:
-                    continue
-                
-                away = next(
-                    (t for t in competitors if isinstance(t, dict) and t.get("homeAway") == "away"), None
-                )
-                home = next(
-                    (t for t in competitors if isinstance(t, dict) and t.get("homeAway") == "home"), None
-                )
-                
-                if not away or not home:
-                    continue
-                
-                try:
-                    game_info = extract_game_info(league, competition)
-                    
-                    games.append(
-                        GameInfo(
-                            sport=config["name"],
-                            league=league,
-                            away_team=format_team_data(away),
-                            home_team=format_team_data(home),
-                            info=game_info,
-                        )
-                    )
-                except Exception as e:
-                    continue
-        
-        except requests.RequestException as e:
-            st.warning(f"Failed to fetch {config['name']}: {str(e)[:100]}")
-        except Exception as e:
-            st.warning(f"Error parsing {config['name']} data: {str(e)[:100]}")
-    
+    for sport_path in SPORTS_CONFIG:
+        games.extend(fetch_espn_league_scores(sport_path))
     return games
 
 def extract_game_info(league: str, competition: Dict) -> Dict[str, Any]:
@@ -575,7 +589,7 @@ def extract_game_info(league: str, competition: Dict) -> Dict[str, Any]:
 # ============================================================================
 
 @st.cache_data(ttl=300)
-def load_betting_data(league: str) -> List[Dict]:
+def load_betting_data(league: str, refresh_key: int = 0) -> List[Dict]:
     """Load cached betting predictions."""
     try:
         with open(f"{league}_predicted_odds.json", "r") as f:
@@ -661,9 +675,10 @@ def render_betting_table(
     league: str,
     empty_message: str,
     recommendation_col: str = "Value On",
+    refresh_key: int = 0,
 ):
     """Render a betting table for a given league."""
-    data = load_betting_data(league)
+    data = load_betting_data(league, refresh_key=refresh_key)
     if not data:
         st.info(empty_message)
         return
@@ -881,10 +896,15 @@ def get_info_renderer(league: str):
     }
     return renderers.get(league, lambda x: "")
 
-def render_game_card(game: GameInfo):
+def render_game_card(game: GameInfo, odds_refresh_key: int = 0):
     """Render a single game card."""
     col1, col2, col3 = st.columns([3, 2, 3])
-    game_odds = find_game_odds(game.league, game.away_team.name, game.home_team.name)
+    game_odds = find_game_odds(
+        game.league,
+        game.away_team.name,
+        game.home_team.name,
+        refresh_key=odds_refresh_key,
+    )
     away_moneyline = game_odds.get("ml_away") if game_odds else None
     home_moneyline = game_odds.get("ml_home") if game_odds else None
     
@@ -955,15 +975,18 @@ def render_nfl_section(games: List[GameInfo]):
         unsafe_allow_html=True,
     )
 
-    col1, col2 = st.columns([3, 1])
+    _, col2 = st.columns([3, 1])
     with col2:
         if st.button("🔁 Refresh NFL", key="refresh_nfl"):
-            fetch_espn_scores.clear()
-            load_betting_data.clear()
-            load_betiq_odds.clear()
+            st.session_state.nfl_refresh_key = st.session_state.get("nfl_refresh_key", 0) + 1
             st.rerun()
 
-    nfl_games = [game for game in games if game.league == "nfl"]
+    nfl_refresh_key = st.session_state.get("nfl_refresh_key", 0)
+    nfl_games = (
+        fetch_espn_league_scores("football/nfl", refresh_key=nfl_refresh_key)
+        if nfl_refresh_key
+        else [game for game in games if game.league == "nfl"]
+    )
 
     st.markdown(
         "<div class='section-header'><h3>🏈 NFL Live Games</h3></div>",
@@ -971,7 +994,7 @@ def render_nfl_section(games: List[GameInfo]):
     )
     if nfl_games:
         for game in nfl_games:
-            render_game_card(game)
+            render_game_card(game, odds_refresh_key=nfl_refresh_key)
             st.divider()
     else:
         st.info("No live NFL games currently.")
@@ -985,6 +1008,7 @@ def render_nfl_section(games: List[GameInfo]):
             "nfl",
             empty_message="No NFL betting data available yet.",
             recommendation_col="Recommended Bet",
+            refresh_key=nfl_refresh_key,
         )
     except Exception as e:
         st.warning(f"Could not load NFL data: {str(e)[:100]}")
