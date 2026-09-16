@@ -52,6 +52,17 @@ SPORTS_CONFIG = {
 }
 
 BETTING_LEAGUES = ["mlb", "nba", "nfl", "nhl", "wnba"]
+BETTING_DISPLAY_COLUMNS = [
+    "away",
+    "home",
+    "prob_home",
+    "market_ml_away",
+    "market_ml_home",
+    "spread",
+    "total",
+    "value_edge_home",
+    "value_edge_away",
+]
 
 # ============================================================================
 # DATA MODELS
@@ -116,7 +127,7 @@ def build_team_aliases(team_name: str) -> set[str]:
 
 
 @st.cache_data(ttl=300)
-def load_betiq_odds(league: str) -> List[Dict[str, Any]]:
+def load_betiq_odds(league: str, _refresh_key: int = 0) -> List[Dict[str, Any]]:
     """Load live BetIQ odds for a league."""
     try:
         return scrape_betiq_odds(league)
@@ -124,12 +135,14 @@ def load_betiq_odds(league: str) -> List[Dict[str, Any]]:
         return []
 
 
-def find_game_odds(league: str, away_team: str, home_team: str) -> Optional[Dict[str, Any]]:
+def find_game_odds(
+    league: str, away_team: str, home_team: str, odds_refresh_key: int = 0
+) -> Optional[Dict[str, Any]]:
     """Find BetIQ odds for the given game."""
     away_aliases = build_team_aliases(away_team)
     home_aliases = build_team_aliases(home_team)
 
-    for odds in load_betiq_odds(league):
+    for odds in load_betiq_odds(league, _refresh_key=odds_refresh_key):
         if (
             normalize_team_name(odds.get("away", "")) in away_aliases
             and normalize_team_name(odds.get("home", "")) in home_aliases
@@ -403,74 +416,90 @@ st.markdown(
 # ============================================================================
 
 @st.cache_data(ttl=5)
+def fetch_espn_league_scores(
+    sport_path: str, _refresh_key: int = 0, filter_today: bool = True
+) -> Optional[List[GameInfo]]:
+    """Fetch live game scores for a single league from ESPN API."""
+    config = SPORTS_CONFIG.get(sport_path)
+    if not config:
+        return []
+
+    games = []
+    today = date.today().isoformat()
+
+    try:
+        response = requests.get(
+            f"{ESPN_BASE_URL}/{sport_path}/scoreboard",
+            timeout=FETCH_TIMEOUT,
+        )
+        if response.status_code != 200:
+            return None
+
+        data = response.json()
+        league = config["league"]
+        events = data.get("events", []) if isinstance(data, dict) else []
+
+        for event in events:
+            if not isinstance(event, dict):
+                continue
+
+            if filter_today and not event.get("date", "").startswith(today):
+                continue
+
+            competitions = event.get("competitions", [])
+            if not competitions or not isinstance(competitions, list):
+                continue
+
+            competition = competitions[0]
+            if not isinstance(competition, dict):
+                continue
+
+            competitors = competition.get("competitors", [])
+
+            if len(competitors) < 2:
+                continue
+
+            away = next(
+                (t for t in competitors if isinstance(t, dict) and t.get("homeAway") == "away"), None
+            )
+            home = next(
+                (t for t in competitors if isinstance(t, dict) and t.get("homeAway") == "home"), None
+            )
+
+            if not away or not home:
+                continue
+
+            try:
+                game_info = extract_game_info(league, competition)
+
+                games.append(
+                    GameInfo(
+                        sport=config["name"],
+                        league=league,
+                        away_team=format_team_data(away),
+                        home_team=format_team_data(home),
+                        info=game_info,
+                    )
+                )
+            except Exception:
+                continue
+
+    except requests.RequestException as e:
+        st.warning(f"Failed to fetch {config['name']}: {str(e)[:100]}")
+    except Exception as e:
+        st.warning(f"Error parsing {config['name']} data: {str(e)[:100]}")
+
+    return None
+
+
+@st.cache_data(ttl=5)
 def fetch_espn_scores() -> List[GameInfo]:
     """Fetch live game scores from ESPN API."""
     games = []
-    today = date.today().isoformat()
-    
-    for sport_path, config in SPORTS_CONFIG.items():
-        try:
-            response = requests.get(
-                f"{ESPN_BASE_URL}/{sport_path}/scoreboard",
-                timeout=FETCH_TIMEOUT,
-            )
-            if response.status_code != 200:
-                continue
-            
-            data = response.json()
-            league = config["league"]
-            events = data.get("events", []) if isinstance(data, dict) else []
-            
-            for event in events:
-                if not isinstance(event, dict):
-                    continue
-                    
-                if not event.get("date", "").startswith(today):
-                    continue
-                
-                competitions = event.get("competitions", [])
-                if not competitions or not isinstance(competitions, list):
-                    continue
-                
-                competition = competitions[0]
-                if not isinstance(competition, dict):
-                    continue
-                    
-                competitors = competition.get("competitors", [])
-                
-                if len(competitors) < 2:
-                    continue
-                
-                away = next(
-                    (t for t in competitors if isinstance(t, dict) and t.get("homeAway") == "away"), None
-                )
-                home = next(
-                    (t for t in competitors if isinstance(t, dict) and t.get("homeAway") == "home"), None
-                )
-                
-                if not away or not home:
-                    continue
-                
-                try:
-                    game_info = extract_game_info(league, competition)
-                    
-                    games.append(
-                        GameInfo(
-                            sport=config["name"],
-                            league=league,
-                            away_team=format_team_data(away),
-                            home_team=format_team_data(home),
-                            info=game_info,
-                        )
-                    )
-                except Exception as e:
-                    continue
-        
-        except requests.RequestException as e:
-            st.warning(f"Failed to fetch {config['name']}: {str(e)[:100]}")
-        except Exception as e:
-            st.warning(f"Error parsing {config['name']} data: {str(e)[:100]}")
-    
+    for sport_path in SPORTS_CONFIG:
+        league_games = fetch_espn_league_scores(sport_path)
+        if league_games is not None:
+            games.extend(league_games)
     return games
 
 def extract_game_info(league: str, competition: Dict) -> Dict[str, Any]:
@@ -564,7 +593,7 @@ def extract_game_info(league: str, competition: Dict) -> Dict[str, Any]:
 # ============================================================================
 
 @st.cache_data(ttl=300)
-def load_betting_data(league: str) -> List[Dict]:
+def load_betting_data(league: str, _refresh_key: int = 0) -> List[Dict]:
     """Load cached betting predictions."""
     try:
         with open(f"{league}_predicted_odds.json", "r") as f:
@@ -590,6 +619,87 @@ def update_betting_predictions():
         st.error(f"Error in betting pipeline: {str(e)[:100]}")
     finally:
         st.session_state.updating_bets = False
+
+
+def build_betting_display_df(
+    data: List[Dict[str, Any]], recommendation_col: str = "Value On"
+) -> pd.DataFrame:
+    """Build a formatted betting dataframe for display."""
+    df = pd.DataFrame(data)
+    if df.empty:
+        return df
+
+    df[recommendation_col] = df.apply(
+        lambda row: (
+            "HOME"
+            if row.get("value_edge_home", 0) > row.get("value_edge_away", 0)
+            else (
+                "AWAY"
+                if row.get("value_edge_away", 0) > row.get("value_edge_home", 0)
+                else "PASS"
+            )
+        ),
+        axis=1,
+    )
+    preferred_order = BETTING_DISPLAY_COLUMNS + [recommendation_col]
+    available_cols = [col for col in preferred_order if col in df.columns]
+    remaining_cols = [col for col in df.columns if col not in available_cols]
+    return df[available_cols + remaining_cols].copy()
+
+
+def get_betting_column_config(columns) -> Dict[str, Any]:
+    """Build column configuration for betting data tables."""
+    column_config = {}
+    if "prob_home" in columns:
+        column_config["prob_home"] = st.column_config.NumberColumn(
+            "Elo Home %", format="%.3f"
+        )
+    if "market_ml_home" in columns:
+        column_config["market_ml_home"] = st.column_config.NumberColumn(
+            "BetIQ Home ML", format="%d"
+        )
+    if "market_ml_away" in columns:
+        column_config["market_ml_away"] = st.column_config.NumberColumn(
+            "BetIQ Away ML", format="%d"
+        )
+    if "spread" in columns:
+        column_config["spread"] = st.column_config.NumberColumn(
+            "Spread", format="%.1f"
+        )
+    if "total" in columns:
+        column_config["total"] = st.column_config.NumberColumn(
+            "Total", format="%.1f"
+        )
+    if "value_edge_home" in columns:
+        column_config["value_edge_home"] = st.column_config.NumberColumn(
+            "Value Edge Home", format="%.2f"
+        )
+    if "value_edge_away" in columns:
+        column_config["value_edge_away"] = st.column_config.NumberColumn(
+            "Value Edge Away", format="%.2f"
+        )
+    return column_config
+
+
+def render_betting_table(
+    league: str,
+    empty_message: str,
+    recommendation_col: str = "Value On",
+    refresh_key: int = 0,
+):
+    """Render a betting table for a given league."""
+    data = load_betting_data(league, _refresh_key=refresh_key)
+    if not data:
+        st.info(empty_message)
+        return
+
+    display_df = build_betting_display_df(data, recommendation_col=recommendation_col)
+    column_config = get_betting_column_config(display_df.columns)
+    st.dataframe(
+        display_df,
+        use_container_width=True,
+        column_config=column_config if column_config else None,
+    )
 
 # ============================================================================
 # UI COMPONENTS
@@ -796,10 +906,15 @@ def get_info_renderer(league: str):
     }
     return renderers.get(league, lambda x: "")
 
-def render_game_card(game: GameInfo):
+def render_game_card(game: GameInfo, odds_refresh_key: int = 0):
     """Render a single game card."""
     col1, col2, col3 = st.columns([3, 2, 3])
-    game_odds = find_game_odds(game.league, game.away_team.name, game.home_team.name)
+    game_odds = find_game_odds(
+        game.league,
+        game.away_team.name,
+        game.home_team.name,
+        odds_refresh_key=odds_refresh_key,
+    )
     away_moneyline = game_odds.get("ml_away") if game_odds else None
     home_moneyline = game_odds.get("ml_home") if game_odds else None
     
@@ -855,68 +970,72 @@ def render_betting_tab():
     for league_tab, league in zip(betting_tabs, BETTING_LEAGUES):
         with league_tab:
             try:
-                data = load_betting_data(league)
-                if data:
-                    df = pd.DataFrame(data)
-                    df["Value On"] = df.apply(
-                        lambda x: "HOME"
-                        if x.get("value_edge_home", 0) > x.get("value_edge_away", 0)
-                        else "AWAY",
-                        axis=1,
-                    )
-                    preferred_order = [
-                        "away",
-                        "home",
-                        "prob_home",
-                        "market_ml_away",
-                        "market_ml_home",
-                        "spread",
-                        "total",
-                        "value_edge_home",
-                        "value_edge_away",
-                        "Value On",
-                    ]
-                    available_cols = [col for col in preferred_order if col in df.columns]
-                    remaining_cols = [col for col in df.columns if col not in available_cols]
-                    display_df = df[available_cols + remaining_cols].copy()
-                    column_config = {}
-                    if "prob_home" in display_df.columns:
-                        column_config["prob_home"] = st.column_config.NumberColumn(
-                            "Elo Home %", format="%.3f"
-                        )
-                    if "market_ml_home" in display_df.columns:
-                        column_config["market_ml_home"] = st.column_config.NumberColumn(
-                            "BetIQ Home ML", format="%d"
-                        )
-                    if "market_ml_away" in display_df.columns:
-                        column_config["market_ml_away"] = st.column_config.NumberColumn(
-                            "BetIQ Away ML", format="%d"
-                        )
-                    if "spread" in display_df.columns:
-                        column_config["spread"] = st.column_config.NumberColumn(
-                            "Spread", format="%.1f"
-                        )
-                    if "total" in display_df.columns:
-                        column_config["total"] = st.column_config.NumberColumn(
-                            "Total", format="%.1f"
-                        )
-                    if "value_edge_home" in display_df.columns:
-                        column_config["value_edge_home"] = st.column_config.NumberColumn(
-                            "Value Edge Home", format="%.2f"
-                        )
-                    if "value_edge_away" in display_df.columns:
-                        column_config["value_edge_away"] = st.column_config.NumberColumn(
-                            "Value Edge Away", format="%.2f"
-                        )
-                    st.dataframe(
-                        display_df,
-                        use_container_width=True,
-                        column_config=column_config if column_config else None,
-                    )
-                else:
-                    st.info(f"No betting data for {league.upper()} yet.")
+                render_betting_table(
+                    league,
+                    empty_message=f"No betting data for {league.upper()} yet.",
+                )
             except Exception as e:
                 st.warning(f"Could not load {league.upper()} data: {str(e)[:100]}")
+
+
+def render_nfl_section(games: List[GameInfo]):
+    """Render a dedicated NFL section with live games and betting predictions."""
+    st.markdown(
+        "<div class='section-header'><h3>🏈 NFL Live Games & Betting</h3></div>",
+        unsafe_allow_html=True,
+    )
+
+    _, col2 = st.columns([3, 1])
+    with col2:
+        refresh_nfl = st.button("🔁 Refresh NFL", key="refresh_nfl")
+        if refresh_nfl:
+            st.session_state.nfl_refresh_key = st.session_state.get("nfl_refresh_key", 0) + 1
+            refreshed_games = fetch_espn_league_scores(
+                "football/nfl",
+                _refresh_key=st.session_state.nfl_refresh_key,
+                filter_today=False,
+            )
+            if refreshed_games is not None:
+                st.session_state.refreshed_nfl_games = refreshed_games
+                st.session_state.refreshed_nfl_games_at = time.time()
+
+    nfl_refresh_key = st.session_state.get("nfl_refresh_key", 0)
+    nfl_games = [game for game in games if game.league == "nfl"]
+    refreshed_nfl_games = st.session_state.get("refreshed_nfl_games")
+    refreshed_nfl_games_at = st.session_state.get("refreshed_nfl_games_at", 0)
+    if (
+        "refreshed_nfl_games" in st.session_state
+        and (time.time() - refreshed_nfl_games_at) < REFRESH_INTERVAL
+    ):
+        nfl_games = refreshed_nfl_games
+    else:
+        st.session_state.pop("refreshed_nfl_games", None)
+        st.session_state.pop("refreshed_nfl_games_at", None)
+
+    st.markdown(
+        "<div class='section-header'><h3>🏈 NFL Live Games</h3></div>",
+        unsafe_allow_html=True,
+    )
+    if nfl_games:
+        for game in nfl_games:
+            render_game_card(game, odds_refresh_key=nfl_refresh_key)
+            st.divider()
+    else:
+        st.info("No live NFL games currently.")
+
+    st.markdown(
+        "<div class='section-header'><h3>📊 NFL Betting Predictions</h3></div>",
+        unsafe_allow_html=True,
+    )
+    try:
+        render_betting_table(
+            "nfl",
+            empty_message="No NFL betting data available yet.",
+            recommendation_col="Recommended Bet",
+            refresh_key=nfl_refresh_key,
+        )
+    except Exception as e:
+        st.warning(f"Could not load NFL data: {str(e)[:100]}")
 
 # ============================================================================
 # SCORES TAB
@@ -976,3 +1095,5 @@ except Exception as e:
     games = []
 
 render_scores_tabs(games)
+st.markdown("---")
+render_nfl_section(games)
