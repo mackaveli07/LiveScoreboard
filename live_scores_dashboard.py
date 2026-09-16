@@ -987,7 +987,7 @@ def render_nfl_section(games: List[GameInfo]):
             st.session_state.nfl_refresh_key = st.session_state.get("nfl_refresh_key", 0) + 1
             st.rerun()
 
-    nfl_refresh_key = st.session_state.get("nfl_refresh_key", 0)
+    nfl_refresh_key = st.session_state.pop("nfl_refresh_key", 0)
     nfl_games = (
         fetch_espn_league_scores("football/nfl", _refresh_key=nfl_refresh_key)
         if nfl_refresh_key
