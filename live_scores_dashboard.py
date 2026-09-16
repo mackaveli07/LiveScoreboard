@@ -127,7 +127,7 @@ def build_team_aliases(team_name: str) -> set[str]:
 
 
 @st.cache_data(ttl=300)
-def load_betiq_odds(league: str, refresh_key: int = 0) -> List[Dict[str, Any]]:
+def load_betiq_odds(league: str, _refresh_key: int = 0) -> List[Dict[str, Any]]:
     """Load live BetIQ odds for a league."""
     try:
         return scrape_betiq_odds(league)
@@ -136,13 +136,13 @@ def load_betiq_odds(league: str, refresh_key: int = 0) -> List[Dict[str, Any]]:
 
 
 def find_game_odds(
-    league: str, away_team: str, home_team: str, refresh_key: int = 0
+    league: str, away_team: str, home_team: str, odds_refresh_key: int = 0
 ) -> Optional[Dict[str, Any]]:
     """Find BetIQ odds for the given game."""
     away_aliases = build_team_aliases(away_team)
     home_aliases = build_team_aliases(home_team)
 
-    for odds in load_betiq_odds(league, refresh_key=refresh_key):
+    for odds in load_betiq_odds(league, _refresh_key=odds_refresh_key):
         if (
             normalize_team_name(odds.get("away", "")) in away_aliases
             and normalize_team_name(odds.get("home", "")) in home_aliases
@@ -416,7 +416,7 @@ st.markdown(
 # ============================================================================
 
 @st.cache_data(ttl=5)
-def fetch_espn_league_scores(sport_path: str, refresh_key: int = 0) -> List[GameInfo]:
+def fetch_espn_league_scores(sport_path: str, _refresh_key: int = 0) -> List[GameInfo]:
     """Fetch live game scores for a single league from ESPN API."""
     config = SPORTS_CONFIG.get(sport_path)
     if not config:
@@ -589,7 +589,7 @@ def extract_game_info(league: str, competition: Dict) -> Dict[str, Any]:
 # ============================================================================
 
 @st.cache_data(ttl=300)
-def load_betting_data(league: str, refresh_key: int = 0) -> List[Dict]:
+def load_betting_data(league: str, _refresh_key: int = 0) -> List[Dict]:
     """Load cached betting predictions."""
     try:
         with open(f"{league}_predicted_odds.json", "r") as f:
@@ -684,7 +684,7 @@ def render_betting_table(
     refresh_key: int = 0,
 ):
     """Render a betting table for a given league."""
-    data = load_betting_data(league, refresh_key=refresh_key)
+    data = load_betting_data(league, _refresh_key=refresh_key)
     if not data:
         st.info(empty_message)
         return
@@ -909,7 +909,7 @@ def render_game_card(game: GameInfo, odds_refresh_key: int = 0):
         game.league,
         game.away_team.name,
         game.home_team.name,
-        refresh_key=odds_refresh_key,
+        odds_refresh_key=odds_refresh_key,
     )
     away_moneyline = game_odds.get("ml_away") if game_odds else None
     home_moneyline = game_odds.get("ml_home") if game_odds else None
@@ -989,7 +989,7 @@ def render_nfl_section(games: List[GameInfo]):
 
     nfl_refresh_key = st.session_state.get("nfl_refresh_key", 0)
     nfl_games = (
-        fetch_espn_league_scores("football/nfl", refresh_key=nfl_refresh_key)
+        fetch_espn_league_scores("football/nfl", _refresh_key=nfl_refresh_key)
         if nfl_refresh_key
         else [game for game in games if game.league == "nfl"]
     )
