@@ -416,7 +416,9 @@ st.markdown(
 # ============================================================================
 
 @st.cache_data(ttl=5)
-def fetch_espn_league_scores(sport_path: str, _refresh_key: int = 0) -> List[GameInfo]:
+def fetch_espn_league_scores(
+    sport_path: str, _refresh_key: int = 0, filter_today: bool = True
+) -> List[GameInfo]:
     """Fetch live game scores for a single league from ESPN API."""
     config = SPORTS_CONFIG.get(sport_path)
     if not config:
@@ -441,7 +443,7 @@ def fetch_espn_league_scores(sport_path: str, _refresh_key: int = 0) -> List[Gam
             if not isinstance(event, dict):
                 continue
 
-            if not event.get("date", "").startswith(today):
+            if filter_today and not event.get("date", "").startswith(today):
                 continue
 
             competitions = event.get("competitions", [])
@@ -989,6 +991,7 @@ def render_nfl_section(games: List[GameInfo]):
             st.session_state.refreshed_nfl_games = fetch_espn_league_scores(
                 "football/nfl",
                 _refresh_key=st.session_state.nfl_refresh_key,
+                filter_today=False,
             )
             st.session_state.refreshed_nfl_games_at = time.time()
 
@@ -996,7 +999,10 @@ def render_nfl_section(games: List[GameInfo]):
     nfl_games = [game for game in games if game.league == "nfl"]
     refreshed_nfl_games = st.session_state.get("refreshed_nfl_games")
     refreshed_nfl_games_at = st.session_state.get("refreshed_nfl_games_at", 0)
-    if refreshed_nfl_games and (time.time() - refreshed_nfl_games_at) < REFRESH_INTERVAL:
+    if (
+        "refreshed_nfl_games" in st.session_state
+        and (time.time() - refreshed_nfl_games_at) < REFRESH_INTERVAL
+    ):
         nfl_games = refreshed_nfl_games
     else:
         st.session_state.pop("refreshed_nfl_games", None)
